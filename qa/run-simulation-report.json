@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-07-10T21:50:20.575Z",
+  "simulations": 180,
+  "outcomes": {
+    "exiled-knight": {
+      "battle": {
+        "won": 20,
+        "lost": 0,
+        "timeout": 0
+      },
+      "elite": {
+        "won": 19,
+        "lost": 1,
+        "timeout": 0
+      },
+      "boss": {
+        "won": 5,
+        "lost": 15,
+        "timeout": 0
+      }
+    },
+    "candle-nun": {
+      "battle": {
+        "won": 20,
+        "lost": 0,
+        "timeout": 0
+      },
+      "elite": {
+        "won": 20,
+        "lost": 0,
+        "timeout": 0
+      },
+      "boss": {
+        "won": 19,
+        "lost": 1,
+        "timeout": 0
+      }
+    },
+    "ashblood-alchemist": {
+      "battle": {
+        "won": 20,
+        "lost": 0,
+        "timeout": 0
+      },
+      "elite": {
+        "won": 19,
+        "lost": 1,
+        "timeout": 0
+      },
+      "boss": {
+        "won": 4,
+        "lost": 16,
+        "timeout": 0
+      }
+    }
+  },
+  "errors": []
+}

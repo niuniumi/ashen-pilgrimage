@@ -1,0 +1,33 @@
+{
+  "errors": [],
+  "screenshots": [
+    "01_main_menu.png",
+    "02_guide.png",
+    "03_character_select.png",
+    "04_exiled_knight_selected.png",
+    "05_map_initial.png",
+    "06_battle_start.png",
+    "07_first_battle_tutorial.png",
+    "08_card_hover.png",
+    "09_card_selected.png",
+    "10_attack_hit.png",
+    "11_block_effect.png",
+    "12_hand_after_card_used.png",
+    "13_enemy_turn.png",
+    "14_reward.png",
+    "15_shop.png",
+    "16_event.png",
+    "17_rest.png",
+    "18_chest.png",
+    "19_boss_start.png",
+    "20_boss_phase_switch.png",
+    "21_victory_result.png",
+    "22_failure_result.png",
+    "battle_1280x720.png",
+    "battle_1366x768.png",
+    "battle_1536x864.png",
+    "battle_scene_fixed_round_1.png",
+    "battle_scene_fixed_round_2.png",
+    "battle_scene_fixed_round_3.png"
+  ]
+}

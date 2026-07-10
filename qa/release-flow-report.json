@@ -1,0 +1,196 @@
+{
+  "url": "http://127.0.0.1:4176",
+  "generatedAt": "2026-07-10T13:37:21.305Z",
+  "screenshots": [
+    "qa/screenshots/release/menu.png",
+    "qa/screenshots/release/prologue.png",
+    "qa/screenshots/release/character_select.png",
+    "qa/screenshots/release/vow.png",
+    "qa/screenshots/release/map.png",
+    "qa/screenshots/release/battle_knight.png",
+    "qa/screenshots/release/pause_menu.png",
+    "qa/screenshots/release/reward.png",
+    "qa/screenshots/release/event.png",
+    "qa/screenshots/release/shop.png",
+    "qa/screenshots/release/rest.png",
+    "qa/screenshots/release/chest.png",
+    "qa/screenshots/release/boss_intro.png",
+    "qa/screenshots/release/boss_battle.png",
+    "qa/screenshots/release/act_clear.png",
+    "qa/screenshots/release/act2_map.png",
+    "qa/screenshots/release/act2_clear.png",
+    "qa/screenshots/release/act3_map.png",
+    "qa/screenshots/release/act3_clear.png",
+    "qa/screenshots/release/result_victory.png",
+    "qa/screenshots/release/result_defeat.png",
+    "qa/screenshots/release/codex.png",
+    "qa/screenshots/release/battle_nun.png",
+    "qa/screenshots/release/battle_alchemist.png",
+    "qa/screenshots/release/responsive_1920x1080_map.png",
+    "qa/screenshots/release/responsive_1920x1080_battle.png",
+    "qa/screenshots/release/responsive_1536x864_map.png",
+    "qa/screenshots/release/responsive_1536x864_battle.png",
+    "qa/screenshots/release/responsive_1366x768_map.png",
+    "qa/screenshots/release/responsive_1366x768_battle.png",
+    "qa/screenshots/release/responsive_1280x720_map.png",
+    "qa/screenshots/release/responsive_1280x720_battle.png"
+  ],
+  "steps": [
+    {
+      "name": "主菜单",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "序章",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "角色选择",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "誓约",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "地图",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "骑士战斗",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "攻击牌",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "防御牌",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "暂停菜单",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "奖励",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "事件",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "商店",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "休息",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "宝箱",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "精英战斗",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "Boss 登场",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "Boss 战",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "通关演出",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "第二章地图",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "第二章通关演出",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "第三章地图",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "第三章通关演出",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "胜利结算",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "失败结算",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "图鉴",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "nun 战斗",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "alchemist 战斗",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "响应式 1920x1080",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "响应式 1536x864",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "响应式 1366x768",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "响应式 1280x720",
+      "status": "pass",
+      "detail": {}
+    }
+  ],
+  "errors": []
+}

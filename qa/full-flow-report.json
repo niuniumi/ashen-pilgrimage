@@ -1,0 +1,9 @@
+{
+  "url": "http://127.0.0.1:4173",
+  "generatedAt": "2026-07-09T17:11:15.459Z",
+  "steps": [],
+  "screenshots": [],
+  "errors": [
+    "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4173/\", waiting until \"networkidle\"\u001b[22m\n\n    at captureFinalScreens (C:\\Users\\16224\\Desktop\\灰烬圣途-重做\\scripts\\qa-full-flow.mjs:113:14)\n    at async file:///C:/Users/16224/Desktop/%E7%81%B0%E7%83%AC%E5%9C%A3%E9%80%94-%E9%87%8D%E5%81%9A/scripts/qa-full-flow.mjs:264:3"
+  ]
+}

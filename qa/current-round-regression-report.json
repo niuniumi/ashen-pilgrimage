@@ -1,0 +1,269 @@
+{
+  "ok": true,
+  "screenshots": [
+    "qa/screenshots/current_round/menu_fixed.png",
+    "qa/screenshots/current_round/prologue_story_sketch.png",
+    "qa/screenshots/current_round/boss_summons_no_overlap.png",
+    "qa/screenshots/current_round/dead_enemy_removed_from_targets.png",
+    "qa/screenshots/current_round/reward_cards_hover_baseline.png",
+    "qa/screenshots/current_round/shop_cards_hover_baseline.png"
+  ],
+  "checks": [
+    {
+      "name": "audio waits for first gesture",
+      "ok": true,
+      "details": {
+        "unlocked": false,
+        "currentBgmKey": null,
+        "pendingBgmKey": "bgm-shared"
+      }
+    },
+    {
+      "name": "first menu click unlocks shared bgm",
+      "ok": true,
+      "details": {
+        "unlocked": true,
+        "currentBgmKey": "bgm-shared",
+        "pendingBgmKey": null
+      }
+    },
+    {
+      "name": "prologue keeps shared bgm",
+      "ok": true,
+      "details": {
+        "currentBgmKey": "bgm-shared"
+      }
+    },
+    {
+      "name": "map keeps shared bgm",
+      "ok": true,
+      "details": {
+        "currentBgmKey": "bgm-shared"
+      }
+    },
+    {
+      "name": "normal battle keeps shared bgm",
+      "ok": true,
+      "details": {
+        "currentBgmKey": "bgm-shared"
+      }
+    },
+    {
+      "name": "normal battle uses low-noise raster actor textures",
+      "ok": true,
+      "details": {
+        "player": {
+          "name": "流亡骑士",
+          "x": 330,
+          "y": 448,
+          "assetId": "exiled-knight",
+          "textureKey": "ln-hero-exiled-knight-idle",
+          "objectName": "low-noise-hero-exiled-knight"
+        },
+        "enemies": [
+          {
+            "name": null,
+            "x": 748,
+            "y": 448,
+            "assetId": "rotting-villager",
+            "textureKey": "ln-enemy-rotting-villager-idle",
+            "objectName": "low-noise-enemy-rotting-villager"
+          },
+          {
+            "name": null,
+            "x": 948,
+            "y": 448,
+            "assetId": "black-hound",
+            "textureKey": "ln-enemy-black-hound-idle",
+            "objectName": "low-noise-enemy-black-hound"
+          }
+        ]
+      }
+    },
+    {
+      "name": "boss summons do not overlap",
+      "ok": true,
+      "details": {
+        "rects": [
+          {
+            "index": 0,
+            "x": 802,
+            "y": 372,
+            "width": 306,
+            "height": 382,
+            "left": 649,
+            "right": 955,
+            "top": 181,
+            "bottom": 563
+          },
+          {
+            "index": 1,
+            "x": 1078,
+            "y": 522,
+            "width": 168,
+            "height": 246,
+            "left": 994,
+            "right": 1162,
+            "top": 399,
+            "bottom": 645
+          },
+          {
+            "index": 2,
+            "x": 524,
+            "y": 522,
+            "width": 168,
+            "height": 246,
+            "left": 440,
+            "right": 608,
+            "top": 399,
+            "bottom": 645
+          }
+        ],
+        "collisions": []
+      }
+    },
+    {
+      "name": "boss battle uses low-noise raster actor textures",
+      "ok": true,
+      "details": {
+        "player": {
+          "name": "流亡骑士",
+          "x": 330,
+          "y": 448,
+          "assetId": "exiled-knight",
+          "textureKey": "ln-hero-exiled-knight-idle",
+          "objectName": "low-noise-hero-exiled-knight"
+        },
+        "enemies": [
+          {
+            "name": null,
+            "x": 802,
+            "y": 390,
+            "assetId": "headless-grave-knight",
+            "textureKey": "ln-enemy-headless-grave-knight-idle",
+            "objectName": "low-noise-enemy-headless-grave-knight"
+          },
+          {
+            "name": null,
+            "x": 1078,
+            "y": 540,
+            "assetId": "graveyard-skeleton",
+            "textureKey": "ln-enemy-graveyard-skeleton-idle",
+            "objectName": "low-noise-enemy-graveyard-skeleton"
+          },
+          {
+            "name": null,
+            "x": 524,
+            "y": 540,
+            "assetId": "graveyard-skeleton",
+            "textureKey": "ln-enemy-graveyard-skeleton-idle",
+            "objectName": "low-noise-enemy-graveyard-skeleton"
+          }
+        ]
+      }
+    },
+    {
+      "name": "boss battle keeps shared bgm",
+      "ok": true,
+      "details": {
+        "currentBgmKey": "bgm-shared"
+      }
+    },
+    {
+      "name": "dead enemies do not keep hit zones",
+      "ok": true,
+      "details": {
+        "hitZones": 1,
+        "hasDeadView": false,
+        "hasLivingView": true,
+        "livingX": 845
+      }
+    },
+    {
+      "name": "dead enemy cleanup keeps only the living enemy asset",
+      "ok": true,
+      "details": {
+        "player": {
+          "name": "流亡骑士",
+          "x": 330,
+          "y": 448,
+          "assetId": "exiled-knight",
+          "textureKey": "ln-hero-exiled-knight-idle",
+          "objectName": "low-noise-hero-exiled-knight"
+        },
+        "enemies": [
+          {
+            "name": null,
+            "x": 845,
+            "y": 448,
+            "assetId": "black-hound",
+            "textureKey": "ln-enemy-black-hound-idle",
+            "objectName": "low-noise-enemy-black-hound"
+          }
+        ]
+      }
+    },
+    {
+      "name": "reward keeps shared bgm",
+      "ok": true,
+      "details": {
+        "currentBgmKey": "bgm-shared"
+      }
+    },
+    {
+      "name": "reward card hover stable",
+      "ok": true,
+      "details": {
+        "before": {
+          "x": 548,
+          "y": 502,
+          "baseY": 502,
+          "scale": 1,
+          "name": "磨刃"
+        },
+        "after": {
+          "x": 548,
+          "y": 502,
+          "baseY": 502,
+          "scale": 1,
+          "name": "磨刃"
+        }
+      }
+    },
+    {
+      "name": "shop keeps shared bgm",
+      "ok": true,
+      "details": {
+        "currentBgmKey": "bgm-shared"
+      }
+    },
+    {
+      "name": "shop card hover stable",
+      "ok": true,
+      "details": {
+        "before": {
+          "x": 350,
+          "y": 430,
+          "baseY": 430,
+          "scale": 1,
+          "name": "格挡"
+        },
+        "after": {
+          "x": 350,
+          "y": 430,
+          "baseY": 430,
+          "scale": 1,
+          "name": "格挡"
+        }
+      }
+    },
+    {
+      "name": "defeat result keeps shared bgm",
+      "ok": true,
+      "details": {
+        "currentBgmKey": "bgm-shared"
+      }
+    }
+  ],
+  "errors": []
+}

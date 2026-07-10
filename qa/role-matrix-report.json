@@ -1,0 +1,440 @@
+{
+  "url": "http://127.0.0.1:4176",
+  "generatedAt": "2026-07-10T13:06:57.194Z",
+  "data": [
+    {
+      "role": "流亡骑士",
+      "characterId": "exiled-knight",
+      "maxHp": 82,
+      "energyMax": 3,
+      "startingDeck": {
+        "knight-cleave": 5,
+        "knight-block": 4,
+        "knight-rend": 1
+      },
+      "rewardPool": [
+        "劈砍(knight-cleave)",
+        "格挡(knight-block)",
+        "撕裂斩(knight-rend)",
+        "双重斩(knight-double-slash)",
+        "刻痕(knight-score)",
+        "血线切(knight-bloodline-cut)",
+        "轻步斩(knight-quickstep)",
+        "盾墙(knight-shield-wall)",
+        "重剑压制(knight-heavy-pressure)",
+        "磨刃(knight-sharpen)",
+        "破甲切(knight-armor-break)",
+        "追猎(knight-pursuit)",
+        "血誓架势(knight-blood-oath-stance)",
+        "反击姿态(knight-counter-stance)",
+        "处决(knight-execution)",
+        "临时包扎(common-bandage)",
+        "短弩射击(common-crossbow)",
+        "旧盾(common-old-shield)",
+        "火把挥击(common-torch-swing)",
+        "灰步闪避(common-ash-dodge)",
+        "野外干粮(common-field-ration)",
+        "烟雾弹(common-smoke-bomb)",
+        "墓盐(common-grave-salt)",
+        "鸦群呼号(common-crow-call)",
+        "铁祷(common-iron-prayer)",
+        "圣火碎片(common-saint-fire-shard)",
+        "护盾突刺(knight-guarded-lunge)",
+        "红披风守势(knight-red-cape-stand)",
+        "破誓斩(knight-vowbreaker)",
+        "无圣决斗(knight-saintless-duel)"
+      ]
+    },
+    {
+      "role": "圣烛修女",
+      "characterId": "candle-nun",
+      "maxHp": 72,
+      "energyMax": 3,
+      "startingDeck": {
+        "nun-flame": 5,
+        "nun-prayer-shield": 4,
+        "nun-confession-mark": 1
+      },
+      "rewardPool": [
+        "烛火(nun-flame)",
+        "祷盾(nun-prayer-shield)",
+        "忏悔印(nun-confession-mark)",
+        "蜡封(nun-wax-seal)",
+        "引燃烛印(nun-ignite)",
+        "圣火飞烛(nun-flying-candles)",
+        "护身祷词(nun-guardian-prayer)",
+        "缄默祷言(nun-silent-prayer)",
+        "烛阵展开(nun-candle-array)",
+        "微光(nun-glimmer)",
+        "替罪蜡像(nun-scapegoat-wax)",
+        "青白圣火(nun-pale-holy-fire)",
+        "静默礼拜(nun-quiet-mass)",
+        "烛网(nun-candle-net)",
+        "万烛归一(nun-thousand-candles)",
+        "临时包扎(common-bandage)",
+        "短弩射击(common-crossbow)",
+        "旧盾(common-old-shield)",
+        "火把挥击(common-torch-swing)",
+        "灰步闪避(common-ash-dodge)",
+        "野外干粮(common-field-ration)",
+        "烟雾弹(common-smoke-bomb)",
+        "墓盐(common-grave-salt)",
+        "鸦群呼号(common-crow-call)",
+        "铁祷(common-iron-prayer)",
+        "圣火碎片(common-saint-fire-shard)",
+        "行者小烛(nun-pilgrim-candle)",
+        "赦罪焰(nun-absolution)",
+        "黎明连祷(nun-litany-of-dawn)",
+        "最后一烛(nun-last-candle)"
+      ]
+    },
+    {
+      "role": "灰血炼金师",
+      "characterId": "ashblood-alchemist",
+      "maxHp": 76,
+      "energyMax": 3,
+      "startingDeck": {
+        "alc-acid-vial": 5,
+        "alc-leather-guard": 4,
+        "alc-forbidden-test": 1
+      },
+      "rewardPool": [
+        "酸蚀瓶(alc-acid-vial)",
+        "皮革护具(alc-leather-guard)",
+        "禁药试验(alc-forbidden-test)",
+        "腐蚀烧瓶(alc-corrosive-flask)",
+        "苦味药剂(alc-bitter-draught)",
+        "灰血沸腾(alc-ashblood-boil)",
+        "硬化皮肤(alc-hardened-skin)",
+        "再生药膏(alc-regrowth-salve)",
+        "破颅锤(alc-skullbreaker)",
+        "狂化注射(alc-berserk-injection)",
+        "铅皮硬化(alc-leadskin)",
+        "烟雾步(alc-smoke-step)",
+        "血怒投掷(alc-bloodrage-throw)",
+        "白灰莲剂(alc-white-ash-lotus)",
+        "灰血新生(alc-ashblood-rebirth)",
+        "临时包扎(common-bandage)",
+        "短弩射击(common-crossbow)",
+        "旧盾(common-old-shield)",
+        "火把挥击(common-torch-swing)",
+        "灰步闪避(common-ash-dodge)",
+        "野外干粮(common-field-ration)",
+        "烟雾弹(common-smoke-bomb)",
+        "墓盐(common-grave-salt)",
+        "鸦群呼号(common-crow-call)",
+        "铁祷(common-iron-prayer)",
+        "圣火碎片(common-saint-fire-shard)",
+        "旅途补剂(alc-traveling-tonic)",
+        "水银小刀(alc-mercury-knife)",
+        "猩红触媒(alc-crimson-catalyst)",
+        "不死鸟试剂(alc-phoenix-reagent)"
+      ]
+    }
+  ],
+  "mechanics": [
+    {
+      "role": "流亡骑士",
+      "checks": [
+        "刻痕施加伤痕",
+        "撕裂斩额外伤害",
+        "撕裂后清空伤痕"
+      ]
+    },
+    {
+      "role": "圣烛修女",
+      "checks": [
+        "烛火施加烛印",
+        "回合末烛印燃烧",
+        "忏悔印叠烛印",
+        "引燃烛印且不移除"
+      ]
+    },
+    {
+      "role": "灰血炼金师",
+      "checks": [
+        "禁药试验自伤加力量",
+        "腐蚀烧瓶自伤高伤害",
+        "苦味药剂自伤抽牌",
+        "自伤不能致死"
+      ]
+    }
+  ],
+  "browser": [
+    {
+      "role": "流亡骑士",
+      "characterId": "exiled-knight",
+      "selectedStateOk": true,
+      "run": {
+        "characterId": "exiled-knight",
+        "name": "流亡骑士",
+        "maxHp": 82,
+        "hp": 82,
+        "energyMax": 3,
+        "startingDeck": {
+          "knight-cleave": 5,
+          "knight-block": 4,
+          "knight-rend": 1
+        }
+      },
+      "battle": {
+        "runId": "exiled-knight",
+        "playerName": "流亡骑士",
+        "playerArtKey": "knight-battle",
+        "hp": 82,
+        "maxHp": 82,
+        "energy": 3,
+        "cardIds": [
+          "knight-rend",
+          "knight-cleave",
+          "knight-cleave",
+          "knight-cleave",
+          "knight-block",
+          "knight-block",
+          "knight-cleave",
+          "knight-cleave",
+          "knight-block",
+          "knight-block"
+        ],
+        "hand": [
+          {
+            "id": "knight-block",
+            "name": "格挡",
+            "character": "exiled-knight"
+          },
+          {
+            "id": "knight-cleave",
+            "name": "劈砍",
+            "character": "exiled-knight"
+          },
+          {
+            "id": "knight-cleave",
+            "name": "劈砍",
+            "character": "exiled-knight"
+          },
+          {
+            "id": "knight-block",
+            "name": "格挡",
+            "character": "exiled-knight"
+          },
+          {
+            "id": "knight-block",
+            "name": "格挡",
+            "character": "exiled-knight"
+          }
+        ]
+      },
+      "cardShot": [
+        {
+          "id": "knight-cleave",
+          "name": "劈砍",
+          "character": "exiled-knight"
+        },
+        {
+          "id": "knight-block",
+          "name": "格挡",
+          "character": "exiled-knight"
+        },
+        {
+          "id": "knight-score",
+          "name": "刻痕",
+          "character": "exiled-knight"
+        },
+        {
+          "id": "knight-rend",
+          "name": "撕裂斩",
+          "character": "exiled-knight"
+        }
+      ]
+    },
+    {
+      "role": "圣烛修女",
+      "characterId": "candle-nun",
+      "selectedStateOk": true,
+      "run": {
+        "characterId": "candle-nun",
+        "name": "圣烛修女",
+        "maxHp": 72,
+        "hp": 72,
+        "energyMax": 3,
+        "startingDeck": {
+          "nun-flame": 5,
+          "nun-prayer-shield": 4,
+          "nun-confession-mark": 1
+        }
+      },
+      "battle": {
+        "runId": "candle-nun",
+        "playerName": "圣烛修女",
+        "playerArtKey": "nun-battle",
+        "hp": 72,
+        "maxHp": 72,
+        "energy": 3,
+        "cardIds": [
+          "nun-confession-mark",
+          "nun-flame",
+          "nun-flame",
+          "nun-flame",
+          "nun-prayer-shield",
+          "nun-prayer-shield",
+          "nun-flame",
+          "nun-flame",
+          "nun-prayer-shield",
+          "nun-prayer-shield"
+        ],
+        "hand": [
+          {
+            "id": "nun-prayer-shield",
+            "name": "祷盾",
+            "character": "candle-nun"
+          },
+          {
+            "id": "nun-flame",
+            "name": "烛火",
+            "character": "candle-nun"
+          },
+          {
+            "id": "nun-flame",
+            "name": "烛火",
+            "character": "candle-nun"
+          },
+          {
+            "id": "nun-prayer-shield",
+            "name": "祷盾",
+            "character": "candle-nun"
+          },
+          {
+            "id": "nun-prayer-shield",
+            "name": "祷盾",
+            "character": "candle-nun"
+          }
+        ]
+      },
+      "cardShot": [
+        {
+          "id": "nun-flame",
+          "name": "烛火",
+          "character": "candle-nun"
+        },
+        {
+          "id": "nun-prayer-shield",
+          "name": "祷盾",
+          "character": "candle-nun"
+        },
+        {
+          "id": "nun-confession-mark",
+          "name": "忏悔印",
+          "character": "candle-nun"
+        },
+        {
+          "id": "nun-ignite",
+          "name": "引燃烛印",
+          "character": "candle-nun"
+        }
+      ]
+    },
+    {
+      "role": "灰血炼金师",
+      "characterId": "ashblood-alchemist",
+      "selectedStateOk": true,
+      "run": {
+        "characterId": "ashblood-alchemist",
+        "name": "灰血炼金师",
+        "maxHp": 76,
+        "hp": 76,
+        "energyMax": 3,
+        "startingDeck": {
+          "alc-acid-vial": 5,
+          "alc-leather-guard": 4,
+          "alc-forbidden-test": 1
+        }
+      },
+      "battle": {
+        "runId": "ashblood-alchemist",
+        "playerName": "灰血炼金师",
+        "playerArtKey": "alchemist-battle",
+        "hp": 76,
+        "maxHp": 76,
+        "energy": 3,
+        "cardIds": [
+          "alc-forbidden-test",
+          "alc-acid-vial",
+          "alc-acid-vial",
+          "alc-acid-vial",
+          "alc-leather-guard",
+          "alc-leather-guard",
+          "alc-acid-vial",
+          "alc-acid-vial",
+          "alc-leather-guard",
+          "alc-leather-guard"
+        ],
+        "hand": [
+          {
+            "id": "alc-leather-guard",
+            "name": "皮革护具",
+            "character": "ashblood-alchemist"
+          },
+          {
+            "id": "alc-acid-vial",
+            "name": "酸蚀瓶",
+            "character": "ashblood-alchemist"
+          },
+          {
+            "id": "alc-acid-vial",
+            "name": "酸蚀瓶",
+            "character": "ashblood-alchemist"
+          },
+          {
+            "id": "alc-leather-guard",
+            "name": "皮革护具",
+            "character": "ashblood-alchemist"
+          },
+          {
+            "id": "alc-leather-guard",
+            "name": "皮革护具",
+            "character": "ashblood-alchemist"
+          }
+        ]
+      },
+      "cardShot": [
+        {
+          "id": "alc-acid-vial",
+          "name": "酸蚀瓶",
+          "character": "ashblood-alchemist"
+        },
+        {
+          "id": "alc-leather-guard",
+          "name": "皮革护具",
+          "character": "ashblood-alchemist"
+        },
+        {
+          "id": "alc-forbidden-test",
+          "name": "禁药试验",
+          "character": "ashblood-alchemist"
+        },
+        {
+          "id": "alc-corrosive-flask",
+          "name": "腐蚀烧瓶",
+          "character": "ashblood-alchemist"
+        },
+        {
+          "id": "alc-bitter-draught",
+          "name": "苦味药剂",
+          "character": "ashblood-alchemist"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    "qa/screenshots/role_matrix_knight_select.png",
+    "qa/screenshots/role_matrix_knight_battle.png",
+    "qa/screenshots/role_matrix_knight_cards.png",
+    "qa/screenshots/role_matrix_nun_select.png",
+    "qa/screenshots/role_matrix_nun_battle.png",
+    "qa/screenshots/role_matrix_nun_cards.png",
+    "qa/screenshots/role_matrix_alchemist_select.png",
+    "qa/screenshots/role_matrix_alchemist_battle.png",
+    "qa/screenshots/role_matrix_alchemist_cards.png"
+  ],
+  "errors": []
+}

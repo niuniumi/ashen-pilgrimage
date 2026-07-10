@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>灰烬圣途 Ashen Pilgrimage</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #070604;
+      }
+
+      #game {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(circle at 50% 86%, rgba(188, 94, 36, 0.18), transparent 34%),
+          linear-gradient(180deg, #151019 0%, #21170f 54%, #090705 100%);
+      }
+
+      canvas {
+        position: relative;
+        z-index: 2;
+        display: block;
+        image-rendering: auto;
+      }
+
+      #boot-splash {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: grid;
+        place-content: center;
+        gap: 12px;
+        color: #f2c86d;
+        text-align: center;
+        font-family: Georgia, "Microsoft YaHei", serif;
+      }
+
+      #boot-splash strong {
+        font-size: 42px;
+        font-weight: 500;
+      }
+
+      #boot-splash span {
+        color: #c7a96f;
+        font-size: 16px;
+      }
+
+      canvas:focus-visible {
+        outline: 3px solid #f2c86d;
+        outline-offset: -4px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #game {
+          background: #15100d;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="game" aria-label="灰烬圣途">
+      <div id="boot-splash" aria-live="polite">
+        <strong>灰烬圣途</strong>
+        <span>正在唤醒余烬</span>
+      </div>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

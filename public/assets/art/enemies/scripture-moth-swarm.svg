@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="260" viewBox="0 0 220 260" role="img">
+
+  <defs>
+    <filter id="softShadow" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="5" flood-color="#000000" flood-opacity=".32"/>
+    </filter>
+    <linearGradient id="inkWash" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff7e5"/>
+      <stop offset=".58" stop-color="#f2dfbd"/>
+      <stop offset="1" stop-color="#d7bb88"/>
+    </linearGradient>
+    <linearGradient id="robe" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#4c4036"/>
+      <stop offset=".56" stop-color="#1d1a18"/>
+      <stop offset="1" stop-color="#0c0b0b"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#b9b5a8"/>
+      <stop offset=".42" stop-color="#5f6563"/>
+      <stop offset="1" stop-color="#15191a"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="50%" cy="44%" r="60%">
+      <stop offset="0" stop-color="#6b6048" stop-opacity=".30"/>
+      <stop offset="1" stop-color="#6b6048" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+<path d="M25 240 C72 252 150 252 195 240" fill="#000" opacity=".24"/>
+<g filter="url(#softShadow)">
+
+      <path d="M101 109 C55 69 19 92 7 149 C56 151 92 139 112 116 Z" fill="#ead7af" opacity="0.82"/>
+      <path d="M119 112 C161 68 203 91 214 151 C163 151 132 139 112 118 Z" fill="#ead7af" opacity="0.82"/>
+      <path d="M84 86 C100 62 130 63 145 88 L139 173 C122 193 96 190 79 172 Z" fill="#d7c28b"/>
+      <path d="M108 61 C124 50 145 58 151 76 L124 87 Z" fill="#d7c28b"/>
+      <path d="M143 76 L198 85 L149 99 Z" fill="#6b6048"/>
+      <path d="M101 167 L80 234 M123 168 L148 234" stroke="#241d18" stroke-width="8" stroke-linecap="round"/>
+      <path d="M28 130 C62 123 91 115 112 102" fill="none" stroke="#6b6048" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+      <path d="M194 132 C160 124 132 116 111 103" fill="none" stroke="#6b6048" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+    
+</g>
+<path d="M33 250 C78 258 140 258 187 250" fill="none" stroke="#b88935" stroke-width="1.8" opacity=".18"/>
+</svg>

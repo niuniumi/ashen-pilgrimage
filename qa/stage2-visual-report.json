@@ -1,0 +1,30 @@
+{
+  "url": "http://127.0.0.1:4173",
+  "errors": [],
+  "screenshots": [
+    "qa/screenshots/menu_polished.png",
+    "qa/screenshots/character_select_polished.png",
+    "qa/screenshots/map_polished.png",
+    "qa/screenshots/battle_polished.png",
+    "qa/screenshots/battle_card_selected.png",
+    "qa/screenshots/battle_attack_animation.png",
+    "qa/screenshots/battle_pause_menu.png",
+    "qa/screenshots/pause_battle.png",
+    "qa/screenshots/pause_settings.png",
+    "qa/screenshots/pause_confirm_return_menu.png",
+    "qa/screenshots/codex_polished_cards.png",
+    "qa/screenshots/codex_polished_relics.png",
+    "qa/screenshots/codex_polished_enemies.png",
+    "qa/screenshots/reward_polished.png",
+    "qa/screenshots/shop_polished.png",
+    "qa/screenshots/event_polished.png",
+    "qa/screenshots/rest_polished.png",
+    "qa/screenshots/chest_polished.png",
+    "qa/screenshots/result_victory.png",
+    "qa/screenshots/result_defeat.png",
+    "qa/screenshots/stage2_1536x864.png",
+    "qa/screenshots/stage2_1366x768.png",
+    "qa/screenshots/stage2_1280x720.png"
+  ],
+  "generatedAt": "2026-06-29T11:21:00.183Z"
+}

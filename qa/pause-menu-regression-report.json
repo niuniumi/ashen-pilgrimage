@@ -1,0 +1,51 @@
+{
+  "url": "http://127.0.0.1:4176",
+  "generatedAt": "2026-07-10T13:33:40.649Z",
+  "cases": [
+    {
+      "name": "return-map-cancels-active-node-and-can-start-next-node",
+      "activeScenes": [
+        "MapScene"
+      ],
+      "activeNode": null,
+      "path": [],
+      "selectableCount": 1,
+      "savedActiveNode": null,
+      "hasSavedRun": true,
+      "clickedNode": {
+        "nodeId": "n0",
+        "nodeType": "battle",
+        "sceneKey": "BattleScene"
+      },
+      "ok": true
+    },
+    {
+      "name": "pause-menu-open-close-resumes-battle",
+      "opened": true,
+      "closed": true,
+      "battleActive": true,
+      "ok": true
+    },
+    {
+      "name": "main-menu-save-continues-to-playable-map",
+      "activeScenes": [
+        "MapScene"
+      ],
+      "activeNode": null,
+      "path": [],
+      "selectableCount": 1,
+      "savedActiveNode": null,
+      "hasSavedRun": true,
+      "ok": true
+    },
+    {
+      "name": "restart-clears-run-and-opens-character-select",
+      "hasSavedRun": false,
+      "activeScenes": [
+        "CharacterSelectScene"
+      ],
+      "ok": true
+    }
+  ],
+  "errors": []
+}

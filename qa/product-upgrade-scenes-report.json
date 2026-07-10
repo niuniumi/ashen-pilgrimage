@@ -1,0 +1,22 @@
+{
+  "version": "v0.5.0-final-art-rescue",
+  "url": "http://127.0.0.1:4176",
+  "generatedAt": "2026-07-10T12:56:31.628Z",
+  "screenshots": [
+    "qa/screenshots/product_upgrade/01_menu.png",
+    "qa/screenshots/product_upgrade/02_character_select.png",
+    "qa/screenshots/product_upgrade/03_vow.png",
+    "qa/screenshots/product_upgrade/04_map.png",
+    "qa/screenshots/product_upgrade/05_battle.png",
+    "qa/screenshots/product_upgrade/06_reward.png",
+    "qa/screenshots/product_upgrade/07_shop.png",
+    "qa/screenshots/product_upgrade/08_event.png",
+    "qa/screenshots/product_upgrade/09_rest.png",
+    "qa/screenshots/product_upgrade/10_codex.png",
+    "qa/screenshots/product_upgrade/11_settings.png",
+    "qa/screenshots/product_upgrade/battle_1536x864.png",
+    "qa/screenshots/product_upgrade/battle_1366x768.png",
+    "qa/screenshots/product_upgrade/battle_1280x720.png"
+  ],
+  "errors": []
+}

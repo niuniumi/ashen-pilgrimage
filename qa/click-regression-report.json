@@ -1,0 +1,82 @@
+[
+  {
+    "viewport": "letterbox-1567x1207",
+    "canvasRect": {
+      "x": 0,
+      "y": 243.78125,
+      "width": 1567,
+      "height": 881.4375
+    },
+    "selected": "exiled-knight",
+    "tutorialStep": 1,
+    "tutorialOpen": false,
+    "selectedCard": true,
+    "beforeHp": 32,
+    "afterHp": 26,
+    "activeScenes": [
+      "BattleScene"
+    ],
+    "errors": [],
+    "ok": true
+  },
+  {
+    "viewport": "desktop-1920x1080",
+    "canvasRect": {
+      "x": 0,
+      "y": 0,
+      "width": 1920,
+      "height": 1080
+    },
+    "selected": "exiled-knight",
+    "tutorialStep": 1,
+    "tutorialOpen": false,
+    "selectedCard": true,
+    "beforeHp": 42,
+    "afterHp": 36,
+    "activeScenes": [
+      "BattleScene"
+    ],
+    "errors": [],
+    "ok": true
+  },
+  {
+    "viewport": "laptop-1366x768",
+    "canvasRect": {
+      "x": 0.328125,
+      "y": 0,
+      "width": 1365.328125,
+      "height": 768
+    },
+    "selected": "exiled-knight",
+    "tutorialStep": 1,
+    "tutorialOpen": false,
+    "selectedCard": true,
+    "beforeHp": 28,
+    "afterHp": 22,
+    "activeScenes": [
+      "BattleScene"
+    ],
+    "errors": [],
+    "ok": true
+  },
+  {
+    "viewport": "hd-1280x720",
+    "canvasRect": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 720
+    },
+    "selected": "exiled-knight",
+    "tutorialStep": 1,
+    "tutorialOpen": false,
+    "selectedCard": true,
+    "beforeHp": 32,
+    "afterHp": 26,
+    "activeScenes": [
+      "BattleScene"
+    ],
+    "errors": [],
+    "ok": true
+  }
+]

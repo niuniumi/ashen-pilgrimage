@@ -1,0 +1,11 @@
+{
+  "url": "http://127.0.0.1:4173",
+  "errors": [],
+  "screenshots": [
+    "qa/screenshots/battle_scene_fixed_round_1.png",
+    "qa/screenshots/battle_1536x864.png",
+    "qa/screenshots/battle_1366x768.png",
+    "qa/screenshots/battle_1280x720.png"
+  ],
+  "generatedAt": "2026-06-29T11:21:52.602Z"
+}

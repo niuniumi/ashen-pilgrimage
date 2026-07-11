@@ -265,8 +265,8 @@ export default class MapScene extends Phaser.Scene {
   drawMap() {
     this.mapMaxRow = Math.max(1, ...this.run.map.nodes.map((item) => item.row ?? 0));
     this.compactMap = this.mapMaxRow >= 11;
-    const routeLayer = this.add.graphics();
-    routeLayer.setAlpha(0);
+    const routeLayer = this.add.graphics().setDepth(10);
+    routeLayer.setAlpha(0.46);
     for (const node of this.run.map.nodes) {
       for (const link of node.links) {
         const target = MapSystem.getNode(this.run, link);
@@ -279,10 +279,11 @@ export default class MapScene extends Phaser.Scene {
   }
 
   nodePosition(node) {
-    const t = (node.x - SOURCE_X_MIN) / (SOURCE_X_MAX - SOURCE_X_MIN);
+    const t = Phaser.Math.Clamp((Number(node.x) - SOURCE_X_MIN) / (SOURCE_X_MAX - SOURCE_X_MIN), 0, 1);
+    const rowProgress = Phaser.Math.Clamp((Number(node.row) || 0) / (this.mapMaxRow ?? 1), 0, 1);
     return {
       x: Phaser.Math.Linear(MAP_BOUNDS.xMin, MAP_BOUNDS.xMax, t),
-      y: Phaser.Math.Linear(MAP_BOUNDS.yBottom, MAP_BOUNDS.yTop, (node.row ?? 0) / (this.mapMaxRow ?? 1))
+      y: Phaser.Math.Linear(MAP_BOUNDS.yBottom, MAP_BOUNDS.yTop, rowProgress)
     };
   }
 
@@ -315,8 +316,9 @@ export default class MapScene extends Phaser.Scene {
     const completed = this.run.map.completed.includes(node.id);
     const compact = this.compactMap;
     const container = this.add.container(pos.x, pos.y);
-    container.setAlpha(0);
+    container.setAlpha(1);
     container.setScale(0.86);
+    container.setDepth(20);
     if (!hasTexture(this, HANDPAINTED_KEYS.ui)) {
       const seal = this.add.graphics();
       seal.fillStyle(completed ? 0x3a2d20 : 0x6a3d20, completed ? 0.42 : 0.82);
@@ -350,7 +352,6 @@ export default class MapScene extends Phaser.Scene {
     this.nodeViews.push({ id: node.id, type: node.type, x: pos.x, y: pos.y, selectable, completed });
     this.tweens.add({
       targets: container,
-      alpha: 1,
       scale: selectable ? 1.08 : 1,
       delay: (node.row ?? 0) * 56,
       duration: 280,

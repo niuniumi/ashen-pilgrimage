@@ -70,7 +70,7 @@ test('new runs persist a versioned seed and random cursor', () => {
   const run = createNewRun('exiled-knight', { seed: 314159 });
   const replay = createNewRun('exiled-knight', { seed: 314159 });
 
-  assert.equal(run.version, 2);
+  assert.equal(run.version, 3);
   assert.equal(run.seed, 314159);
   assert.ok(run.rngState.cursor > 0);
   assert.deepEqual(run.rngState, replay.rngState);

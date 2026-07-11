@@ -1,5 +1,13 @@
 # Deployment
 
+## Current Production
+
+- Platform: GitHub Pages
+- Site URL: <https://niuniumi.github.io/ashen-pilgrimage/>
+- Source: `main` branch via `.github/workflows/pages.yml`
+- Build base: `/ashen-pilgrimage/`
+- Netlify remains configured as a secondary target, but returned `503 usage_exceeded` during the v1.1.1 release.
+
 Version: `v0.5.0-final-art-rescue`
 
 ## Platform

@@ -15,11 +15,11 @@ const root = process.cwd();
 const outDir = path.join(root, 'qa', 'screenshots');
 fs.mkdirSync(outDir, { recursive: true });
 
-const URL = process.env.DEPLOY_URL ?? process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'https://ashen-pilgrimage-stage2.netlify.app/';
+const URL = process.env.DEPLOY_URL ?? process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'https://niuniumi.github.io/ashen-pilgrimage/';
 const roles = [
-  { slug: 'knight', id: 'exiled-knight', select: { x: 292, y: 460 }, shot: 'deploy_art_final_battle.png' },
-  { slug: 'nun', id: 'candle-nun', select: { x: 632, y: 460 }, shot: 'deploy_nun_battle.png' },
-  { slug: 'alchemist', id: 'ashblood-alchemist', select: { x: 966, y: 460 }, shot: 'deploy_alchemist_battle.png' }
+  { slug: 'knight', id: 'exiled-knight', shot: 'deploy_art_final_battle.png' },
+  { slug: 'nun', id: 'candle-nun', shot: 'deploy_nun_battle.png' },
+  { slug: 'alchemist', id: 'ashblood-alchemist', shot: 'deploy_alchemist_battle.png' }
 ];
 const report = { url: URL, buildVersion: BUILD_VERSION, generatedAt: new Date().toISOString(), screenshots: [], roles: [], errors: [] };
 
@@ -32,7 +32,11 @@ function assert(value, message) {
 }
 
 async function waitScene(page, sceneKey) {
-  await page.waitForFunction((key) => window.__ASHEN_GAME__?.scene?.getScenes(true).some((scene) => scene.scene.key === key), sceneKey);
+  await page.waitForFunction(
+    (key) => window.__ASHEN_GAME__?.scene?.getScenes(true).some((scene) => scene.scene.key === key),
+    sceneKey,
+    { timeout: 120_000 }
+  );
 }
 
 async function canvasRect(page) {
@@ -92,8 +96,8 @@ async function openCleanPage(browser, { storySeen = false } = {}) {
   page.on('console', (message) => {
     if (message.type() === 'error') report.errors.push(`console: ${message.text()}`);
   });
-  await page.goto(URL, { waitUntil: 'networkidle' });
-  await page.waitForSelector('canvas');
+  await page.goto(URL, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('canvas', { state: 'visible', timeout: 120_000 });
   return { context, page };
 }
 
@@ -101,8 +105,13 @@ async function startRoleBattle(page, role) {
   await waitScene(page, 'MainMenuScene');
   await clickGame(page, 1190, 386, 420);
   await waitScene(page, 'CharacterSelectScene');
-  await clickGame(page, role.select.x, role.select.y, 260);
-  await clickGame(page, 1324, 798, 650);
+  await page.evaluate((characterId) => {
+    const scene = window.__ASHEN_GAME__.scene.keys.CharacterSelectScene;
+    scene.selectCharacter(characterId);
+    scene.startRun();
+  }, role.id);
+  await waitScene(page, 'VowScene');
+  await page.evaluate(() => window.__ASHEN_QA__.chooseVow(0));
   await waitScene(page, 'MapScene');
   if (role.slug === 'knight') await screenshot(page, 'deploy_art_final_map.png');
   const node = await firstSelectableNode(page);
@@ -122,7 +131,7 @@ try {
     await clickGame(page, 1190, 386, 420);
     await waitScene(page, 'PrologueScene');
     await screenshot(page, 'deploy_release_prologue.png');
-    await clickGame(page, 1238, 558, 420);
+    await clickGame(page, 1388, 58, 420);
     await waitScene(page, 'CharacterSelectScene');
     await screenshot(page, 'deploy_art_final_character.png');
     await context.close();

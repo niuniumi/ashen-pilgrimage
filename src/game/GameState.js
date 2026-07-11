@@ -1,5 +1,6 @@
 import { findCharacter } from '../data/characters.js';
 import { MapSystem } from '../systems/MapSystem.js';
+import { CURRENT_RUN_VERSION } from './RunMigration.js';
 import { createRngState } from './RunRng.js';
 
 let nextUid = 1;
@@ -26,7 +27,7 @@ export function createNewRun(characterId, options = {}) {
   const seed = Number.isFinite(options.seed) ? Number(options.seed) >>> 0 : Date.now() >>> 0;
   const generatedMap = MapSystem.createSeededMap(1, createRngState(seed));
   return {
-    version: 2,
+    version: CURRENT_RUN_VERSION,
     id: `run-${Date.now()}`,
     seed,
     rngState: generatedMap.state,

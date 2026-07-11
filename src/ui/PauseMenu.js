@@ -138,29 +138,6 @@ export class PauseMenu {
     this.settings = SaveManager.readSettings();
     const rows = [
       ['音效', 'sound'],
-      ['动画', 'animation'],
-      ['快速模式', 'fastMode']
-    ];
-    rows.forEach(([label, key], index) => {
-      const value = Boolean(this.settings[key]);
-      this.addButton(-118 + index * 58, `${label}：${value ? '开启' : '关闭'}`, () => {
-        this.settings[key] = !this.settings[key];
-        SaveManager.saveSettings(this.settings);
-        this.redraw('settings');
-      }, { fill: value ? THEME.colors.iron : 0x382c27 });
-    });
-    this.addButton(74, '重新开启教程', () => {
-      SaveManager.resetTutorial();
-      this.redraw('settings');
-    });
-    this.addButton(132, '清除存档', () => this.redraw('confirm-clear'), { fill: 0x4a2522 });
-    this.addButton(202, '返回暂停菜单', () => this.redraw('main'));
-  }
-
-  drawSettings() {
-    this.settings = SaveManager.readSettings();
-    const rows = [
-      ['音效', 'sound'],
       ['音乐', 'music'],
       ['静音', 'muted'],
       ['动画', 'animation'],

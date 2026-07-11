@@ -20,3 +20,18 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm build
+      - name: Verify legacy map migration in browser
+        run: |
+          pnpm run preview -- --host 127.0.0.1 --port 4173 &
+          preview_pid=$!
+          trap 'kill $preview_pid' EXIT
+          ready=0
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          pnpm run qa:map-migration

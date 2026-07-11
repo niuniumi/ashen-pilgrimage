@@ -20,9 +20,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm build
+      - name: Install Chromium for browser regression
+        run: pnpm exec playwright install --with-deps chromium
       - name: Verify legacy map migration in browser
         run: |
-          pnpm run preview -- --host 127.0.0.1 --port 4173 &
+          pnpm exec vite preview --host 127.0.0.1 --port 4173 &
           preview_pid=$!
           trap 'kill $preview_pid' EXIT
           ready=0

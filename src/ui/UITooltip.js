@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
-import { COLORS } from '../game/constants.js';
-
-const FONT = 'Georgia, "Microsoft YaHei", serif';
+import { FONT } from '../design/textStyles.js';
+import { PIXEL_PALETTE, snapPixel } from '../art/PixelArtSystem.js';
 
 export class UITooltip extends Phaser.GameObjects.Container {
   constructor(scene) {
@@ -26,12 +25,14 @@ export class UITooltip extends Phaser.GameObjects.Container {
     const w = Math.max(160, bounds.width + 26);
     const h = Math.max(44, bounds.height + 22);
     this.bg.clear();
-    this.bg.fillStyle(0x070604, 0.54);
-    this.bg.fillRoundedRect(-15, -8 + 4, w, h, 7);
-    this.bg.fillStyle(COLORS.deep, 0.96);
-    this.bg.fillRoundedRect(-12, -10, w, h, 7);
-    this.bg.lineStyle(2, 0x9d7438, 0.86);
-    this.bg.strokeRoundedRect(-12, -10, w, h, 7);
+    const width = snapPixel(w);
+    const height = snapPixel(h);
+    this.bg.fillStyle(PIXEL_PALETTE.void, 0.7);
+    this.bg.fillRect(-8, -4, width, height);
+    this.bg.fillStyle(PIXEL_PALETTE.goldDark, 1);
+    this.bg.fillRect(-12, -8, width, height);
+    this.bg.fillStyle(PIXEL_PALETTE.black, 0.98);
+    this.bg.fillRect(-8, -4, width - 8, height - 8);
     this.setPosition(Math.min(x, 1536 - w - 24), Math.min(y, 864 - h - 24));
     this.setVisible(true);
   }

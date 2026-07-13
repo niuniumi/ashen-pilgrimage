@@ -3,6 +3,8 @@ import { COLORS, GAME_WIDTH, SCENES } from '../game/constants.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UIPanel } from '../ui/UIPanel.js';
 import { addBackButton, addSceneTitle, attachSceneServices, drawGameBackdrop } from './SceneHelpers.js';
+import { FONT } from '../design/textStyles.js';
+import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 
 const pages = [
   {
@@ -63,20 +65,22 @@ export default class GuideScene extends Phaser.Scene {
     drawGameBackdrop(this, 'parchment');
     addSceneTitle(this, '旅途指南', '羊皮纸冒险手册');
     addBackButton(this);
-    this.panel = new UIPanel(this, 768, 450, 1120, 590, { fill: 0xb99155, alpha: 0.62, stroke: COLORS.deep });
+    this.panel = new UIPanel(this, 768, 450, 1120, 590, { fill: PIXEL_PALETTE.coal, alpha: 0.96, stroke: PIXEL_PALETTE.goldDark });
     this.heading = this.add
       .text(768, 236, '', {
-        fontFamily: 'Georgia, "Microsoft YaHei", serif',
+        fontFamily: FONT,
         fontSize: 38,
-        color: '#2b170d',
-        align: 'center'
+        color: '#f4e7c5',
+        align: 'center',
+        stroke: '#08090d',
+        strokeThickness: 4
       })
       .setOrigin(0.5);
     this.body = this.add
       .text(348, 324, '', {
-        fontFamily: 'Georgia, "Microsoft YaHei", serif',
+        fontFamily: FONT,
         fontSize: 23,
-        color: '#2b170d',
+        color: '#d6c7a5',
         align: 'left',
         lineSpacing: 13,
         wordWrap: { width: 840, useAdvancedWrap: true }
@@ -84,9 +88,9 @@ export default class GuideScene extends Phaser.Scene {
       .setOrigin(0, 0);
     this.pageText = this.add
       .text(768, 684, '', {
-        fontFamily: 'Georgia, "Microsoft YaHei", serif',
+        fontFamily: FONT,
         fontSize: 20,
-        color: '#4e321d'
+        color: '#b99862'
       })
       .setOrigin(0.5);
     new UIButton(this, 610, 748, 170, 52, '上一步', () => this.changePage(-1), { fontSize: 22 });

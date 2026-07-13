@@ -12,6 +12,7 @@ import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { drawHeroArt } from '../ui/UICharacterArt.js';
 import { attachSceneServices } from './SceneHelpers.js';
 import { addHandPaintedBackground, addVfxAsset, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
+import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 
 export default class ResultScene extends Phaser.Scene {
   constructor() {
@@ -163,21 +164,21 @@ export default class ResultScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    new UIFrame(this, 745, 414, 360, 250, { fill: 0x21140f, alpha: 0.92, stroke: THEME.colors.darkGold });
-    this.add.text(745, 318, '旅途统计', titleStyle(25)).setOrigin(0.5);
+    new UIFrame(this, 720, 414, 330, 250, { fill: 0x21140f, alpha: 0.92, stroke: THEME.colors.darkGold });
+    this.add.text(720, 318, '旅途统计', titleStyle(25)).setOrigin(0.5);
     this.add
-      .text(590, 360, `使用角色：${run.characterName ?? '未知'}\n到达进度：${formatRunProgress(run)}\n击败敌人：${run.kills ?? 0}\n遗物 / 誓约：${run.relics?.length ?? 0} / ${run.vows?.length ?? 0}\n最终金币：${run.gold ?? 0}\n用时：${elapsed} 秒`, {
+      .text(580, 360, `使用角色：${run.characterName ?? '未知'}\n到达进度：${formatRunProgress(run)}\n击败敌人：${run.kills ?? 0}\n遗物 / 誓约：${run.relics?.length ?? 0} / ${run.vows?.length ?? 0}\n最终金币：${run.gold ?? 0}\n用时：${elapsed} 秒`, {
         ...textStyle(20, THEME.css.body, { lineSpacing: 9 }),
         wordWrap: { width: 300 }
       })
       .setOrigin(0, 0);
 
-    new UIFrame(this, 970, 548, 360, 220, { fill: 0x21140f, alpha: 0.92, stroke: THEME.colors.darkGold });
-    this.add.text(970, 468, '最终卡组', titleStyle(25)).setOrigin(0.5);
+    new UIFrame(this, 1040, 548, 280, 220, { fill: 0x21140f, alpha: 0.92, stroke: THEME.colors.darkGold });
+    this.add.text(1040, 468, '最终卡组', titleStyle(25)).setOrigin(0.5);
     this.add
-      .text(820, 508, deckNames || '无', {
+      .text(920, 508, deckNames || '无', {
         ...textStyle(17, THEME.css.muted, { lineSpacing: 6 }),
-        wordWrap: { width: 300 }
+        wordWrap: { width: 240 }
       })
       .setOrigin(0, 0);
 
@@ -199,52 +200,27 @@ export default class ResultScene extends Phaser.Scene {
       new UIIcon(this, 420, 652, 'flame', { size: 72 });
       return;
     }
-    if (this.textures.exists('generated-defeat-tombstone')) {
-      const shadow = this.add.ellipse(420, 646, 294, 38, 0x080607, 0.68).setDepth(5);
-      const figure = this.add
-        .image(420, 640, 'generated-defeat-tombstone')
-        .setOrigin(0.5, 1)
-        .setDisplaySize(318, 318)
-        .setDepth(6);
-      if (SaveManager.readSettings().animation !== false) {
-        const targetScaleX = figure.scaleX;
-        const targetScaleY = figure.scaleY;
-        figure.setPosition(420, 676).setAlpha(0).setScale(targetScaleX * 0.92, targetScaleY * 0.92);
-        shadow.setAlpha(0).setScale(0.72, 0.72);
-        this.tweens.add({
-          targets: figure,
-          y: 640,
-          alpha: 1,
-          scaleX: targetScaleX,
-          scaleY: targetScaleY,
-          duration: 520,
-          ease: 'Back.Out'
-        });
-        this.tweens.add({
-          targets: shadow,
-          alpha: 0.68,
-          scaleX: 1,
-          scaleY: 1,
-          duration: 420,
-          ease: 'Sine.Out'
-        });
-      }
-      return;
-    }
     const g = this.add.graphics().setDepth(6);
-    g.fillStyle(0x1b1512, 0.56);
-    g.fillEllipse(420, 654, 280, 34);
-    g.fillStyle(0x726757, 0.96);
-    g.fillRoundedRect(364, 394, 112, 214, 46);
-    g.fillStyle(0x3a3028, 0.5);
-    g.fillRoundedRect(380, 422, 80, 154, 26);
-    g.lineStyle(4, 0x2b241f, 0.82);
-    g.strokeRoundedRect(364, 394, 112, 214, 46);
-    g.lineStyle(5, 0x8a6a35, 0.72);
-    g.lineBetween(420, 436, 420, 522);
-    g.lineBetween(388, 468, 452, 468);
-    g.lineStyle(8, 0x6e2f25, 0.76);
-    g.lineBetween(318, 626, 522, 596);
+    g.fillStyle(PIXEL_PALETTE.void, 0.72);
+    g.fillRect(288, 632, 264, 20);
+    g.fillStyle(0x24272d, 1);
+    g.fillRect(356, 406, 128, 208);
+    g.fillRect(372, 382, 96, 28);
+    g.fillRect(388, 366, 64, 20);
+    g.fillStyle(0x56606a, 1);
+    g.fillRect(364, 414, 112, 12);
+    g.fillRect(364, 430, 8, 168);
+    g.fillStyle(0x11131a, 0.72);
+    g.fillRect(380, 446, 80, 136);
+    g.fillStyle(PIXEL_PALETTE.goldDark, 0.7);
+    g.fillRect(412, 466, 16, 84);
+    g.fillRect(388, 494, 64, 16);
+    g.fillStyle(PIXEL_PALETTE.blood, 0.86);
+    g.fillRect(324, 594, 28, 20);
+    g.fillRect(488, 584, 36, 24);
+    g.fillStyle(PIXEL_PALETTE.bone, 0.72);
+    g.fillRect(332, 574, 4, 24);
+    g.fillRect(504, 566, 4, 24);
   }
 
   formatDeckNames(deck) {

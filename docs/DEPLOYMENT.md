@@ -1,119 +1,58 @@
 # Deployment
 
-## Current Production
+## Production
 
 - Platform: GitHub Pages
-- Site URL: <https://niuniumi.github.io/ashen-pilgrimage/>
-- Source: `main` branch via `.github/workflows/pages.yml`
-- Build base: `/ashen-pilgrimage/`
-- Netlify remains configured as a secondary target, but returned `503 usage_exceeded` during the v1.1.1 release.
+- Site: <https://niuniumi.github.io/ashen-pilgrimage/>
+- Repository: <https://github.com/niuniumi/ashen-pilgrimage>
+- Source: `main` branch through `.github/workflows/pages.yml`
+- Version: `v2.0.0-pixel-rebuild`
+- Vite base path: `/ashen-pilgrimage/`
 
-Version: `v0.5.0-final-art-rescue`
+Netlify is not the production target. The historical Netlify site reached its account usage limit, so the canonical release now uses GitHub Pages and GitHub Actions.
 
-## Platform
+## Release Gate
 
-Netlify
-
-## Site
-
-- Project name: `ashen-pilgrimage-stage2`
-- Site id: `83e14dfc-0695-481f-b80f-2bb7ab18d467`
-- Site URL: <https://ashen-pilgrimage-stage2.netlify.app/>
-- Netlify project page: <https://app.netlify.com/projects/ashen-pilgrimage-stage2>
-
-## Local Build
-
-Commands:
+Run from a clean dependency install:
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
+pnpm test
+pnpm run qa:content-schema
+pnpm run qa:asset-manifest
+pnpm run qa:visual-bindings
+pnpm run qa:battle-mechanics
+pnpm run qa:simulation
 pnpm run build
 ```
 
-Result:
-
-- `pnpm install`: passed, lockfile unchanged.
-- `pnpm run build`: passed.
-- Warning: Vite chunk size exceeds 500 kB after minification. This is recorded as a non-blocking bundle-size warning.
-- Preview used for QA: <http://127.0.0.1:4175/>
-
-Publish directory:
-
-```text
-dist
-```
-
-## QA Before Deploy
-
-Commands:
+Start the production preview, then run browser regressions:
 
 ```bash
-node scripts/qa-final-art-rescue.mjs --url=http://127.0.0.1:4175/
-node scripts/qa-role-matrix.mjs --url=http://127.0.0.1:4175/
-node scripts/qa-release-flow.mjs --url=http://127.0.0.1:4175/
+pnpm run preview -- --host 127.0.0.1 --port 4173
+pnpm run qa:map-migration
+pnpm run qa:progression
+pnpm run qa:resume-stages
+pnpm run qa:pixel-scenes
+pnpm run qa:role-matrix
+pnpm run qa:release-flow
 ```
 
-Results:
+## Automated Publish
 
-- Final art rescue QA: passed, 17 screenshots.
-- Role matrix QA: passed, 9 screenshots.
-- Release flow QA: passed, 26 steps and 27 screenshots.
+Pushing `main` starts two workflows:
 
-Reports:
+1. `CI` runs unit, content, asset and browser persistence regressions.
+2. `Deploy GitHub Pages` repeats the core release gate, builds with the repository base path and publishes `dist/`.
 
-- `docs/FINAL_ART_RESCUE_QA.md`
-- `docs/FINAL_ART_RESCUE_REPORT.md`
-- `qa/final-art-rescue-report.json`
-- `qa/role-matrix-report.json`
-- `qa/release-flow-report.json`
-
-## Deploy
-
-Deployment was triggered through the Netlify MCP upload command returned for the existing site.
-
-- Deploy id: `6a435324415b73a0ca63421e`
-- Build id: `6a435323415b73a0ca63421c`
-- Deploy state: ready
-- Site URL: <https://ashen-pilgrimage-stage2.netlify.app/>
-- Deploy permalink: <https://6a435324415b73a0ca63421e--ashen-pilgrimage-stage2.netlify.app/>
-
-## Online Smoke
-
-Commands:
+After both workflows pass, verify production with:
 
 ```bash
-node scripts/qa-final-art-rescue.mjs --url=https://ashen-pilgrimage-stage2.netlify.app/ --deploy
-node scripts/qa-deploy-smoke.mjs --url=https://ashen-pilgrimage-stage2.netlify.app/
+pnpm run qa:deploy-smoke -- --url=https://niuniumi.github.io/ashen-pilgrimage/
 ```
 
-Results:
+The smoke check must confirm the v2.0 version label, main menu, character selection, map, battle and pause flow without browser console errors.
 
-- Final art rescue deploy QA: passed, 4 screenshots.
-- Deploy smoke: passed, 8 screenshots.
-- Confirmed main menu shows `v0.5.0-final-art-rescue`.
-- Confirmed character select, map, battle, pause, nun battle, and alchemist battle open online.
-- Confirmed no white screen and no browser console errors in smoke script.
+## Bundle Note
 
-Required online screenshots:
-
-- `qa/screenshots/final_art_rescue/deploy_menu.png`
-- `qa/screenshots/final_art_rescue/deploy_character_select.png`
-- `qa/screenshots/final_art_rescue/deploy_battle.png`
-- `qa/screenshots/final_art_rescue/deploy_map.png`
-
-Additional online screenshots:
-
-- `qa/screenshots/deploy_art_final_menu.png`
-- `qa/screenshots/deploy_release_prologue.png`
-- `qa/screenshots/deploy_art_final_character.png`
-- `qa/screenshots/deploy_art_final_map.png`
-- `qa/screenshots/deploy_art_final_battle.png`
-- `qa/screenshots/deploy_art_final_pause.png`
-- `qa/screenshots/deploy_nun_battle.png`
-- `qa/screenshots/deploy_alchemist_battle.png`
-
-## Known Issues
-
-- Current art is local generated SVG texture art, not professional hand-drawn or animated frame art.
-- Phaser/Vite single bundle still exceeds 500 kB after minification.
-- Mobile touch and low-end device long-run performance were not part of this final art rescue pass.
+Phaser is shipped in the main JavaScript bundle, so Vite currently reports a non-blocking chunk-size warning. Production images and audio were reduced from the previous mixed-asset build, and obsolete hand-painted, SVG and generated runtime directories are no longer published.

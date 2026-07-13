@@ -15,7 +15,7 @@ export function hitFlash(scene, target, color = 0xff2f2f) {
   if (!seq.length) {
     const flash = scene.add.graphics().setDepth(745);
     flash.fillStyle(color, 0.28);
-    flash.fillEllipse(target.x, target.y - 18, 150, 210);
+    flash.fillRect(target.x - 72, target.y - 122, 144, 208);
     scene.tweens.add({
       targets: flash,
       alpha: 0,

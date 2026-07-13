@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
+import { FONT } from '../design/textStyles.js';
 
-const FONT = 'Georgia, "Microsoft YaHei", serif';
 
 export function spawnDamageText(scene, x, y, amount, kind = 'damage') {
   const color = {

@@ -1,56 +1,30 @@
 import { THEME } from '../game/Theme.js';
 import { addUiAsset, addVfxAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
+import { FONT } from '../design/textStyles.js';
+import { PIXEL_PALETTE, drawPixelDivider, snapPixel } from '../art/PixelArtSystem.js';
 
 export function drawDivider(scene, x, y, width, options = {}) {
-  if (hasTexture(scene, HANDPAINTED_KEYS.ui)) {
-    return addUiAsset(scene, 'divider', x, y, {
-      displayWidth: width,
-      displayHeight: Math.max(18, width * 0.11),
-      alpha: options.alpha ?? 0.9,
-      depth: options.depth
-    });
-  }
   const g = scene.add.graphics();
   const color = options.color ?? THEME.colors.darkGold;
-  g.lineStyle(1, color, options.alpha ?? 0.54);
-  g.lineBetween(x - width / 2, y, x + width / 2, y);
-  g.fillStyle(color, 0.7);
-  g.fillCircle(x - width / 2, y, 3);
-  g.fillCircle(x + width / 2, y, 3);
-  g.fillTriangle(x - 8, y, x, y - 5, x + 8, y);
-  g.fillTriangle(x - 8, y, x, y + 5, x + 8, y);
+  drawPixelDivider(g, x, y, width, color, options.alpha ?? 0.8);
+  if (Number.isFinite(options.depth)) g.setDepth(options.depth);
   return g;
 }
 
 export function drawWaxSeal(scene, x, y, radius = 24, color = THEME.colors.blood) {
-  if (hasTexture(scene, HANDPAINTED_KEYS.ui)) {
-    return addUiAsset(scene, 'waxSeal', x, y, {
-      displayWidth: radius * 2.25,
-      displayHeight: radius * 2,
-      alpha: 0.96
-    });
-  }
   const g = scene.add.graphics();
+  const size = snapPixel(radius * 2);
+  g.fillStyle(PIXEL_PALETTE.void, 0.8);
+  g.fillRect(snapPixel(x - size / 2 + 4), snapPixel(y - size / 2 + 4), size, size);
   g.fillStyle(color, 0.95);
-  g.fillCircle(x, y, radius);
-  g.fillStyle(0x5a1714, 0.35);
-  g.fillCircle(x + radius * 0.22, y - radius * 0.18, radius * 0.64);
-  g.lineStyle(2, THEME.colors.candle, 0.48);
-  g.strokeCircle(x, y, radius - 4);
-  g.lineStyle(2, 0xf1c76a, 0.7);
-  g.lineBetween(x - radius * 0.45, y, x + radius * 0.45, y);
-  g.lineBetween(x, y - radius * 0.45, x, y + radius * 0.45);
+  g.fillRect(snapPixel(x - size / 2), snapPixel(y - size / 2), size, size);
+  g.fillStyle(PIXEL_PALETTE.gold, 0.72);
+  g.fillRect(snapPixel(x - radius * 0.45), snapPixel(y - 2), snapPixel(radius * 0.9), 4);
+  g.fillRect(snapPixel(x - 2), snapPixel(y - radius * 0.45), 4, snapPixel(radius * 0.9));
   return g;
 }
 
 export function drawCandle(scene, x, y, scale = 1) {
-  if (hasTexture(scene, HANDPAINTED_KEYS.vfx)) {
-    return addVfxAsset(scene, 'blessingA', x, y + 12 * scale, {
-      displayWidth: 92 * scale,
-      displayHeight: 82 * scale,
-      alpha: 0.82
-    });
-  }
   const g = scene.add.graphics();
   g.fillStyle(0xd9c28f, 0.95);
   g.fillRoundedRect(x - 8 * scale, y, 16 * scale, 46 * scale, 4 * scale);
@@ -89,7 +63,7 @@ export function drawBackArrowButton(scene, x, y, label, onClick, options = {}) {
     ? scene.add.image(0, 0, key).setOrigin(0.5).setDisplaySize(w, h).setAlpha(options.alpha ?? 0.96)
     : scene.add
         .text(0, 0, direction === 'right' ? '›' : '‹', {
-          fontFamily: 'Georgia, "Microsoft YaHei", serif',
+        fontFamily: FONT,
           fontSize: Math.max(42, h),
           color: '#f6d78a',
           stroke: '#2b1a12',

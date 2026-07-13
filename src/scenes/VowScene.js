@@ -6,7 +6,7 @@ import { addHandPaintedBackground, addVfxAsset, HANDPAINTED_KEYS } from '../art/
 import { VowSystem } from '../systems/VowSystem.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UIFrame } from '../ui/UIFrame.js';
-import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
+import { drawDivider, drawVignette, drawWaxSeal } from '../ui/UIOrnament.js';
 import { attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
 
 export default class VowScene extends Phaser.Scene {
@@ -31,7 +31,11 @@ export default class VowScene extends Phaser.Scene {
     drawDivider(this, GAME_WIDTH / 2, 158, 620);
 
     if (offer.length === 0) {
-      new UIButton(this, GAME_WIDTH / 2, 520, 240, 58, '进入路线', () => this.scene.start(SCENES.Map));
+      new UIButton(this, GAME_WIDTH / 2, 520, 240, 58, '进入路线', () => {
+        delete this.run.pendingScene;
+        saveActiveRun(this, this.run);
+        this.scene.start(SCENES.Map);
+      });
       return;
     }
     const spacing = 402;
@@ -63,13 +67,7 @@ export default class VowScene extends Phaser.Scene {
       stroke: THEME.colors.darkGold,
       lineWidth: 2
     });
-    const seal = this.add.graphics();
-    seal.fillStyle(0x7f3028, 0.95);
-    seal.fillCircle(x, y - 174, 37);
-    seal.lineStyle(3, 0xd6ae61, 0.86);
-    seal.strokeCircle(x, y - 174, 30);
-    seal.lineBetween(x - 12, y - 174, x + 12, y - 174);
-    seal.lineBetween(x, y - 186, x, y - 162);
+    drawWaxSeal(this, x, y - 174, 32, 0x91303a);
     this.add.text(x, y - 112, vow.name, titleStyle(29)).setOrigin(0.5);
     this.add
       .text(x, y - 60, vow.motto, {
@@ -96,6 +94,8 @@ export default class VowScene extends Phaser.Scene {
     if (this.transitioning) return;
     this.transitioning = true;
     VowSystem.apply(this.run, vowId);
+    delete this.run.pendingScene;
+    delete this.run.pendingBattleType;
     saveActiveRun(this, this.run);
     this.audio?.play('relic');
     this.cameras.main.fadeOut(320, 0, 0, 0);

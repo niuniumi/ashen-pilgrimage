@@ -26,6 +26,7 @@ export default class RestScene extends Phaser.Scene {
     this.audio?.startAmbience?.('rest');
     this.run = getActiveRun(this);
     if (!this.run) return;
+    this.resolved = false;
     this.drawBackdrop();
     this.drawHeader();
     this.renderRest();
@@ -98,7 +99,8 @@ export default class RestScene extends Phaser.Scene {
   }
 
   rest() {
-    if (this.uiPaused) return;
+    if (this.uiPaused || this.resolved) return;
+    this.resolved = true;
     const amount = this.restAmount();
     this.run.hp = clamp(this.run.hp + amount, 0, this.run.maxHp);
     addToast(this, `回复 ${amount} 生命。`);
@@ -111,9 +113,11 @@ export default class RestScene extends Phaser.Scene {
   }
 
   upgrade() {
-    if (this.uiPaused) return;
+    if (this.uiPaused || this.resolved) return;
+    this.resolved = true;
     const upgraded = CardSystem.upgradeRandom(this.run);
     if (!upgraded) {
+      this.resolved = false;
       addToast(this, '没有可升级的卡牌。', 'error');
       return;
     }
@@ -123,6 +127,8 @@ export default class RestScene extends Phaser.Scene {
   }
 
   leave() {
+    delete this.run.pendingScene;
+    delete this.run.pendingBattleType;
     MapSystem.finishActiveNode(this.run);
     saveActiveRun(this, this.run);
     this.time.delayedCall(350, () => this.scene.start(SCENES.Map));

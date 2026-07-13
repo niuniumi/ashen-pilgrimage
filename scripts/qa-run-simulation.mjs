@@ -40,12 +40,33 @@ function cardPriority(instance, battle) {
   const needsDefense = incoming > battle.player.block + 4;
   const providesBlock = effects.some((effect) => String(effect.kind).toLowerCase().includes('block'));
   const providesHeal = effects.some((effect) => String(effect.kind).toLowerCase().includes('heal'));
-  if (needsDefense && providesBlock) return 0;
-  if (battle.player.hp / battle.player.maxHp < 0.46 && providesHeal) return 0;
-  if (card.type === CARD_TYPES.ATTACK || card.type === CARD_TYPES.SPELL) return 1;
+  const target = battle.enemies.find((enemy) => enemy.hp > 0);
+  const marks = target?.status?.mark ?? 0;
+  if (needsDefense && providesBlock) return -10;
+  if (battle.player.hp / battle.player.maxHp < 0.7 && providesHeal) return -9;
+  if (card.id === 'knight-score' || card.id === 'knight-blood-oath-stance') return marks < 3 ? -8 : 2;
+  if (effects.some((effect) => effect.kind === 'rendMarks')) return marks >= 3 ? -7 : 3;
+  if (effects.some((effect) => effect.kind === 'draw' || effect.kind === 'gainEnergy') && card.cost === 0) return -6;
+  if (effects.some((effect) => effect.kind === 'statusPlayer' && effect.status === 'strength')) return -4;
+  if (card.type === CARD_TYPES.ATTACK || card.type === CARD_TYPES.SPELL) {
+    const damage = effects.reduce((total, effect) => total + (effect.kind === 'damage' ? (effect.value ?? 0) * (effect.times ?? 1) : 0), 0);
+    return 1 - damage / Math.max(1, (card.cost ?? 0) + 1) / 20;
+  }
   if (card.type === CARD_TYPES.SKILL) return 2;
-  if (card.type === CARD_TYPES.DEFENSE) return 3;
-  return 4;
+  if (card.type === CARD_TYPES.DEFENSE) return needsDefense ? 0 : 4;
+  return 5;
+}
+
+function isStrategicallySafe(instance, battle) {
+  const card = CardSystem.getDisplayCard(instance);
+  const effects = card.activeEffects ?? [];
+  const immediateLoss = effects.reduce((total, effect) => total + (effect.kind === 'selfLoseHp' ? Number(effect.value ?? 0) : 0), 0);
+  const delayedLoss = effects.reduce((total, effect) => total + (effect.kind === 'statusPlayer' && effect.status === 'endTurnLoseHp' ? Number(effect.value ?? 0) : 0), 0);
+  const healing = effects.reduce((total, effect) => total + (String(effect.kind).toLowerCase().includes('heal') ? Number(effect.value ?? 0) : 0), 0);
+  const projectedHp = battle.player.hp - immediateLoss - delayedLoss + healing;
+  if (projectedHp <= 1) return false;
+  if (immediateLoss + delayedLoss > 0 && projectedHp / battle.player.maxHp < 0.28) return false;
+  return true;
 }
 
 function autoplay(run, battle, label) {
@@ -55,6 +76,7 @@ function autoplay(run, battle, label) {
       const target = targetIndex(battle);
       const candidates = [...battle.deck.hand].sort((a, b) => cardPriority(a, battle) - cardPriority(b, battle));
       const playable = candidates.find((instance) => {
+        if (!isStrategicallySafe(instance, battle)) return false;
         const card = CardSystem.getDisplayCard(instance);
         const selectedTarget = card.requiresTarget ? target : null;
         return BattleSystem.canPlayCard(run, battle, instance, selectedTarget).ok;
@@ -115,6 +137,7 @@ for (const [characterId, groups] of Object.entries(report.outcomes)) {
   if (groups.battle.won === 0) report.errors.push(`${characterId}: autoplay never won a normal battle`);
   if (groups.battle.timeout > 2) report.errors.push(`${characterId}: too many normal battle timeouts`);
   if (groups.boss.won < 4) report.errors.push(`${characterId}: boss-ready decks won fewer than 4 of 20 samples`);
+  if (groups.boss.won > 17) report.errors.push(`${characterId}: boss-ready decks won more than 17 of 20 samples`);
 }
 
 fs.writeFileSync(path.join(root, 'qa', 'run-simulation-report.json'), JSON.stringify(report, null, 2), 'utf8');

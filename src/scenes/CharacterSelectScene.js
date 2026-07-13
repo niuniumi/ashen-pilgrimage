@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { drawPixelHero } from '../art/PixelActorFactory.js';
+import { PIXEL_PALETTE, drawPixelPanel } from '../art/PixelArtSystem.js';
 import { characters } from '../data/characters.js';
 import { SCENES } from '../game/constants.js';
 import { drawRebuiltCharacterSelectBackdrop } from '../art/RebuiltVisualFactory.js';
@@ -53,19 +55,18 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   createDetailPanel() {
     this.detailPanel = new UIFrame(this, 1324, 454, 280, 592, {
-      fill: 0xf2dfbd,
+      fill: 0x1b1d24,
       alpha: 0.94,
-      stroke: 0xb88935,
+      stroke: 0x566675,
       strokeAlpha: 0.78,
-      parchment: true,
-      radius: 12
+      parchment: false
     });
     this.detailPanel.setDepth?.(20);
     this.add
       .text(1324, 188, '行者札记', {
         ...titleStyle(28),
-        color: '#725027',
-        stroke: '#f8ecd5',
+        color: '#f4e7c5',
+        stroke: '#08090d',
         strokeThickness: 4
       })
       .setOrigin(0.5)
@@ -74,8 +75,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.detailName = this.add
       .text(1210, 262, '', {
         ...titleStyle(25),
-        color: '#604225',
-        stroke: '#f8ecd5',
+        color: '#ffd36a',
+        stroke: '#08090d',
         strokeThickness: 3,
         wordWrap: { width: 226 }
       })
@@ -83,8 +84,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
       .setDepth(22);
     this.detailBody = this.add
       .text(1210, 324, '', {
-        ...textStyle(17, '#4f3a28', { lineSpacing: 8 }),
-        stroke: '#f8ecd5',
+        ...textStyle(17, '#d6c7a5', { lineSpacing: 8 }),
+        stroke: '#08090d',
         strokeThickness: 2,
         wordWrap: { width: 226, useAdvancedWrap: true }
       })
@@ -92,8 +93,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
       .setDepth(22);
     this.detailHint = this.add
       .text(1210, 690, '移入角色卡可展开立绘与说明，点击后锁定选择。', {
-        ...textStyle(16, '#70583c', { lineSpacing: 7 }),
-        stroke: '#f8ecd5',
+        ...textStyle(16, '#9a8c72', { lineSpacing: 7 }),
+        stroke: '#08090d',
         strokeThickness: 2,
         wordWrap: { width: 226, useAdvancedWrap: true }
       })
@@ -104,24 +105,23 @@ export default class CharacterSelectScene extends Phaser.Scene {
   createNewCharacterCard(character, x, y) {
     const w = 286;
     const h = 580;
+    const accent = character.id === 'candle-nun' ? 0xd0a24f : character.id === 'ashblood-alchemist' ? 0x35706b : 0x91303a;
     const container = this.add.container(x, y).setDepth(12);
     const panel = new UIFrame(this, 0, 0, w, h, {
-      fill: 0xf2dfbd,
+      fill: 0x1b1d24,
       alpha: 0.96,
-      stroke: 0xb88935,
+      stroke: accent,
       strokeAlpha: 0.74,
-      parchment: true,
-      radius: 12
+      parchment: false
     });
     container.add(panel);
 
     const artFrame = new UIFrame(this, 0, -45, 244, 326, {
-      fill: 0xf6ead1,
+      fill: 0x2c3540,
       alpha: 0.72,
-      stroke: 0xb88935,
+      stroke: accent,
       strokeAlpha: 0.46,
-      parchment: true,
-      radius: 10
+      parchment: false
     });
     container.add(artFrame);
     const art = this.createCharacterCardFaceImages(character.id, 0, -45, 236, 316);
@@ -131,8 +131,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
       this.add
         .text(0, -250, character.name, {
           ...titleStyle(29),
-          color: '#725027',
-          stroke: '#f8ecd5',
+          color: '#f4e7c5',
+          stroke: '#08090d',
           strokeThickness: 4
         })
         .setOrigin(0.5)
@@ -142,8 +142,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
       this.add
         .text(0, 146, character.mechanic, {
           ...titleStyle(22),
-          color: '#604225',
-          stroke: '#f8ecd5',
+          color: '#ffd36a',
+          stroke: '#08090d',
           strokeThickness: 3
         })
         .setOrigin(0.5)
@@ -151,8 +151,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
     container.add(
       this.add
         .text(0, 184, '移入翻开完整立绘', {
-          ...textStyle(15, '#70583c', { align: 'center' }),
-          stroke: '#f8ecd5',
+          ...textStyle(15, '#9a8c72', { align: 'center' }),
+          stroke: '#08090d',
           strokeThickness: 2,
           wordWrap: { width: 230 }
         })
@@ -178,21 +178,15 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   createCharacterCardFaceImages(characterId, x, y, width, height) {
-    const ready = this.ensureCharacterCardFaceFrames();
-    const frontFrame = `${characterId}-front`;
-    const backFrame = `${characterId}-back`;
-    if (!ready) {
-      throw new Error('generated-character-card-faces-atlas texture is required before rendering character cards');
-    }
-    const front = this.add
-      .image(x, y, 'generated-character-card-faces-atlas', frontFrame)
-      .setDisplaySize(width, height)
-      .setAlpha(0.98);
-    const back = this.add
-      .image(x, y, 'generated-character-card-faces-atlas', backFrame)
-      .setDisplaySize(width, height)
-      .setAlpha(0)
-      .setVisible(false);
+    const front = drawPixelHero(this, characterId, x, y + height * 0.17, 1.12, {
+      artPortrait: true,
+      idle: false
+    });
+    const back = drawPixelHero(this, characterId, x, y + height * 0.17, 1.28, {
+      artPortrait: true,
+      idle: false
+    });
+    back.setAlpha(0).setVisible(false);
     return { front, back };
   }
 
@@ -303,18 +297,21 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   addDeckTagsParchment(container, character) {
-    if (!hasTexture(this, HANDPAINTED_KEYS.ui)) {
-      throw new Error('hand-painted UI texture is required before rendering character deck tags');
-    }
     const entries = this.deckEntries(character);
     entries.forEach((entry, index) => {
       const x = -96 + index * 96;
       const y = 238;
-      const tag = addUiAsset(this, 'ribbon', x, y, { displayWidth: 88, displayHeight: 32, alpha: 0.88 });
+      const tag = this.add.graphics();
+      drawPixelPanel(tag, x, y, 88, 32, {
+        fill: PIXEL_PALETTE.paperDark,
+        inner: PIXEL_PALETTE.black,
+        stroke: PIXEL_PALETTE.goldDark,
+        dither: false
+      });
       const text = this.add
         .text(x, y, entry, {
-          ...textStyle(12, '#4f3a28', { align: 'center', strokeThickness: 2 }),
-          stroke: '#f8ecd5'
+          ...textStyle(11, '#d6c7a5', { align: 'center', strokeThickness: 2 }),
+          stroke: '#08090d'
         })
         .setOrigin(0.5);
       container.add([tag, text]);
@@ -373,6 +370,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     SaveManager.clearRun();
     this.registry.remove('run');
     const run = createNewRun(this.selected);
+    run.pendingScene = 'vow';
     this.registry.set('run', run);
     SaveManager.saveRun(run);
     this.scene.start(SCENES.Vow);

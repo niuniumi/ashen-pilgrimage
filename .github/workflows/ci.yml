@@ -19,6 +19,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+      - run: pnpm run qa:content-schema
+      - run: pnpm run qa:asset-manifest
+      - run: pnpm run qa:visual-bindings
       - run: pnpm build
       - name: Install Chromium for browser regression
         run: pnpm exec playwright install --with-deps chromium
@@ -37,3 +40,5 @@ jobs:
           done
           test "$ready" -eq 1
           pnpm run qa:map-migration
+          pnpm run qa:progression
+          pnpm run qa:resume-stages

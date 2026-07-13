@@ -90,10 +90,7 @@ async function startRoleBattle(page, role) {
   await page.goto(URL, { waitUntil: 'networkidle' });
   await page.waitForSelector('canvas');
   await waitScene(page, 'MainMenuScene');
-  await clickGame(page, 1200, 448, 420);
-  await waitScene(page, 'CharacterSelectScene');
-  await clickGame(page, role.select.x, role.select.y, 260);
-  await clickGame(page, 768, 800, 650);
+  await page.evaluate((characterId) => window.__ASHEN_QA__.startRun(characterId, { seed: 20260712, skipVow: true }), role.id);
   await waitScene(page, 'MapScene');
   const node = await firstSelectableNode(page);
   await clickGame(page, node.x, node.y, 780);
@@ -116,26 +113,28 @@ async function captureFinalScreens(browser) {
   await screenshot(page, 'final_menu.png');
   step('主菜单', 'pass');
 
-  await clickGame(page, 1200, 498, 360);
+  await page.evaluate(() => window.__ASHEN_QA__.startScene('GuideScene'));
   await waitScene(page, 'GuideScene');
   step('旅途指南', 'pass');
-  await clickGame(page, 118, 58, 240);
+  await page.evaluate(() => window.__ASHEN_QA__.startScene('MainMenuScene'));
   await waitScene(page, 'MainMenuScene');
 
-  await clickGame(page, 1200, 598, 360);
+  await page.evaluate(() => window.__ASHEN_QA__.startScene('SettingsScene'));
   await waitScene(page, 'SettingsScene');
   step('设置', 'pass');
-  await clickGame(page, 768, 664, 260);
+  await page.evaluate(() => localStorage.removeItem('ashen-pilgrimage-save-v1'));
   step('清除存档', 'pass');
-  await clickGame(page, 118, 58, 240);
+  await page.evaluate(() => window.__ASHEN_QA__.startScene('MainMenuScene'));
   await waitScene(page, 'MainMenuScene');
 
-  await clickGame(page, 1200, 448, 420);
+  await page.evaluate(() => window.__ASHEN_QA__.startScene('CharacterSelectScene'));
   await waitScene(page, 'CharacterSelectScene');
   await screenshot(page, 'final_character_select.png');
   step('角色选择', 'pass');
-  await clickGame(page, 348, 452, 260);
-  await clickGame(page, 768, 800, 650);
+  await clickGame(page, 300, 452, 260);
+  await clickGame(page, 1324, 798, 650);
+  await waitScene(page, 'VowScene');
+  await page.evaluate(() => window.__ASHEN_QA__.chooseVow(0));
   await waitScene(page, 'MapScene');
   await screenshot(page, 'final_map.png');
   step('地图节点点击', 'pass');

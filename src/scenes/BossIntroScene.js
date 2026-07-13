@@ -8,7 +8,7 @@ import { screenShake } from '../effects/ScreenShake.js';
 import { StoryDialog } from '../ui/StoryDialog.js';
 import { SceneTransition } from '../ui/SceneTransition.js';
 import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
-import { attachSceneServices, getActiveRun } from './SceneHelpers.js';
+import { attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { drawEnemyArt } from '../ui/UICharacterArt.js';
 
@@ -35,7 +35,12 @@ export default class BossIntroScene extends Phaser.Scene {
     new StoryDialog(this, this.chapter.bossName, this.chapter.bossIntro ?? fallbackBossIntro, {
       nextLabel: '迎战',
       skipLabel: '直接迎战',
-      onComplete: () => SceneTransition.fadeTo(this, SCENES.Battle, { battleType: 'boss' }, 520)
+      onComplete: () => {
+        this.run.pendingScene = 'battle';
+        this.run.pendingBattleType = 'boss';
+        saveActiveRun(this, this.run);
+        SceneTransition.fadeTo(this, SCENES.Battle, { battleType: 'boss' }, 520);
+      }
     });
     this.cameras.main.fadeIn(420, 0, 0, 0);
   }
@@ -43,8 +48,8 @@ export default class BossIntroScene extends Phaser.Scene {
   drawBackdrop() {
     const bossId = this.chapter?.bossId ?? 'headless-grave-knight';
     if (addHandPaintedBackground(this, HANDPAINTED_KEYS.battleBg, { depth: 0 })) {
-      const boss = drawEnemyArt(this, bossId, 768, 650, 1.6, { idle: true, type: 'boss', phase: 1, depth: 3 });
-      boss.setAlpha(0.68);
+      const boss = drawEnemyArt(this, bossId, 768, 442, 1.35, { idle: true, type: 'boss', phase: 1, depth: 3 });
+      boss.setAlpha(0.88);
       addAmbientAsh(this, { count: 46, depth: 8 });
       return;
     }

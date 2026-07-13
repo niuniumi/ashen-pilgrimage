@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COLORS } from '../game/constants.js';
 import { UIButton } from './UIButton.js';
 import { UIPanel } from './UIPanel.js';
+import { FONT } from '../design/textStyles.js';
 
 export class UIDialog extends Phaser.GameObjects.Container {
   constructor(scene, title, body, buttons = [], options = {}) {
@@ -10,7 +11,7 @@ export class UIDialog extends Phaser.GameObjects.Container {
     this.panel = new UIPanel(scene, 0, 0, options.width ?? 620, options.height ?? 370, { fill: COLORS.deep, stroke: COLORS.gold });
     this.titleText = scene.add
       .text(0, -135, title, {
-        fontFamily: 'Georgia, "Microsoft YaHei", serif',
+        fontFamily: FONT,
         fontSize: 32,
         color: '#f4d89c',
         align: 'center'
@@ -18,7 +19,7 @@ export class UIDialog extends Phaser.GameObjects.Container {
       .setOrigin(0.5);
     this.bodyText = scene.add
       .text(0, -28, body, {
-        fontFamily: 'Georgia, "Microsoft YaHei", serif',
+        fontFamily: FONT,
         fontSize: 22,
         color: '#f6edd0',
         align: 'left',

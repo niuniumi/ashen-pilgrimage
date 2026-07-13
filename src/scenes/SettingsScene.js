@@ -6,8 +6,9 @@ import { UIButton } from '../ui/UIButton.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { drawDivider } from '../ui/UIOrnament.js';
 import { addBackButton, addToast, attachSceneServices, drawGameBackdrop } from './SceneHelpers.js';
+import { FONT } from '../design/textStyles.js';
+import { PIXEL_PALETTE, snapPixel } from '../art/PixelArtSystem.js';
 
-const FONT = 'Georgia, "Microsoft YaHei", serif';
 
 export default class SettingsScene extends Phaser.Scene {
   constructor() {
@@ -24,8 +25,8 @@ export default class SettingsScene extends Phaser.Scene {
   render() {
     this.children.removeAll(true);
     drawGameBackdrop(this, 'menu');
-    this.add.text(768, 58, '设置', { ...titleStyle(44), color: '#76512a', stroke: '#f8ecd5', strokeThickness: 4 }).setOrigin(0.5);
-    this.add.text(768, 104, '声音、体验与旅途记录', textStyle(18, '#66513c', { align: 'center' })).setOrigin(0.5);
+    this.add.text(768, 58, '设置', { ...titleStyle(44), color: '#f4e7c5', stroke: '#08090d', strokeThickness: 6 }).setOrigin(0.5);
+    this.add.text(768, 104, '声音、体验与旅途记录', textStyle(18, '#b99862', { align: 'center' })).setOrigin(0.5);
     drawDivider(this, 768, 132, 520, { color: 0xb88935, alpha: 0.58 });
     addBackButton(this);
     new UIFrame(this, 768, 466, 820, 568, {
@@ -34,8 +35,8 @@ export default class SettingsScene extends Phaser.Scene {
       stroke: THEME.colors.darkGold,
       parchment: true
     });
-    this.add.text(570, 230, '声音', { ...titleStyle(22), color: '#604225', stroke: '#f8ecd5', strokeThickness: 3 }).setOrigin(0.5);
-    this.add.text(966, 230, '体验', { ...titleStyle(22), color: '#604225', stroke: '#f8ecd5', strokeThickness: 3 }).setOrigin(0.5);
+    this.add.text(570, 230, '声音', { ...titleStyle(22), color: '#f4e7c5', stroke: '#08090d', strokeThickness: 3 }).setOrigin(0.5);
+    this.add.text(966, 230, '体验', { ...titleStyle(22), color: '#f4e7c5', stroke: '#08090d', strokeThickness: 3 }).setOrigin(0.5);
 
     this.toggleButton(570, 292, '音效', 'sound');
     this.toggleButton(570, 350, '音乐', 'music');
@@ -82,29 +83,34 @@ export default class SettingsScene extends Phaser.Scene {
 
   slider(x, y, label, key, onChange) {
     const value = Math.max(0, Math.min(1, Number(this.settings[key] ?? 0)));
-    this.add
+    const labelText = this.add
       .text(x - 210, y - 28, `${label} ${Math.round(value * 100)}%`, {
         fontFamily: FONT,
         fontSize: 20,
-        color: '#4f3520'
+        color: '#d6c7a5'
       })
       .setOrigin(0, 0.5);
     const track = this.add.graphics();
-    track.lineStyle(8, 0x3c332c, 0.95);
-    track.lineBetween(x - 210, y, x + 210, y);
-    track.lineStyle(6, 0xd0aa62, 0.88);
-    track.lineBetween(x - 210, y, x - 210 + 420 * value, y);
-    const knob = this.add.circle(x - 210 + 420 * value, y, 12, 0xf2c86d, 1);
-    knob.setStrokeStyle(2, 0x1b120e, 0.82);
+    const knob = this.add.rectangle(snapPixel(x - 210 + 420 * value), y, 20, 20, PIXEL_PALETTE.candle, 1);
+    knob.setStrokeStyle(4, PIXEL_PALETTE.void, 1);
     const zone = this.add.zone(x, y, 450, 36).setInteractive({ useHandCursor: true, draggable: true });
+    const drawValue = (next) => {
+      track.clear();
+      track.fillStyle(PIXEL_PALETTE.iron, 1);
+      track.fillRect(x - 210, y - 4, 420, 8);
+      track.fillStyle(PIXEL_PALETTE.gold, 1);
+      track.fillRect(x - 210, y - 4, snapPixel(420 * next), 8);
+      knob.x = snapPixel(x - 210 + 420 * next);
+      labelText.setText(`${label} ${Math.round(next * 100)}%`);
+    };
     const update = (worldX) => {
       const next = Math.max(0, Math.min(1, (worldX - (x - 210)) / 420));
       this.settings[key] = next;
       SaveManager.saveSettings(this.settings);
       onChange?.(next);
-      this.settings = SaveManager.readSettings();
-      this.render();
+      drawValue(next);
     };
+    drawValue(value);
     zone.on('pointerdown', (pointer) => update(pointer.x));
     zone.on('drag', (pointer) => update(pointer.x));
   }

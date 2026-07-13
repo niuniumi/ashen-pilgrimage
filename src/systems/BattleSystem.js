@@ -300,7 +300,7 @@ export class BattleSystem {
     if (effect.kind === 'rendMarks' && target && target.hp > 0) {
       const marks = target.status.mark ?? 0;
       if (marks > 0) {
-        const dealt = this.damageEnemy(target, marks * 3);
+        const dealt = this.damageEnemy(target, marks * 4);
         target.status.mark = 0;
         context.damageDealt += dealt;
         context.killedTarget = target.hp <= 0;
@@ -518,6 +518,7 @@ export class BattleSystem {
         const dealt = this.damageEnemy(enemy, stacks * (2 + RelicSystem.value(run, 'candleDamageBonus')));
         battle.log.unshift(`${enemy.name} 的烛印燃烧，受到 ${dealt} 伤害。`);
         events.push({ type: 'enemyDamage', targetIndex: i, amount: dealt });
+        enemy.status.candlemark = Math.max(0, stacks - 2);
       }
       reduceStatus(enemy, 'weak');
       reduceStatus(enemy, 'vulnerable');

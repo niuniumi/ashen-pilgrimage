@@ -1,0 +1,149 @@
+{
+  "url": "http://127.0.0.1:4184/",
+  "generatedAt": "2026-07-12T15:56:52.177Z",
+  "scenes": [
+    {
+      "slug": "01_prologue",
+      "sceneKey": "PrologueScene",
+      "screenshot": "qa/screenshots/pixel_scenes/01_prologue.png",
+      "bytes": 767280,
+      "active": true,
+      "textCount": 0,
+      "fonts": [],
+      "legacyFonts": [],
+      "overflow": [],
+      "pixelBackgrounds": [
+        "pixel-background-folio"
+      ]
+    },
+    {
+      "slug": "02_guide",
+      "sceneKey": "GuideScene",
+      "screenshot": "qa/screenshots/pixel_scenes/02_guide.png",
+      "bytes": 702346,
+      "active": true,
+      "textCount": 5,
+      "fonts": [
+        "PixelCN, \"Microsoft YaHei\", monospace"
+      ],
+      "legacyFonts": [],
+      "overflow": [],
+      "pixelBackgrounds": [
+        "pixel-background-folio"
+      ]
+    },
+    {
+      "slug": "03_chest",
+      "sceneKey": "ChestScene",
+      "screenshot": "qa/screenshots/pixel_scenes/03_chest.png",
+      "bytes": 943699,
+      "active": true,
+      "textCount": 2,
+      "fonts": [
+        "PixelCN, \"Microsoft YaHei\", monospace"
+      ],
+      "legacyFonts": [],
+      "overflow": [],
+      "pixelBackgrounds": [
+        "pixel-background-folio"
+      ]
+    },
+    {
+      "slug": "04_event",
+      "sceneKey": "EventScene",
+      "screenshot": "qa/screenshots/pixel_scenes/04_event.png",
+      "bytes": 818526,
+      "active": true,
+      "textCount": 3,
+      "fonts": [
+        "PixelCN, \"Microsoft YaHei\", monospace"
+      ],
+      "legacyFonts": [],
+      "overflow": [],
+      "pixelBackgrounds": [
+        "pixel-background-folio"
+      ]
+    },
+    {
+      "slug": "05_settings",
+      "sceneKey": "SettingsScene",
+      "screenshot": "qa/screenshots/pixel_scenes/05_settings.png",
+      "bytes": 918655,
+      "active": true,
+      "textCount": 6,
+      "fonts": [
+        "PixelCN, \"Microsoft YaHei\", monospace"
+      ],
+      "legacyFonts": [],
+      "overflow": [],
+      "pixelBackgrounds": [
+        "pixel-background-folio"
+      ]
+    },
+    {
+      "slug": "06_boss_intro",
+      "sceneKey": "BossIntroScene",
+      "screenshot": "qa/screenshots/pixel_scenes/06_boss_intro.png",
+      "bytes": 1315548,
+      "active": true,
+      "textCount": 2,
+      "fonts": [
+        "PixelCN, \"Microsoft YaHei\", monospace"
+      ],
+      "legacyFonts": [],
+      "overflow": [],
+      "pixelBackgrounds": [
+        "pixel-background-battle"
+      ]
+    },
+    {
+      "slug": "07_act_clear",
+      "sceneKey": "ActClearScene",
+      "screenshot": "qa/screenshots/pixel_scenes/07_act_clear.png",
+      "bytes": 1041116,
+      "active": true,
+      "textCount": 2,
+      "fonts": [
+        "PixelCN, \"Microsoft YaHei\", monospace"
+      ],
+      "legacyFonts": [],
+      "overflow": [],
+      "pixelBackgrounds": [
+        "pixel-background-folio"
+      ]
+    },
+    {
+      "slug": "08_result_defeat",
+      "sceneKey": "ResultScene",
+      "screenshot": "qa/screenshots/pixel_scenes/08_result_defeat.png",
+      "bytes": 749521,
+      "active": true,
+      "textCount": 8,
+      "fonts": [
+        "PixelCN, \"Microsoft YaHei\", monospace"
+      ],
+      "legacyFonts": [],
+      "overflow": [],
+      "pixelBackgrounds": [
+        "pixel-background-folio"
+      ]
+    },
+    {
+      "slug": "09_result_victory",
+      "sceneKey": "ResultScene",
+      "screenshot": "qa/screenshots/pixel_scenes/09_result_victory.png",
+      "bytes": 931138,
+      "active": true,
+      "textCount": 8,
+      "fonts": [
+        "PixelCN, \"Microsoft YaHei\", monospace"
+      ],
+      "legacyFonts": [],
+      "overflow": [],
+      "pixelBackgrounds": [
+        "pixel-background-folio"
+      ]
+    }
+  ],
+  "errors": []
+}

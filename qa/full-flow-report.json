@@ -1,9 +1,179 @@
 {
-  "url": "http://127.0.0.1:4173",
-  "generatedAt": "2026-07-09T17:11:15.459Z",
-  "steps": [],
-  "screenshots": [],
-  "errors": [
-    "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4173/\", waiting until \"networkidle\"\u001b[22m\n\n    at captureFinalScreens (C:\\Users\\16224\\Desktop\\灰烬圣途-重做\\scripts\\qa-full-flow.mjs:113:14)\n    at async file:///C:/Users/16224/Desktop/%E7%81%B0%E7%83%AC%E5%9C%A3%E9%80%94-%E9%87%8D%E5%81%9A/scripts/qa-full-flow.mjs:264:3"
-  ]
+  "url": "http://127.0.0.1:4184/",
+  "generatedAt": "2026-07-13T06:40:12.221Z",
+  "steps": [
+    {
+      "name": "主菜单",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "旅途指南",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "设置",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "清除存档",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "角色选择",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "地图节点点击",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "普通战斗-骑士",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "攻击牌",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "防御牌",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "技能牌",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "结束回合",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "暂停菜单",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "暂停设置",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "普通战斗-nun",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "普通战斗-alchemist",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "战斗胜利",
+      "status": "recorded-direct-system-check",
+      "detail": {
+        "hasRun": true,
+        "hasPause": true,
+        "hasAudio": true,
+        "currentScene": "BattleScene",
+        "activeNode": "n0",
+        "canContinue": true
+      }
+    },
+    {
+      "name": "奖励拿卡",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "奖励跳过",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "商店购买",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "商店金币不足",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "删除卡牌",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "事件选择",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "休息",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "宝箱",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "精英",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "Boss",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "胜利结算",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "失败结算",
+      "status": "recorded-direct-system-check",
+      "detail": {}
+    },
+    {
+      "name": "继续旅途",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "刷新页面",
+      "status": "pass",
+      "detail": {}
+    },
+    {
+      "name": "部署链接打开",
+      "status": "recorded-url",
+      "detail": {}
+    }
+  ],
+  "screenshots": [
+    "qa/screenshots/final_menu.png",
+    "qa/screenshots/final_character_select.png",
+    "qa/screenshots/final_map.png",
+    "qa/screenshots/final_battle_knight.png",
+    "qa/screenshots/final_pause_battle.png",
+    "qa/screenshots/final_pause_settings.png",
+    "qa/screenshots/final_battle_nun.png",
+    "qa/screenshots/final_battle_alchemist.png"
+  ],
+  "errors": []
 }

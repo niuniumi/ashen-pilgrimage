@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../game/constants.js';
+import { FONT } from '../design/textStyles.js';
+import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 
 export class UIStatusIcon extends Phaser.GameObjects.Container {
   constructor(scene, x, y, kind, value = '') {
@@ -9,7 +11,7 @@ export class UIStatusIcon extends Phaser.GameObjects.Container {
     this.g = scene.add.graphics();
     this.text = scene.add
       .text(0, 23, value ? `${value}` : '', {
-        fontFamily: 'Georgia, "Microsoft YaHei", serif',
+        fontFamily: FONT,
         fontSize: 16,
         color: '#f6edd0'
       })
@@ -21,10 +23,10 @@ export class UIStatusIcon extends Phaser.GameObjects.Container {
 
   draw() {
     this.g.clear();
-    this.g.fillStyle(0x170f0d, 0.85);
-    this.g.fillCircle(0, 0, 20);
-    this.g.lineStyle(2, COLORS.gold, 0.85);
-    this.g.strokeCircle(0, 0, 20);
+    this.g.fillStyle(PIXEL_PALETTE.goldDark, 1);
+    this.g.fillRect(-20, -20, 40, 40);
+    this.g.fillStyle(PIXEL_PALETTE.black, 1);
+    this.g.fillRect(-16, -16, 32, 32);
     if (this.kind === 'attack') {
       this.g.lineStyle(5, COLORS.red, 1);
       this.g.lineBetween(-10, 10, 10, -12);
@@ -36,14 +38,14 @@ export class UIStatusIcon extends Phaser.GameObjects.Container {
       this.g.fillTriangle(0, -12, -14, -3, 0, 15);
     } else if (this.kind === 'debuff') {
       this.g.fillStyle(COLORS.purple, 0.9);
-      this.g.fillCircle(0, 0, 9);
-      this.g.fillRect(-8, 5, 16, 4);
+      this.g.fillRect(-8, -8, 16, 16);
+      this.g.fillRect(-12, 5, 24, 4);
     } else if (this.kind === 'buff') {
       this.g.fillStyle(COLORS.candle, 0.9);
       this.g.fillTriangle(0, -15, 12, 9, -12, 9);
     } else {
       this.g.fillStyle(COLORS.candle, 0.9);
-      this.g.fillCircle(0, 0, 9);
+      this.g.fillRect(-8, -8, 16, 16);
     }
   }
 }

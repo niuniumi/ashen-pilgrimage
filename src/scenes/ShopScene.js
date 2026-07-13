@@ -197,6 +197,8 @@ export default class ShopScene extends Phaser.Scene {
 
   leave() {
     this.run.shopState = null;
+    delete this.run.pendingScene;
+    delete this.run.pendingBattleType;
     MapSystem.finishActiveNode(this.run);
     saveActiveRun(this, this.run);
     this.scene.start(SCENES.Map);

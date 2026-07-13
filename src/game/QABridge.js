@@ -31,6 +31,7 @@ export class QABridge {
       this.saveRun(run);
       this.startScene(SCENES.Map);
     } else {
+      run.pendingScene = 'vow';
       this.saveRun(run);
       this.startScene(SCENES.Vow);
     }
@@ -43,6 +44,7 @@ export class QABridge {
     const offer = VowSystem.getOffer(run, run.act ?? 1);
     const vow = offer[index] ?? offer[0];
     if (vow) VowSystem.apply(run, vow.id);
+    delete run.pendingScene;
     this.saveRun(run);
     this.startScene(SCENES.Map);
     return vow?.id ?? null;
@@ -54,6 +56,8 @@ export class QABridge {
     const targetId = nodeId ?? run.map.available?.[0];
     const node = MapSystem.startNode(run, targetId);
     if (!node) return null;
+    run.pendingScene = node.type === 'boss' ? 'boss-intro' : node.type;
+    run.pendingBattleType = node.type === 'elite' ? 'elite' : node.type === 'boss' ? 'boss' : 'battle';
     this.saveRun(run);
     const sceneKey = NODE_SCENES[node.type] ?? SCENES.Map;
     const data = ['battle', 'elite', 'boss'].includes(node.type)
@@ -69,6 +73,8 @@ export class QABridge {
       const id = `qa-${nodeType}-${Date.now()}`;
       run.map.nodes.push({ id, row: 99, column: 0, x: 575, type: nodeType, links: [] });
       run.map.activeNode = id;
+      run.pendingScene = nodeType === 'boss' ? 'boss-intro' : nodeType;
+      run.pendingBattleType = nodeType === 'elite' ? 'elite' : nodeType === 'boss' ? 'boss' : 'battle';
       this.saveRun(run);
     }
     const data = sceneKey === SCENES.Battle && nodeType

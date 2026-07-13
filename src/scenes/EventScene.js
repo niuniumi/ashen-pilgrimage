@@ -21,6 +21,7 @@ export default class EventScene extends Phaser.Scene {
     this.audio?.startAmbience?.('story');
     this.run = getActiveRun(this);
     if (!this.run) return;
+    this.resolved = false;
     this.event = this.run.currentEvent ?? EventSystem.randomEvent(this.run);
     this.run.currentEvent = this.event;
     this.renderEvent();
@@ -30,11 +31,11 @@ export default class EventScene extends Phaser.Scene {
     if (addHandPaintedBackground(this, HANDPAINTED_KEYS.folioBg, { depth: 0 })) {
       this.add.text(768, 52, this.event.title, {
         ...titleStyle(42),
-        color: '#76542a',
-        stroke: '#fbefd8',
-        strokeThickness: 4
+        color: '#f4e7c5',
+        stroke: '#08090d',
+        strokeThickness: 6
       }).setOrigin(0.5);
-      this.add.text(768, 96, subtitle, textStyle(18, '#6b533a', { align: 'center' })).setOrigin(0.5);
+      this.add.text(768, 96, subtitle, textStyle(18, '#b99862', { align: 'center' })).setOrigin(0.5);
       drawDivider(this, 768, 124, 520);
       return;
     }
@@ -61,10 +62,8 @@ export default class EventScene extends Phaser.Scene {
     });
     if (hasTexture(this, HANDPAINTED_KEYS.ui)) return;
     const fold = this.add.graphics();
-    fold.fillStyle(0x5d3a1f, 0.18);
+    fold.fillStyle(0x8f612f, 0.42);
     fold.fillRect(764, 204, 8, 516);
-    fold.lineStyle(1, 0xffffff, 0.25);
-    fold.lineBetween(772, 212, 772, 710);
   }
 
   renderEvent() {
@@ -73,7 +72,8 @@ export default class EventScene extends Phaser.Scene {
     this.drawBook();
     this.add
       .text(768, 278, this.event.description, {
-        ...textStyle(28, THEME.css.parchmentInk, { align: 'center', lineSpacing: 12, strokeThickness: 0 }),
+        ...textStyle(28, THEME.css.body, { align: 'center', lineSpacing: 12, strokeThickness: 3 }),
+        stroke: '#08090d',
         wordWrap: { width: 820 }
       })
       .setOrigin(0.5);
@@ -83,35 +83,41 @@ export default class EventScene extends Phaser.Scene {
       new UIButton(this, 768, y, 660, 56, `${option.label}  ·  ${option.cost}`, () => this.choose(option), {
         fontSize: 22,
         disabled: !enabled,
-        fill: enabled ? 0x4f321e : 0x3a3028
+        fill: enabled ? 0x35706b : 0x2c3540
       });
     });
     installPauseMenu(this, { allowMap: false });
   }
 
   choose(option) {
-    if (this.uiPaused) return;
+    if (this.uiPaused || this.resolved) return;
     if (!EventSystem.canChoose(this.run, option)) {
       addToast(this, '条件不足。', 'error');
       return;
     }
+    this.resolved = true;
     const notes = EventSystem.apply(this.run, option);
+    this.run.currentEvent = null;
+    delete this.run.pendingScene;
+    delete this.run.pendingBattleType;
+    MapSystem.finishActiveNode(this.run);
+    saveActiveRun(this, this.run);
     this.children.removeAll(true);
     this.drawBackdrop('事件结果');
     this.drawBook();
     this.add
       .text(768, 350, `${option.result}\n\n${notes.join('，') || '没有额外变化。'}`, {
-        ...textStyle(27, THEME.css.parchmentInk, { align: 'center', lineSpacing: 14, strokeThickness: 0 }),
+        ...textStyle(27, THEME.css.body, { align: 'center', lineSpacing: 14, strokeThickness: 3 }),
+        stroke: '#08090d',
         wordWrap: { width: 820 }
       })
       .setOrigin(0.5);
-    new UIButton(this, 768, 642, 220, 56, '继续旅途', () => this.leave(), { fontSize: 24, fill: 0x4f321e });
+    new UIButton(this, 768, 642, 220, 56, '继续旅途', () => this.leave(), { fontSize: 24, fill: 0x35706b });
     installPauseMenu(this, { allowMap: false });
   }
 
   leave() {
     this.run.currentEvent = null;
-    MapSystem.finishActiveNode(this.run);
     saveActiveRun(this, this.run);
     this.scene.start(SCENES.Map);
   }

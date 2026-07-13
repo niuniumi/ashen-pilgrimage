@@ -14,14 +14,12 @@ export function slashEffect(scene, x, y) {
   });
   if (seq.length) return;
   const g = scene.add.graphics().setDepth(760);
-  g.lineStyle(12, 0x6b1d1d, 0.32);
-  g.lineBetween(x - 78, y + 44, x + 86, y - 48);
-  g.lineStyle(7, COLORS.paleGold, 0.94);
-  g.lineBetween(x - 72, y + 36, x + 78, y - 42);
-  g.lineStyle(3, 0xffffff, 0.88);
-  g.lineBetween(x - 40, y + 42, x + 92, y - 16);
-  g.lineStyle(3, 0xb83b34, 0.88);
-  g.lineBetween(x - 70, y - 26, x + 30, y + 24);
+  for (let i = -72; i <= 72; i += 8) {
+    g.fillStyle(i % 16 === 0 ? COLORS.paleGold : 0xffffff, 0.94);
+    g.fillRect(x + i, y - i * 0.55, 12, 6);
+  }
+  g.fillStyle(0xb83b34, 0.86);
+  g.fillRect(x - 68, y - 28, 92, 6);
   scene.tweens.add({
     targets: g,
     alpha: 0,

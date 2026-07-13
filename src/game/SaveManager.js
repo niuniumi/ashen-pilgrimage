@@ -8,7 +8,7 @@ const defaultSettings = {
   music: true,
   muted: false,
   bgmVolume: 0.3,
-  sfxVolume: 0.75,
+  sfxVolume: 0.62,
   animation: true,
   fastMode: false,
   tutorialEnabled: true,

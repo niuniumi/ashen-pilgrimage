@@ -8,6 +8,7 @@ import { drawBackArrowButton } from '../ui/UIOrnament.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { queueDeferredAudio } from '../game/AudioCatalog.js';
 import { queueDeferredVisuals } from '../game/VisualCatalog.js';
+import { FONT } from '../design/textStyles.js';
 
 export function attachSceneServices(scene) {
   scene.audio = scene.registry.get('audio');
@@ -17,22 +18,34 @@ export function attachSceneServices(scene) {
 }
 
 function ensureDeferredAssets(scene) {
-  if (!scene?.sys?.isActive?.() || scene.registry.get('deferredAssetsReady')) return;
-  const queued = queueDeferredAudio(scene) + queueDeferredVisuals(scene);
-  if (queued === 0) {
-    scene.registry.set('deferredAssetsReady', true);
+  if (!scene?.sys?.isActive?.()) return;
+  const state = scene.registry.get('deferredAssetsState');
+  if (state === 'ready' || state === 'loading') return;
+  if (scene.load.isLoading()) {
+    scene.time.delayedCall(240, () => ensureDeferredAssets(scene));
     return;
   }
-  if (scene.load.isLoading()) return;
-  const owner = scene.sys.settings.key;
+  const owner = `${scene.sys.settings.key}:${scene.time.now}`;
+  scene.registry.set('deferredAssetsState', 'loading');
   scene.registry.set('deferredAssetsOwner', owner);
+  const queued = queueDeferredAudio(scene) + queueDeferredVisuals(scene);
+  if (queued === 0) {
+    scene.registry.set('deferredAssetsState', 'ready');
+    scene.registry.set('deferredAssetsReady', true);
+    scene.registry.remove('deferredAssetsOwner');
+    return;
+  }
   scene.load.once('complete', () => {
+    if (scene.registry.get('deferredAssetsOwner') !== owner) return;
+    scene.registry.set('deferredAssetsState', 'ready');
     scene.registry.set('deferredAssetsReady', true);
     scene.registry.remove('deferredAssetsOwner');
   });
   scene.load.on('loaderror', (file) => console.warn(`Deferred audio load failed: ${file?.key ?? 'unknown'}`));
   scene.events.once('shutdown', () => {
-    if (scene.registry.get('deferredAssetsOwner') === owner) scene.registry.remove('deferredAssetsOwner');
+    if (scene.registry.get('deferredAssetsOwner') !== owner) return;
+    scene.registry.remove('deferredAssetsOwner');
+    scene.registry.remove('deferredAssetsState');
   });
   scene.load.start();
 }
@@ -52,7 +65,7 @@ export function addBackButton(scene, target = SCENES.MainMenu) {
 export function addSceneTitle(scene, title, subtitle = '') {
   scene.add
     .text(GAME_WIDTH / 2, 58, title, {
-      fontFamily: 'Georgia, "Microsoft YaHei", serif',
+      fontFamily: FONT,
       fontSize: 44,
       color: '#f4d89c',
       align: 'center',
@@ -63,7 +76,7 @@ export function addSceneTitle(scene, title, subtitle = '') {
   if (subtitle) {
     scene.add
       .text(GAME_WIDTH / 2, 100, subtitle, {
-        fontFamily: 'Georgia, "Microsoft YaHei", serif',
+        fontFamily: FONT,
         fontSize: 21,
         color: '#e2c68c',
         align: 'center'
@@ -192,7 +205,7 @@ export function drawEnemyFigure(scene, x, y, enemy, scale = 1) {
 export function addSmallLabel(scene, x, y, text, size = 20) {
   return scene.add
     .text(x, y, text, {
-      fontFamily: 'Georgia, "Microsoft YaHei", serif',
+      fontFamily: FONT,
       fontSize: size,
       color: '#f6edd0',
       align: 'center'
@@ -226,5 +239,10 @@ export function getActiveRun(scene) {
 export function saveActiveRun(scene, run) {
   sanitizeRunNumbers(run);
   scene.registry.set('run', run);
-  SaveManager.saveRun(run);
+  const saved = SaveManager.saveRun(run);
+  if (!saved && scene?.sys?.isActive?.()) {
+    console.error('Run save failed. Progress remains in memory only.');
+    addToast(scene, '存档写入失败，请检查浏览器存储权限。', 'error');
+  }
+  return saved;
 }

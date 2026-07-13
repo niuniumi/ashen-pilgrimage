@@ -8,23 +8,23 @@
 
 | 游戏用途 | 文件 | 来源 | 作者 | 许可 |
 | --- | --- | --- | --- | --- |
-| 主菜单、剧情、休息、失败 | `bgm-menu.*` | [Dark Shrine Loop](https://opengameart.org/content/dark-shrine-loop) | qubodup / yd | CC0 |
-| 第一章地图 | `bgm-map-act-1.*` | [Dungeon Ambience](https://opengameart.org/content/dungeon-ambience) | yd | CC0 |
-| 第二章地图 | `bgm-map-act-2.*` | [Ancient Caverns](https://opengameart.org/content/ancient-caverns-horror-ambient-loop) | congusbongus | CC0 |
+| 主菜单 | `bgm-menu.*` | [Town in Ruins Loop](https://opengameart.org/content/town-in-ruins-loop) | Brandon Morris | CC0 |
+| 第一章地图、休息 | `bgm-map-act-1.*` | [Abandoned Castle Music](https://opengameart.org/content/abandoned-castle-music-loop) | StarNinjas | CC0 |
+| 第二章地图、剧情 | `bgm-map-act-2.*` | [Dark Shrine Loop](https://opengameart.org/content/dark-shrine-loop) | qubodup / yd | CC0 |
 | 第三章地图 | `bgm-map-act-3.*` | [Dark Place](https://opengameart.org/content/dark-place-loop) | SkyleTheFrench | CC0 |
-| 第一章战斗 | `bgm-battle-act-1.*` | [Determined Pursuit](https://opengameart.org/content/determined-pursuit-epic-orchestra-loop) | Emma_MA | CC0 |
-| 第二章战斗 | `bgm-battle-act-2.*` | [Battle Theme](https://opengameart.org/content/battle-theme-0) | Wolfgang_ | CC0 |
-| 第三章战斗 | `bgm-battle-act-3.*` | [The Final Battle](https://opengameart.org/content/the-final-battle) | skrjablin | CC0 |
+| 第一章战斗 | `bgm-battle-act-1.*` | [Medieval: Battle](https://opengameart.org/content/medieval-battle) | RandomMind | CC0 |
+| 第二章战斗 | `bgm-battle-act-2.*` | [Prepare Your Swords](https://opengameart.org/content/prepare-your-swords) | Bojidar Marinov | CC0 |
+| 第三章战斗 | `bgm-battle-act-3.*` | [Prepare Your Swords](https://opengameart.org/content/prepare-your-swords) + [Evil Temple Ambiance](https://opengameart.org/content/evil-temple-ambiance-loop) | Bojidar Marinov / Brandon Morris | CC0 |
 | 首领战 | `bgm-boss.*` | [Boss Battle Music](https://opengameart.org/content/boss-battle-music) | SubspaceAudio / Juhani Junkala | CC0 |
 
 ## 效果音
 
 | 分组 | 游戏用途 | 来源 | 许可 |
 | --- | --- | --- | --- |
-| UI Audio | 点击、悬停、错误、回合切换 | [Kenney UI Audio](https://kenney.nl/assets/ui-audio) | CC0 |
-| Casino Audio | 选牌、出牌、卡牌移动 | [Kenney Casino Audio](https://kenney.nl/assets/casino-audio) | CC0 |
-| RPG Audio | 武器、金币、书页、弹窗 | [Kenney RPG Audio](https://kenney.nl/assets/rpg-audio) | CC0 |
-| Impact Sounds | 受击、格挡、首领、胜负反馈 | [Kenney Impact Sounds](https://kenney.nl/assets/impact-sounds) | CC0 |
+| UI Audio | 点击、悬停、错误、回合切换 | [UI Sound Effects](https://opengameart.org/content/ui-sound-effects-button-clicks-user-feedback-notifications) | CC0 |
+| Card Game Sounds | 选牌、出牌、卡牌移动 | [Card Game Sounds](https://opengameart.org/content/card-game-sounds) | CC0 |
+| RPG Audio | 金币、书页、弹窗 | [Kenney 50 RPG Sound Effects](https://opengameart.org/content/50-rpg-sound-effects) | CC0 |
+| Sword and Clash | 攻击、受击、格挡 | [20 Sword Sound Effects](https://opengameart.org/node/122900) | CC0 |
 | Magic Spell SFX | 增益、减益、遗物、治疗变化样本 | [OpenGameArt](https://opengameart.org/content/magic-spell-sfx) | CC0 |
 | Health Restore | 治疗主样本 | [Magic Words + Healing](https://opengameart.org/content/magic-words-healing-sound-effect) | CC0 |
 

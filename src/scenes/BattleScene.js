@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { FONT } from '../design/textStyles.js';
 import { getCharacter } from '../data/characters.js';
 import { CARD_TYPES, GAME_HEIGHT, GAME_WIDTH, SCENES } from '../game/constants.js';
 import { drawRebuiltBattleBackdrop } from '../art/RebuiltVisualFactory.js';
@@ -28,9 +29,7 @@ import { installPauseMenu } from '../ui/PauseMenu.js';
 import { addToast, attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
 import { addUiAsset, addVfxAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 import { BattleInputController } from '../input/BattleInputController.js';
-import { queueLowNoiseBattleAssets } from '../art/LowNoiseBattleAssets.js';
 
-const FONT = 'Georgia, "Microsoft YaHei", serif';
 
 const LAYOUT = {
   status: { x: 96, y: 14, w: 1344, h: 62 },
@@ -85,19 +84,6 @@ export default class BattleScene extends Phaser.Scene {
     if (this.restoredBattle?.battleType) this.battleType = this.restoredBattle.battleType;
   }
 
-  preload() {
-    const run = this.registry.get('run') ?? SaveManager.loadRun();
-    if (!run) return;
-    const enemyIds = this.restoredBattle?.enemies?.map((enemy) => enemy.id) ?? this.previewEncounterIds(run);
-    queueLowNoiseBattleAssets(this, run.characterId, enemyIds);
-  }
-
-  previewEncounterIds(run) {
-    const previewRun = structuredClone(run);
-    const previewBattle = BattleSystem.createBattle(previewRun, this.battleType);
-    return previewBattle.enemies.map((enemy) => enemy.id);
-  }
-
   create() {
     attachSceneServices(this);
     this.run = getActiveRun(this);
@@ -107,6 +93,7 @@ export default class BattleScene extends Phaser.Scene {
     this.selectedUid = null;
     this.keyboardTargetIndex = null;
     this.inputLocked = false;
+    this.settlementScheduled = false;
     this.currentPrompt = '点击一张卡牌使用。';
     this.battle = this.restoredBattle ? structuredClone(this.restoredBattle) : BattleSystem.createBattle(this.run, this.battleType);
     this.battle.player.resource = HeroResourceSystem.normalize(this.run.characterId, this.battle.player.resource);
@@ -444,9 +431,9 @@ export default class BattleScene extends Phaser.Scene {
     const end = LAYOUT.endTurn;
     const connector = this.add.graphics();
     connector.fillStyle(0x1b1110, 0.55);
-    connector.fillRoundedRect(end.x, end.y, end.w, end.h, 8);
+    connector.fillRect(end.x, end.y, end.w, end.h);
     connector.lineStyle(1, 0x7b5d2d, 0.35);
-    connector.strokeRoundedRect(end.x, end.y, end.w, end.h, 8);
+    connector.strokeRect(end.x, end.y, end.w, end.h);
     this.endTurnButton = new UIButton(
       this,
       end.x + end.w / 2,
@@ -513,10 +500,10 @@ export default class BattleScene extends Phaser.Scene {
       const y = log.y + 58 + index * 38;
       const row = this.add.graphics();
       row.fillStyle(index === 0 ? 0x3a2118 : 0x201512, index === 0 ? 0.44 : 0.24);
-      row.fillRoundedRect(log.x + 18, y - 7, log.w - 36, 31, 5);
+      row.fillRect(log.x + 18, y - 7, log.w - 36, 31);
       if (index === 0) {
         row.lineStyle(1, 0xb88935, 0.32);
-        row.strokeRoundedRect(log.x + 18, y - 7, log.w - 36, 31, 5);
+        row.strokeRect(log.x + 18, y - 7, log.w - 36, 31);
       }
       const text = this.add
         .text(log.x + 28, y, entry, {
@@ -577,12 +564,12 @@ export default class BattleScene extends Phaser.Scene {
     const ratio = resource.max > 0 ? Phaser.Math.Clamp(resource.value / resource.max, 0, 1) : 0;
     const track = this.add.graphics();
     track.fillStyle(0x120d0b, 0.92);
-    track.fillRoundedRect(x, y, width, height, 4);
+    track.fillRect(x, y, width, height);
     track.lineStyle(1, resource.ready ? palette.ready : 0x80643d, resource.ready ? 0.92 : 0.72);
-    track.strokeRoundedRect(x, y, width, height, 4);
+    track.strokeRect(x, y, width, height);
     if (ratio > 0) {
       track.fillStyle(resource.ready ? palette.ready : palette.fill, 0.9);
-      track.fillRoundedRect(x + 2, y + 2, Math.max(4, (width - 4) * ratio), height - 4, 3);
+      track.fillRect(x + 2, y + 2, Math.max(4, (width - 4) * ratio), height - 4);
     }
     const label = this.add
       .text(0, y + height / 2, `${resource.label}  ${resource.value}/${resource.max}${resource.ready ? ' · 就绪' : ''}`, {
@@ -691,9 +678,9 @@ export default class BattleScene extends Phaser.Scene {
     const w = metrics.frameWidth;
     const h = metrics.frameHeight;
     g.lineStyle(3, 0xf1c76a, 0.86);
-    g.strokeEllipse(0, 4, w, h);
+    g.strokeRect(-w / 2, -h / 2 + 4, w, h);
     g.lineStyle(10, 0xf1c76a, 0.12);
-    g.strokeEllipse(0, 4, w + 18, h + 18);
+    g.strokeRect(-w / 2 - 9, -h / 2 - 5, w + 18, h + 18);
     g.lineStyle(2, 0xffffff, 0.62);
     g.lineBetween(-w / 2 + 22, -h / 2 + 28, -w / 2 + 54, -h / 2 + 12);
     g.lineBetween(w / 2 - 22, -h / 2 + 28, w / 2 - 54, -h / 2 + 12);
@@ -1088,9 +1075,9 @@ export default class BattleScene extends Phaser.Scene {
     }
     const icon = this.add.graphics();
     icon.fillStyle(0x120c0a, 0.86);
-    icon.fillCircle(0, 0, 21);
+    icon.fillRect(-21, -21, 42, 42);
     icon.lineStyle(2, 0xb98b3c, 0.9);
-    icon.strokeCircle(0, 0, 21);
+    icon.strokeRect(-21, -21, 42, 42);
     if (kind === 'attack') {
       icon.lineStyle(4, 0xd94e42, 0.95);
       icon.lineBetween(-9, 10, 10, -10);
@@ -1186,9 +1173,9 @@ export default class BattleScene extends Phaser.Scene {
       : this.add.graphics();
     if (!hasTexture(this, HANDPAINTED_KEYS.ui)) {
       cardRail.fillStyle(0x0b0807, 0.32);
-      cardRail.fillRoundedRect(hand.x + 22, hand.y + 18, hand.w - 44, hand.h - 34, 7);
+      cardRail.fillRect(hand.x + 22, hand.y + 18, hand.w - 44, hand.h - 34);
       cardRail.lineStyle(1, 0x8a6a35, 0.24);
-      cardRail.strokeRoundedRect(hand.x + 22, hand.y + 18, hand.w - 44, hand.h - 34, 7);
+      cardRail.strokeRect(hand.x + 22, hand.y + 18, hand.w - 44, hand.h - 34);
     }
     this.dynamicLayer.add(cardRail);
     const spacing = count <= 1 ? 0 : count <= 7 ? Math.min(142, (hand.w - 160) / (count - 1)) : Math.min(118, (hand.w - 118) / (count - 1));
@@ -1247,9 +1234,9 @@ export default class BattleScene extends Phaser.Scene {
       : this.add.graphics();
     if (!hasTexture(this, HANDPAINTED_KEYS.ui)) {
       bg.fillStyle(0x0b0807, 0.44);
-      bg.fillRoundedRect(-(deck.w - 18) / 2, -(deck.h - 48) / 2, deck.w - 18, deck.h - 48, 7);
+      bg.fillRect(-(deck.w - 18) / 2, -(deck.h - 48) / 2, deck.w - 18, deck.h - 48);
       bg.lineStyle(1, 0x8a6a35, 0.32);
-      bg.strokeRoundedRect(-(deck.w - 18) / 2, -(deck.h - 48) / 2, deck.w - 18, deck.h - 48, 7);
+      bg.strokeRect(-(deck.w - 18) / 2, -(deck.h - 48) / 2, deck.w - 18, deck.h - 48);
     }
     panel.add(bg);
     this.dynamicLayer.add(panel);
@@ -1269,11 +1256,11 @@ export default class BattleScene extends Phaser.Scene {
         : this.add.graphics();
       if (!hasTexture(this, HANDPAINTED_KEYS.ui)) {
         g.fillStyle(0x2a211c, 0.94);
-        g.fillRoundedRect(-19, -26, 38, 54, 5);
+        g.fillRect(-19, -26, 38, 54);
         g.fillStyle(0x14100d, 0.9);
-        g.fillRoundedRect(-13, -20, 26, 42, 4);
+        g.fillRect(-13, -20, 26, 42);
         g.lineStyle(2, 0x8a6a35, 0.75);
-        g.strokeRoundedRect(-19, -26, 38, 54, 5);
+        g.strokeRect(-19, -26, 38, 54);
         g.lineStyle(1, 0xd7a94d, 0.35);
         g.lineBetween(-7, -13, 9, 12);
       }
@@ -1612,7 +1599,8 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   finishIfNeeded() {
-    if (!this.battle.ended) return;
+    if (!this.battle.ended || this.settlementScheduled) return;
+    this.settlementScheduled = true;
     this.inputLocked = true;
     BattleSystem.syncRun(this.run, this.battle);
     saveActiveRun(this, this.run);
@@ -1620,24 +1608,31 @@ export default class BattleScene extends Phaser.Scene {
     this.renderBattle();
     if (this.battle.won) {
       this.audio?.play('victory');
+      const settlementId = `battle-act-${this.run.act ?? this.run.map?.act ?? 1}-${this.run.map.activeNode}`;
       if (this.battleType === 'boss') {
-        clearBattleCheckpoint(this.run, `battle-${this.run.map.activeNode}`);
+        clearBattleCheckpoint(this.run, settlementId);
         MapSystem.finishActiveNode(this.run);
+        this.run.pendingScene = 'act-clear';
+        delete this.run.pendingBattleType;
         saveActiveRun(this, this.run);
         this.time.delayedCall(850, () => this.scene.start(SCENES.ActClear));
       } else {
         this.run.lastBattleType = this.battleType;
         this.run.pendingReward = RewardSystem.createReward(this.run, this.battleType);
         this.run.rewardClaimed = false;
-        clearBattleCheckpoint(this.run, `battle-${this.run.map.activeNode}`);
+        this.run.pendingScene = 'reward';
+        clearBattleCheckpoint(this.run, settlementId);
         saveActiveRun(this, this.run);
         this.time.delayedCall(850, () => this.scene.start(SCENES.Reward));
       }
     } else {
       this.audio?.play('defeat');
       this.run.failureCount = (this.run.failureCount ?? 0) + 1;
+      this.run.pendingScene = 'result';
+      this.run.resultVictory = false;
+      this.run.checkpoint = null;
       this.registry.set('result', { victory: false });
-      SaveManager.clearRun();
+      saveActiveRun(this, this.run);
       this.time.delayedCall(850, () => this.scene.start(SCENES.Result, { victory: false, run: this.run }));
     }
   }

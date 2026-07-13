@@ -21,8 +21,9 @@ export function createBattleCheckpoint(run, battle, sceneKey = 'BattleScene') {
     throw new Error('Cannot create a battle checkpoint from incomplete state.');
   }
   const activeNode = run.map.activeNode;
+  const act = Number(run.act ?? run.map?.act ?? 1) || 1;
   return {
-    id: `checkpoint-${run.id}-${activeNode}-${battle.turn}`,
+    id: `checkpoint-${run.id}-act-${act}-${activeNode}-${battle.turn}`,
     sceneKey,
     activeNode,
     rngState: normalizeRngState(run.rngState, run.seed),
@@ -53,7 +54,10 @@ export function restoreBattleCheckpoint(run) {
 export function clearBattleCheckpoint(run, settlementId = null) {
   if (!run || !settlementId) return false;
   run.settlements = Array.isArray(run.settlements) ? run.settlements : [];
-  if (run.settlements.includes(settlementId)) return false;
+  if (run.settlements.includes(settlementId)) {
+    run.checkpoint = null;
+    return false;
+  }
   run.settlements.push(settlementId);
   run.checkpoint = null;
   return true;

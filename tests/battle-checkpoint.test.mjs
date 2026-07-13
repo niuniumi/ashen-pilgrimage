@@ -62,3 +62,16 @@ test('clearing a checkpoint records settlement exactly once', () => {
   assert.equal(run.checkpoint, null);
   assert.deepEqual(run.settlements, ['reward-n3']);
 });
+
+test('checkpoint identity includes the act and duplicate settlement still removes stale checkpoint', () => {
+  const { run, battle } = fixture();
+  run.act = 2;
+  run.map.activeNode = 'n0';
+  const checkpoint = createBattleCheckpoint(run, battle, 'BattleScene');
+  assert.match(checkpoint.id, /-act-2-n0-/);
+
+  run.settlements = ['battle-act-2-n0'];
+  run.checkpoint = checkpoint;
+  assert.equal(clearBattleCheckpoint(run, 'battle-act-2-n0'), false);
+  assert.equal(run.checkpoint, null);
+});

@@ -4,6 +4,7 @@ import { drawRebuiltMenuBackdrop } from '../art/RebuiltVisualFactory.js';
 import { SCENE_TITLES, THEME, textStyle, titleStyle } from '../game/Theme.js';
 import { SaveManager } from '../game/SaveManager.js';
 import { restoreBattleCheckpoint } from '../game/BattleCheckpoint.js';
+import { getRunResumeTarget } from '../game/RunResume.js';
 import { addAmbientAsh } from '../effects/AmbientParticles.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UIDialog } from '../ui/UIDialog.js';
@@ -24,7 +25,6 @@ export default class MainMenuScene extends Phaser.Scene {
     this.drawBackdrop();
     this.addJourneyFirelight();
     this.addJourneyMicroMotion();
-    if (!this.hasJourneyBackdrop()) this.addHeroStudy();
     this.addTitle();
     this.addMenu();
   }
@@ -175,6 +175,42 @@ export default class MainMenuScene extends Phaser.Scene {
 
   addTitleParchment() {
     const [title, subtitle] = SCENE_TITLES.menu;
+    this.add
+      .text(92, 104, title, {
+        ...titleStyle(68),
+        color: '#f4e7c5',
+        stroke: '#08090d',
+        strokeThickness: 8
+      })
+      .setOrigin(0, 0.5)
+      .setDepth(5);
+    this.add
+      .text(102, 166, subtitle, {
+        ...textStyle(26, '#d0a24f'),
+        stroke: '#08090d',
+        strokeThickness: 5
+      })
+      .setOrigin(0, 0.5)
+      .setDepth(5);
+    drawDivider(this, 294, 208, 388, { color: 0xd0a24f, alpha: 0.9 }).setDepth?.(5);
+    this.add
+      .text(104, 250, '余烬照亮旅途，也照见每一次抉择。', {
+        ...textStyle(19, '#d6c7a5'),
+        stroke: '#08090d',
+        strokeThickness: 4
+      })
+      .setOrigin(0, 0.5)
+      .setDepth(5);
+    this.add
+      .text(104, 300, '穿过暮鸦村、墓园与修道院，整理牌组，\n点亮营火，寻找灰白圣火的源头。', {
+        ...textStyle(18, '#b99862'),
+        stroke: '#08090d',
+        strokeThickness: 4,
+        lineSpacing: 8
+      })
+      .setOrigin(0, 0.5)
+      .setDepth(5);
+    return;
     if (this.hasJourneyBackdrop()) {
       this.add
         .text(720, 92, title, {
@@ -290,6 +326,41 @@ export default class MainMenuScene extends Phaser.Scene {
   }
 
   addMenuParchment() {
+    {
+    const menuX = 1192;
+    const hasRun = SaveManager.hasRun();
+    const frame = new UIFrame(this, menuX, 472, 360, 520, {
+      fill: 0x1b1d24,
+      alpha: 0.94,
+      stroke: 0xd0a24f
+    });
+    frame.setDepth(5);
+    this.add.text(menuX, 244, '旅途菜单', titleStyle(30)).setOrigin(0.5).setDepth(6);
+    drawDivider(this, menuX, 282, 268, { color: 0xd0a24f, alpha: 0.84 }).setDepth?.(6);
+    const buttons = [
+      ['继续旅途', () => this.continueRun(), !hasRun],
+      ['开始新旅程', () => this.startNewJourney(), false],
+      ['旅途指南', () => this.scene.start(SCENES.Guide), false],
+      ['图鉴', () => this.scene.start(SCENES.Codex), false],
+      [this.musicLabel(), () => this.toggleMusic(), false],
+      ['设置', () => this.scene.start(SCENES.Settings), false],
+      ['制作组', () => this.showCredits(), false],
+      ['离开', () => this.showExitNotice(), false]
+    ];
+    buttons.forEach(([label, action, disabled], index) => {
+      const button = new UIButton(this, menuX, 326 + index * 54, 280, 42, label, action, {
+        disabled,
+        fontSize: 19,
+        fill: label === '开始新旅程' ? 0x35706b : 0x2c3540
+      });
+      button.setDepth(7);
+    });
+    this.add
+      .text(GAME_WIDTH - 72, 824, `${BUILD_VERSION} · ${BUILD_TIME}`, textStyle(13, '#85745c'))
+      .setOrigin(1, 0.5)
+      .setDepth(6);
+    return;
+    }
     if (this.hasJourneyBackdrop()) {
       this.drawJourneyMenuWash(1190, 520, 410, 500);
       this.add
@@ -413,6 +484,28 @@ export default class MainMenuScene extends Phaser.Scene {
   }
 
   addJourneyFirelight() {
+    if (this.textures.exists('pixel-bg-menu')) {
+      const glow = this.add.graphics().setDepth(3);
+      glow.fillStyle(0xf4b45b, 0.08);
+      glow.fillRect(456, 652, 208, 104);
+      glow.fillStyle(0xffe7a8, 0.05);
+      glow.fillRect(492, 672, 136, 64);
+      this.tweens.add({ targets: glow, alpha: 0.48, yoyo: true, repeat: -1, duration: 1520, ease: 'Sine.InOut' });
+      for (let i = 0; i < 10; i += 1) {
+        const spark = this.add.rectangle(520 + ((i * 23) % 90), 700 + ((i * 17) % 36), i % 3 === 0 ? 6 : 4, 4, i % 2 ? 0xffdd8a : 0xf2a65d, 0.5).setDepth(7);
+        this.tweens.add({
+          targets: spark,
+          x: spark.x + (i % 2 ? 12 : -8),
+          y: spark.y - 42 - (i % 3) * 10,
+          alpha: 0,
+          duration: 1500 + (i % 5) * 220,
+          delay: i * 150,
+          repeat: -1,
+          ease: 'Linear'
+        });
+      }
+      return;
+    }
     if (this.hasJourneyBackdrop()) {
       const glow = this.add.graphics().setDepth(3);
       glow.fillStyle(0xf4b45b, 0.08);
@@ -482,6 +575,23 @@ export default class MainMenuScene extends Phaser.Scene {
   }
 
   addJourneyMicroMotion() {
+    if (this.textures.exists('pixel-bg-menu')) {
+      for (let i = 0; i < 16; i += 1) {
+        const mote = this.add.rectangle(360 + ((i * 83) % 520), 330 + ((i * 61) % 300), 4, 4, i % 2 ? 0xf1c76a : 0x7bb5a1, 0.18).setDepth(8);
+        this.tweens.add({
+          targets: mote,
+          x: mote.x + (i % 2 ? 24 : -16),
+          y: mote.y - 16 + (i % 3) * 8,
+          alpha: 0.04 + (i % 4) * 0.04,
+          yoyo: true,
+          repeat: -1,
+          duration: 2300 + (i % 6) * 360,
+          delay: i * 90,
+          ease: 'Linear'
+        });
+      }
+      return;
+    }
     if (!this.hasJourneyBackdrop()) return;
     const breath = this.add.graphics().setDepth(3);
     breath.fillStyle(0xf1c76a, 0.07);
@@ -620,10 +730,9 @@ export default class MainMenuScene extends Phaser.Scene {
     if (checkpoint) {
       run.rngState = checkpoint.rngState;
       this.registry.set('run', run);
-      this.scene.start(SCENES.Battle, { restoredBattle: checkpoint.battle });
-      return;
     }
-    this.scene.start(SCENES.Map);
+    const target = getRunResumeTarget(run, { checkpoint });
+    this.scene.start(target.sceneKey, target.data);
   }
 
   showCredits() {

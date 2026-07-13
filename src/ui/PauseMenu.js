@@ -5,6 +5,7 @@ import { THEME, textStyle, titleStyle } from '../game/Theme.js';
 import { UIButton } from './UIButton.js';
 import { UIFrame } from './UIFrame.js';
 import { drawDivider } from './UIOrnament.js';
+import { PIXEL_PALETTE, snapPixel } from '../art/PixelArtSystem.js';
 
 export function installPauseMenu(scene, options = {}) {
   scene.uiPaused = false;
@@ -170,21 +171,27 @@ export class PauseMenu {
     const value = Math.max(0, Math.min(1, Number(this.settings[key] ?? 0)));
     const labelText = this.scene.add.text(-200, y - 8, `${label} ${Math.round(value * 100)}%`, textStyle(16, THEME.css.body)).setOrigin(0, 0.5);
     const track = this.scene.add.graphics();
-    track.lineStyle(6, 0x3c332c, 0.95);
-    track.lineBetween(-40, y, 190, y);
-    track.lineStyle(4, 0xd0aa62, 0.82);
-    track.lineBetween(-40, y, -40 + 230 * value, y);
-    const knob = this.scene.add.circle(-40 + 230 * value, y, 9, 0xf2c86d, 1);
+    const knob = this.scene.add.rectangle(snapPixel(-40 + 230 * value), y, 18, 18, PIXEL_PALETTE.candle, 1);
     knob.setStrokeStyle(2, 0x1b120e, 0.8);
     const zone = this.scene.add.zone(75, y, 250, 32).setInteractive({ useHandCursor: true, draggable: true });
+    const drawValue = (next) => {
+      track.clear();
+      track.fillStyle(PIXEL_PALETTE.iron, 1);
+      track.fillRect(-40, y - 4, 230, 8);
+      track.fillStyle(PIXEL_PALETTE.gold, 1);
+      track.fillRect(-40, y - 4, snapPixel(230 * next), 8);
+      knob.x = snapPixel(-40 + 230 * next);
+      labelText.setText(`${label} ${Math.round(next * 100)}%`);
+    };
     const update = (worldX) => {
       const localX = worldX - this.container.x;
       const next = Math.max(0, Math.min(1, (localX + 40) / 230));
       this.settings[key] = next;
       SaveManager.saveSettings(this.settings);
       onChange?.(next);
-      this.redraw('settings');
+      drawValue(next);
     };
+    drawValue(value);
     zone.on('pointerdown', (pointer) => update(pointer.x));
     zone.on('drag', (pointer) => update(pointer.x));
     this.container.add([labelText, track, knob, zone]);
@@ -221,7 +228,8 @@ export class PauseMenu {
   prepareRunForMapReturn() {
     const run = this.scene.registry.get('run') ?? SaveManager.loadRun();
     if (!run) return null;
-    if (run.map?.activeNode) MapSystem.cancelActiveNode(run);
+    const hasResumableStage = Boolean(run.pendingScene || run.pendingReward || run.checkpoint);
+    if (run.map?.activeNode && !hasResumableStage) MapSystem.cancelActiveNode(run);
     this.scene.registry.set('run', run);
     return run;
   }

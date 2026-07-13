@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { THEME } from '../game/Theme.js';
-import { addUiAsset, choosePanelFrame, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
+import { drawPixelPanel } from '../art/PixelArtSystem.js';
 
 export class UIFrame extends Phaser.GameObjects.Container {
   constructor(scene, x, y, width, height, options = {}) {
@@ -8,13 +8,7 @@ export class UIFrame extends Phaser.GameObjects.Container {
     this.widthValue = width;
     this.heightValue = height;
     this.options = options;
-    this.asset = hasTexture(scene, HANDPAINTED_KEYS.ui)
-      ? addUiAsset(scene, choosePanelFrame(width, height), 0, 0, {
-          displayWidth: width,
-          displayHeight: height,
-          alpha: options.alpha ?? 0.98
-        })
-      : null;
+    this.asset = null;
     this.g = scene.add.graphics();
     this.add([this.asset, this.g].filter(Boolean));
     scene.add.existing(this);
@@ -25,31 +19,18 @@ export class UIFrame extends Phaser.GameObjects.Container {
     const w = this.widthValue;
     const h = this.heightValue;
     const o = this.options;
-    const radius = o.radius ?? 8;
-    const fill = o.fill ?? THEME.colors.panel;
+    const fill = o.pixelFill ?? (o.parchment ? 0x24252a : o.fill) ?? 0x1b1d24;
     const alpha = o.alpha ?? 0.9;
     const stroke = o.stroke ?? THEME.colors.darkGold;
     this.g.clear();
-    if (this.asset) {
-      this.asset.setAlpha(alpha);
-      this.asset.setDisplaySize(w, h);
-      if (o.parchment) this.drawParchmentTexture(w, h);
-      this.drawGildedEdges(w, h, o.stroke ?? THEME.colors.darkGold, o.cornerAlpha ?? 0.5);
-      return;
-    }
-    this.g.fillStyle(0x030202, 0.38);
-    this.g.fillRoundedRect(-w / 2 - 5, -h / 2 + 6, w + 10, h + 5, radius + 2);
-    this.g.fillStyle(fill, alpha);
-    this.g.fillRoundedRect(-w / 2, -h / 2, w, h, radius);
-    this.g.fillStyle(0xffffff, 0.04);
-    this.g.fillRoundedRect(-w / 2 + 8, -h / 2 + 8, w - 16, Math.min(38, h * 0.22), Math.max(3, radius - 2));
-    this.g.lineStyle(o.lineWidth ?? 2, stroke, o.strokeAlpha ?? 0.8);
-    this.g.strokeRoundedRect(-w / 2, -h / 2, w, h, radius);
-    this.g.lineStyle(1, 0x000000, 0.5);
-    this.g.strokeRoundedRect(-w / 2 + 7, -h / 2 + 7, w - 14, h - 14, Math.max(3, radius - 3));
-    this.drawCorners(w, h, stroke, o.cornerAlpha ?? 0.72);
-    this.drawGildedEdges(w, h, stroke, o.cornerAlpha ?? 0.5);
-    if (o.parchment) this.drawParchmentTexture(w, h);
+    drawPixelPanel(this.g, 0, 0, w, h, {
+      fill,
+      inner: 0x11131a,
+      stroke,
+      strokeAlpha: o.strokeAlpha ?? 0.9,
+      alpha,
+      seed: Math.round(w + h)
+    });
   }
 
   drawGildedEdges(w, h, color, alpha = 0.5) {

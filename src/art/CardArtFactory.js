@@ -1,6 +1,7 @@
 import { CARD_TYPES, RARITIES } from '../game/constants.js';
 import { THEME } from '../game/Theme.js';
 import { drawCandleFlame, drawPixelGrain, drawSlashMarks } from './PixelSpriteFactory.js';
+import { PIXEL_PALETTE, snapPixel, stablePixelHash } from './PixelArtSystem.js';
 
 export const CARD_TYPE_COLORS = {
   [CARD_TYPES.ATTACK]: 0x77302b,
@@ -28,38 +29,62 @@ export const CARD_RARITY_FACE_COLORS = {
 };
 
 export function drawCardIllustration(g, card, x, y, width, height, alpha = 1) {
-  g.fillStyle(0x211711, 0.42 * alpha);
-  g.fillRoundedRect(x, y, width, height, 5);
-  g.fillStyle(0xd8bd8a, 0.12 * alpha);
-  g.fillRoundedRect(x + 5, y + 5, width - 10, height - 10, 4);
-  g.lineStyle(1, 0x5d3d22, 0.55 * alpha);
-  g.strokeRoundedRect(x, y, width, height, 5);
-  drawPixelGrain(g, x + 4, y + 4, width - 8, height - 8, [0xffffff, 0x3b2418], {
-    count: 8,
-    alpha: 0.035 * alpha,
-    seed: String(card.id ?? card.name).length
-  });
-
-  const cx = x + width / 2;
-  const cy = y + height / 2;
+  const left = snapPixel(x);
+  const top = snapPixel(y);
+  const w = snapPixel(width);
+  const h = snapPixel(height);
+  const cx = snapPixel(left + w / 2);
+  const cy = snapPixel(top + h / 2);
+  const hash = stablePixelHash(card.id ?? card.name);
+  g.fillStyle(PIXEL_PALETTE.void, alpha);
+  g.fillRect(left, top, w, h);
+  g.fillStyle(PIXEL_PALETTE.iron, 0.8 * alpha);
+  g.fillRect(left + 4, top + 4, w - 8, h - 8);
+  for (let i = 0; i < 5; i += 1) {
+    g.fillStyle(i % 2 ? PIXEL_PALETTE.black : PIXEL_PALETTE.ironLight, 0.16 * alpha);
+    g.fillRect(left + 8 + ((hash + i * 19) % Math.max(4, w - 20)), top + 8 + ((hash + i * 13) % Math.max(4, h - 20)), 4, 4);
+  }
+  g.fillStyle(PIXEL_PALETTE.candle, alpha);
   switch (card.type) {
     case CARD_TYPES.ATTACK:
-      drawAttackArt(g, cx, cy, width, height, alpha);
+      for (let i = -16; i <= 16; i += 4) g.fillRect(cx + i, cy - i - 4, 4, 8);
+      g.fillStyle(PIXEL_PALETTE.blood, alpha);
+      g.fillRect(cx - 20, cy + 12, 20, 4);
       break;
     case CARD_TYPES.DEFENSE:
-      drawDefenseArt(g, cx, cy, width, height, alpha);
+      g.fillStyle(PIXEL_PALETTE.blue, alpha);
+      g.fillRect(cx - 16, cy - 16, 32, 12);
+      g.fillRect(cx - 12, cy - 4, 24, 16);
+      g.fillRect(cx - 8, cy + 12, 16, 8);
       break;
     case CARD_TYPES.SKILL:
-      drawSkillArt(g, cx, cy, width, height, alpha);
+      g.fillStyle(PIXEL_PALETTE.paper, alpha);
+      g.fillRect(cx - 20, cy - 16, 40, 32);
+      g.fillStyle(PIXEL_PALETTE.paperDark, alpha);
+      g.fillRect(cx - 12, cy - 8, 24, 4);
+      g.fillRect(cx - 12, cy, 20, 4);
+      g.fillRect(cx - 12, cy + 8, 24, 4);
       break;
     case CARD_TYPES.SPELL:
-      drawSpellArt(g, cx, cy, width, height, alpha);
+      g.fillStyle(PIXEL_PALETTE.violet, alpha);
+      g.fillRect(cx - 16, cy + 4, 32, 16);
+      g.fillStyle(PIXEL_PALETTE.ember, alpha);
+      g.fillRect(cx - 8, cy - 8, 16, 16);
+      g.fillStyle(PIXEL_PALETTE.candle, alpha);
+      g.fillRect(cx - 4, cy - 20, 8, 16);
       break;
     case CARD_TYPES.CURSE:
-      drawCurseArt(g, cx, cy, width, height, alpha);
+      g.fillStyle(PIXEL_PALETTE.violet, alpha);
+      g.fillRect(cx - 16, cy - 12, 32, 28);
+      g.fillStyle(PIXEL_PALETTE.void, alpha);
+      g.fillRect(cx - 10, cy - 4, 8, 8);
+      g.fillRect(cx + 2, cy - 4, 8, 8);
+      g.fillRect(cx - 4, cy + 8, 8, 8);
       break;
     default:
-      drawStatusArt(g, cx, cy, width, height, alpha);
+      g.fillStyle(PIXEL_PALETTE.moss, alpha);
+      g.fillRect(cx - 20, cy - 4, 40, 8);
+      g.fillRect(cx - 4, cy - 20, 8, 40);
       break;
   }
 }

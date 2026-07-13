@@ -1,21 +1,20 @@
 import Phaser from 'phaser';
 import { COLORS } from '../game/constants.js';
+import { FONT } from '../design/textStyles.js';
+import { PIXEL_PALETTE, drawPixelPanel } from '../art/PixelArtSystem.js';
 
-const FONT = 'Georgia, "Microsoft YaHei", serif';
 
 export class UIToast extends Phaser.GameObjects.Container {
   constructor(scene, x, y, message, kind = 'info') {
     super(scene, x, y);
     const width = Phaser.Math.Clamp(message.length * 17 + 52, 280, 620);
     const bg = scene.add.graphics();
-    bg.fillStyle(0x080604, 0.58);
-    bg.fillRoundedRect(-width / 2 - 4, -28 + 4, width + 8, 56, 8);
-    bg.fillStyle(kind === 'error' ? 0x4b1f1f : COLORS.deep, 0.94);
-    bg.fillRoundedRect(-width / 2, -28, width, 56, 8);
-    bg.fillStyle(0xffffff, 0.04);
-    bg.fillRoundedRect(-width / 2 + 8, -23, width - 16, 16, 5);
-    bg.lineStyle(2, kind === 'error' ? COLORS.red : 0x9d7438, 0.84);
-    bg.strokeRoundedRect(-width / 2, -28, width, 56, 8);
+    drawPixelPanel(bg, 0, 0, width, 56, {
+      fill: kind === 'error' ? PIXEL_PALETTE.bloodDark : PIXEL_PALETTE.coal,
+      inner: PIXEL_PALETTE.black,
+      stroke: kind === 'error' ? PIXEL_PALETTE.blood : PIXEL_PALETTE.goldDark,
+      dither: false
+    });
     const text = scene.add
       .text(0, 0, message, {
         fontFamily: FONT,

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS } from '../game/constants.js';
-import { addUiAsset, choosePanelFrame, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
+import { drawPixelPanel } from '../art/PixelArtSystem.js';
 
 export class UIPanel extends Phaser.GameObjects.Container {
   constructor(scene, x, y, width, height, options = {}) {
@@ -8,13 +8,7 @@ export class UIPanel extends Phaser.GameObjects.Container {
     this.widthValue = width;
     this.heightValue = height;
     this.options = options;
-    this.asset = hasTexture(scene, HANDPAINTED_KEYS.ui)
-      ? addUiAsset(scene, choosePanelFrame(width, height), 0, 0, {
-          displayWidth: width,
-          displayHeight: height,
-          alpha: options.alpha ?? 0.94
-        })
-      : null;
+    this.asset = null;
     this.bg = scene.add.graphics();
     this.add([this.asset, this.bg].filter(Boolean));
     scene.add.existing(this);
@@ -24,43 +18,17 @@ export class UIPanel extends Phaser.GameObjects.Container {
   draw() {
     const w = this.widthValue;
     const h = this.heightValue;
-    const fill = this.options.fill ?? COLORS.deep;
+    const fill = this.options.pixelFill ?? this.options.fill ?? 0x1b1d24;
     const alpha = this.options.alpha ?? 0.9;
-    const radius = this.options.radius ?? 7;
     this.bg.clear();
-    if (this.asset) {
-      this.asset.setDisplaySize(w, h);
-      this.asset.setAlpha(alpha);
-      this.drawGildedOverlay(w, h, this.options.stroke ?? COLORS.gold, this.options.strokeAlpha ?? 0.55);
-      return;
-    }
-    this.bg.fillStyle(0x050403, Math.min(0.36, alpha * 0.4));
-    this.bg.fillRoundedRect(-w / 2 - 4, -h / 2 + 5, w + 8, h + 4, radius + 2);
-    this.bg.fillStyle(fill, alpha);
-    this.bg.fillRoundedRect(-w / 2, -h / 2, w, h, radius);
-    this.bg.fillStyle(0xffffff, 0.035);
-    this.bg.fillRoundedRect(-w / 2 + 8, -h / 2 + 7, w - 16, Math.min(34, h * 0.24), Math.max(3, radius - 2));
-    for (let i = 0; i < 22; i += 1) {
-      this.bg.fillStyle(i % 2 ? 0xb88935 : 0x000000, i % 2 ? 0.035 : 0.045);
-      this.bg.fillRect(-w / 2 + 18 + ((i * 41) % Math.max(20, w - 36)), -h / 2 + 18 + ((i * 59) % Math.max(20, h - 36)), 2 + (i % 3), 1 + (i % 2));
-    }
-    this.bg.lineStyle(this.options.lineWidth ?? 2, this.options.stroke ?? COLORS.gold, this.options.strokeAlpha ?? 0.72);
-    this.bg.strokeRoundedRect(-w / 2, -h / 2, w, h, radius);
-    this.bg.lineStyle(1, 0x000000, 0.42);
-    this.bg.strokeRoundedRect(-w / 2 + 7, -h / 2 + 7, w - 14, h - 14, Math.max(3, radius - 3));
-    this.bg.lineStyle(1, 0xf2c86d, 0.16);
-    this.bg.strokeRoundedRect(-w / 2 + 13, -h / 2 + 13, w - 26, h - 26, Math.max(3, radius - 4));
-    const corner = 18;
-    this.bg.lineStyle(2, this.options.stroke ?? COLORS.gold, (this.options.strokeAlpha ?? 0.72) * 0.7);
-    this.bg.lineBetween(-w / 2 + 10, -h / 2 + corner, -w / 2 + 10, -h / 2 + 10);
-    this.bg.lineBetween(-w / 2 + 10, -h / 2 + 10, -w / 2 + corner, -h / 2 + 10);
-    this.bg.lineBetween(w / 2 - 10, -h / 2 + corner, w / 2 - 10, -h / 2 + 10);
-    this.bg.lineBetween(w / 2 - 10, -h / 2 + 10, w / 2 - corner, -h / 2 + 10);
-    this.bg.lineBetween(-w / 2 + 10, h / 2 - corner, -w / 2 + 10, h / 2 - 10);
-    this.bg.lineBetween(-w / 2 + 10, h / 2 - 10, -w / 2 + corner, h / 2 - 10);
-    this.bg.lineBetween(w / 2 - 10, h / 2 - corner, w / 2 - 10, h / 2 - 10);
-    this.bg.lineBetween(w / 2 - 10, h / 2 - 10, w / 2 - corner, h / 2 - 10);
-    this.drawGildedOverlay(w, h, this.options.stroke ?? COLORS.gold, this.options.strokeAlpha ?? 0.55);
+    drawPixelPanel(this.bg, 0, 0, w, h, {
+      fill,
+      inner: this.options.inner ?? 0x11131a,
+      stroke: this.options.stroke ?? COLORS.gold,
+      strokeAlpha: this.options.strokeAlpha ?? 0.82,
+      alpha,
+      seed: Math.round(w * 0.5 + h)
+    });
   }
 
   drawGildedOverlay(w, h, color, alpha = 0.55) {

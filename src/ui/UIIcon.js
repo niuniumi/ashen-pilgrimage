@@ -1,8 +1,5 @@
 import Phaser from 'phaser';
 import { drawBadgeIcon } from '../art/IconFactory.js';
-import { THEME } from '../game/Theme.js';
-import { addUiAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
-import { relicAssetFor } from '../art/RelicAssets.js';
 
 export class UIIcon extends Phaser.GameObjects.Container {
   constructor(scene, x, y, type, options = {}) {
@@ -10,14 +7,8 @@ export class UIIcon extends Phaser.GameObjects.Container {
     this.type = type;
     this.size = options.size ?? 42;
     this.options = options;
-    const relicAsset = type === 'relic' && options.relicId ? relicAssetFor(options.relicId) : null;
-    this.relicImage = relicAsset && scene.textures.exists(relicAsset.key)
-      ? scene.add.image(0, 0, relicAsset.key).setOrigin(0.5).setDisplaySize(this.size, this.size).setAlpha(options.alpha ?? 1)
-      : null;
-    const assetKey = this.relicImage ? null : iconAssetFor(type);
-    this.asset = assetKey && hasTexture(scene, HANDPAINTED_KEYS.ui)
-      ? addUiAsset(scene, assetKey, 0, 0, { displayWidth: this.size, displayHeight: this.size, alpha: options.alpha ?? 1 })
-      : null;
+    this.relicImage = null;
+    this.asset = null;
     this.g = scene.add.graphics();
     this.add([this.relicImage, this.asset, this.g].filter(Boolean));
     scene.add.existing(this);

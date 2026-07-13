@@ -38,7 +38,7 @@ function legacyRun(overrides = {}) {
 test('migrates v1 run and rolls back an orphaned active node', () => {
   const migrated = migrateRun(legacyRun());
 
-  assert.equal(migrated.version, 3);
+  assert.equal(migrated.version, 4);
   assert.equal(migrated.map.activeNode, null);
   assert.deepEqual(migrated.map.available, ['n0']);
   assert.deepEqual(migrated.map.path, []);
@@ -108,7 +108,7 @@ test('rebuilds an incompatible legacy map without losing run progress', () => {
   const completedRows = migrated.map.completed.map((id) => migrated.map.nodes.find((node) => node.id === id)?.row);
   const availableRows = migrated.map.available.map((id) => migrated.map.nodes.find((node) => node.id === id)?.row);
 
-  assert.equal(migrated.version, 3);
+  assert.equal(migrated.version, 4);
   assert.equal(maxRow, 11);
   assert.ok(migrated.map.nodes.every((node) => node.x >= 300 && node.x <= 850));
   assert.deepEqual(completedRows, [0, 1, 2, 3, 4, 5]);
@@ -148,9 +148,59 @@ test('rebuilds a missing map instead of deleting an otherwise playable run', () 
   }));
 
   assert.ok(migrated);
-  assert.equal(migrated.version, 3);
+  assert.equal(migrated.version, 4);
   assert.equal(migrated.gold, 144);
   assert.equal(migrated.floor, 4);
   assert.equal(Math.max(...migrated.map.nodes.map((node) => node.row)), 11);
   assert.ok(migrated.map.available.every((id) => migrated.map.nodes.find((node) => node.id === id).row === 4));
+});
+
+test('preserves a pending reward checkpoint instead of rolling back its active node', () => {
+  const map = MapSystem.createSeededMap(1, createRngState(91)).map;
+  map.activeNode = 'n0';
+  map.path = ['n0'];
+  const pendingReward = { gold: 27, cards: [], relic: null, relicPending: false };
+  const migrated = migrateRun(legacyRun({
+    version: 3,
+    seed: 91,
+    rngState: createRngState(91),
+    floor: 1,
+    map,
+    checkpoint: null,
+    pendingReward,
+    rewardClaimed: false
+  }));
+
+  assert.equal(migrated.map.activeNode, 'n0');
+  assert.deepEqual(migrated.pendingReward, pendingReward);
+  assert.equal(migrated.rewardClaimed, false);
+});
+
+test('preserves explicit non-battle stages instead of rolling back the active node', () => {
+  const map = MapSystem.createSeededMap(1, createRngState(94)).map;
+  map.activeNode = 'n0';
+  map.path = ['n0'];
+  const migrated = migrateRun(legacyRun({
+    version: 4,
+    seed: 94,
+    rngState: createRngState(94),
+    map,
+    pendingScene: 'shop'
+  }));
+
+  assert.equal(migrated.pendingScene, 'shop');
+  assert.equal(migrated.map.activeNode, 'n0');
+  assert.deepEqual(migrated.map.path, ['n0']);
+});
+
+test('infers act clear for a legacy save with a completed boss and no available nodes', () => {
+  const map = MapSystem.createSeededMap(1, createRngState(95)).map;
+  const boss = map.nodes.find((node) => node.type === 'boss');
+  map.completed = [boss.id];
+  map.path = [boss.id];
+  map.available = [];
+  map.activeNode = null;
+  const migrated = migrateRun(legacyRun({ version: 3, seed: 95, rngState: createRngState(95), map }));
+
+  assert.equal(migrated.pendingScene, 'act-clear');
 });

@@ -18,6 +18,7 @@ export default class ActClearScene extends Phaser.Scene {
 
   create() {
     this.transitioning = false;
+    this.finished = false;
     this.input.enabled = true;
     attachSceneServices(this);
     this.run = getActiveRun(this);
@@ -27,6 +28,8 @@ export default class ActClearScene extends Phaser.Scene {
     }
     this.chapter = getActDefinition(this.run.act ?? this.run.map?.act ?? 1);
     this.nextChapter = getNextActDefinition(this.chapter.number);
+    this.run.pendingScene = 'act-clear';
+    saveActiveRun(this, this.run);
     this.drawBackdrop();
     this.add.text(768, 88, this.chapter.clearTitle, titleStyle(50)).setOrigin(0.5);
     this.add.text(768, 140, this.chapter.clearSubtitle, textStyle(22, THEME.css.muted)).setOrigin(0.5);
@@ -70,6 +73,8 @@ export default class ActClearScene extends Phaser.Scene {
   }
 
   finish() {
+    if (this.finished) return;
+    this.finished = true;
     this.run.victoryCount = (this.run.victoryCount ?? 0) + 1;
     if (this.nextChapter) {
       this.run.act = this.nextChapter.number;
@@ -79,11 +84,16 @@ export default class ActClearScene extends Phaser.Scene {
       this.run.map = generated.map;
       this.run.rngState = generated.state;
       this.run.rewardClaimed = false;
+      this.run.pendingScene = 'vow';
+      delete this.run.pendingBattleType;
       saveActiveRun(this, this.run);
       SceneTransition.fadeTo(this, SCENES.Vow, {}, 460);
       return;
     }
     this.registry.set('result', { victory: true });
+    this.run.pendingScene = 'result';
+    this.run.resultVictory = true;
+    delete this.run.pendingBattleType;
     saveActiveRun(this, this.run);
     SceneTransition.fadeTo(this, SCENES.Result, { victory: true }, 460);
   }

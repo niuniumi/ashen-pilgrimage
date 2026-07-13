@@ -12,9 +12,10 @@ test('menu, map, battle, and boss route to distinct authored tracks', () => {
 test('story and rest use quieter scene-specific mixes', () => {
   const story = resolveBgmProfile('story');
   const rest = resolveBgmProfile('rest');
-  assert.equal(story.key, 'bgm-menu');
+  assert.equal(story.key, 'bgm-map-act-2');
   assert.ok(story.gain < 1);
-  assert.equal(rest.key, 'bgm-menu');
+  assert.equal(rest.key, 'bgm-map-act-1');
+  assert.notEqual(rest.key, story.key);
   assert.ok(rest.gain < story.gain);
 });
 

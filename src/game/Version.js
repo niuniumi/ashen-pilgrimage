@@ -1,6 +1,6 @@
 export const VERSION = {
-  version: 'v1.1.1-production',
-  buildTime: '2026-07-11 20:05:00 +08:00',
+  version: 'v2.0.0-pixel-rebuild',
+  buildTime: '2026-07-13 14:49:43 +08:00',
   buildTarget: 'web-phaser-canvas',
   deployUrl: 'https://niuniumi.github.io/ashen-pilgrimage/'
 };

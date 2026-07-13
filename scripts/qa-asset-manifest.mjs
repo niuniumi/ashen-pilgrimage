@@ -1,48 +1,37 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { flattenFinalArtAssets } from '../src/art/FinalArtAssets.js';
+import { PIXEL_ACTORS, PIXEL_ASSETS } from '../src/art/PixelAssetCatalog.js';
 
 const root = process.cwd();
-const assets = flattenFinalArtAssets();
-const keys = new Set();
+const assets = Object.values(PIXEL_ASSETS);
+const actors = Object.values(PIXEL_ACTORS);
 const issues = [];
-
-function check(condition, message) {
-  if (!condition) {
-    issues.push(message);
-  }
-}
+const keys = new Set();
 
 for (const asset of assets) {
-  check(asset.key, `asset missing key: ${JSON.stringify(asset)}`);
-  check(asset.url, `asset missing url: ${asset.key}`);
-  check(Number.isFinite(asset.width) && asset.width > 0, `asset invalid width: ${asset.key}`);
-  check(Number.isFinite(asset.height) && asset.height > 0, `asset invalid height: ${asset.key}`);
-
-  if (asset.key) {
-    check(!keys.has(asset.key), `duplicate asset key: ${asset.key}`);
-    keys.add(asset.key);
-  }
-
-  if (asset.url) {
-    const file = path.join(root, 'public', asset.url);
-    check(fs.existsSync(file), `missing asset file: ${asset.url}`);
-    if (fs.existsSync(file)) {
-      const size = fs.statSync(file).size;
-      check(size > 512, `asset file too small: ${asset.url}`);
-    }
-  }
+  if (!asset.key || !asset.url) issues.push(`invalid pixel asset: ${JSON.stringify(asset)}`);
+  if (keys.has(asset.key)) issues.push(`duplicate asset key: ${asset.key}`);
+  keys.add(asset.key);
+  const file = path.join(root, 'public', asset.url);
+  if (!fs.existsSync(file)) issues.push(`missing asset file: ${asset.url}`);
+  else if (fs.statSync(file).size < 500_000) issues.push(`production pixel asset too small: ${asset.url}`);
 }
 
-const report = {
-  ok: issues.length === 0,
-  count: assets.length,
-  issues
-};
+for (const asset of actors) {
+  if (!asset.key || !asset.url) issues.push(`invalid pixel actor: ${JSON.stringify(asset)}`);
+  if (keys.has(asset.key)) issues.push(`duplicate asset key: ${asset.key}`);
+  keys.add(asset.key);
+  const file = path.join(root, 'public', asset.url);
+  if (!fs.existsSync(file)) issues.push(`missing pixel actor: ${asset.url}`);
+  else if (fs.statSync(file).size < 10_000) issues.push(`pixel actor too small: ${asset.url}`);
+}
 
+const font = path.join(root, 'public/assets/fonts/fusion-pixel-10px-zh-hans.woff2');
+if (!fs.existsSync(font) || fs.statSync(font).size < 100_000) issues.push('missing production pixel Chinese font');
+
+const report = { ok: issues.length === 0, count: assets.length + actors.length + 1, issues };
 if (!report.ok) {
   console.error(JSON.stringify(report, null, 2));
   process.exit(1);
 }
-
 console.log(JSON.stringify(report, null, 2));

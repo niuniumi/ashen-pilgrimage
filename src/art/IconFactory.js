@@ -1,25 +1,62 @@
 import { THEME } from '../game/Theme.js';
 import { drawCandleFlame } from './PixelSpriteFactory.js';
+import { PIXEL_PALETTE, snapPixel } from './PixelArtSystem.js';
 
 export function drawBadgeIcon(g, x, y, kind, size = 36, options = {}) {
-  const r = size / 2;
-  g.fillStyle(options.bg ?? 0x17100e, options.alpha ?? 0.94);
-  g.fillCircle(x, y, r);
-  g.lineStyle(2, options.stroke ?? THEME.colors.darkGold, 0.82);
-  g.strokeCircle(x, y, r);
-  g.lineStyle(1, 0x000000, 0.45);
-  g.strokeCircle(x, y, r - 5);
-
-  if (kind === 'battle' || kind === 'attack') drawSword(g, x, y, r);
-  else if (kind === 'elite') drawElite(g, x, y, r);
-  else if (kind === 'boss') drawBossMark(g, x, y, r);
-  else if (kind === 'shop') drawCoin(g, x, y, r);
-  else if (kind === 'event') drawScroll(g, x, y, r);
-  else if (kind === 'rest') drawCandleFlame(g, x, y + r * 0.08, r / 18);
-  else if (kind === 'chest') drawChest(g, x, y, r);
-  else if (kind === 'shield' || kind === 'defense') drawShield(g, x, y, r);
-  else if (kind === 'poison') drawVial(g, x, y, r);
-  else drawRelic(g, x, y, r);
+  const s = Math.max(4, snapPixel(size));
+  const left = snapPixel(x - s / 2);
+  const top = snapPixel(y - s / 2);
+  const alpha = options.alpha ?? 1;
+  g.fillStyle(options.stroke ?? PIXEL_PALETTE.goldDark, alpha);
+  g.fillRect(left, top, s, s);
+  g.fillStyle(options.bg ?? PIXEL_PALETTE.black, alpha);
+  g.fillRect(left + 4, top + 4, s - 8, s - 8);
+  const color = options.color ?? PIXEL_PALETTE.candle;
+  g.fillStyle(color, alpha);
+  const cx = snapPixel(x);
+  const cy = snapPixel(y);
+  if (kind === 'battle' || kind === 'attack' || kind === 'sword') {
+    for (let i = -12; i <= 12; i += 4) g.fillRect(cx + i, cy - i - 4, 4, 8);
+    g.fillRect(cx - 12, cy + 8, 20, 4);
+  } else if (kind === 'shield' || kind === 'defense' || kind === 'block') {
+    g.fillRect(cx - 12, cy - 12, 24, 8);
+    g.fillRect(cx - 12, cy - 4, 24, 12);
+    g.fillRect(cx - 8, cy + 8, 16, 8);
+    g.fillRect(cx - 4, cy + 16, 8, 4);
+  } else if (kind === 'rest' || kind === 'flame') {
+    g.fillStyle(PIXEL_PALETTE.ember, alpha);
+    g.fillRect(cx - 8, cy, 16, 12);
+    g.fillStyle(PIXEL_PALETTE.candle, alpha);
+    g.fillRect(cx - 4, cy - 12, 8, 16);
+  } else if (kind === 'shop' || kind === 'coin') {
+    g.fillRect(cx - 12, cy - 12, 24, 24);
+    g.fillStyle(PIXEL_PALETTE.goldDark, alpha);
+    g.fillRect(cx - 4, cy - 8, 8, 16);
+  } else if (kind === 'event') {
+    g.fillRect(cx - 12, cy - 12, 24, 24);
+    g.fillStyle(PIXEL_PALETTE.paperDark, alpha);
+    g.fillRect(cx - 8, cy - 4, 16, 4);
+    g.fillRect(cx - 8, cy + 4, 12, 4);
+  } else if (kind === 'chest') {
+    g.fillStyle(PIXEL_PALETTE.paperDark, alpha);
+    g.fillRect(cx - 14, cy - 8, 28, 24);
+    g.fillStyle(PIXEL_PALETTE.gold, alpha);
+    g.fillRect(cx - 14, cy, 28, 4);
+    g.fillRect(cx - 2, cy, 4, 12);
+  } else if (kind === 'boss' || kind === 'elite') {
+    g.fillStyle(PIXEL_PALETTE.blood, alpha);
+    g.fillRect(cx - 12, cy - 4, 24, 16);
+    g.fillRect(cx - 8, cy - 12, 4, 8);
+    g.fillRect(cx + 4, cy - 12, 4, 8);
+    g.fillStyle(PIXEL_PALETTE.void, alpha);
+    g.fillRect(cx - 6, cy, 4, 4);
+    g.fillRect(cx + 2, cy, 4, 4);
+  } else {
+    g.fillRect(cx - 12, cy - 4, 24, 8);
+    g.fillRect(cx - 4, cy - 12, 8, 24);
+    g.fillStyle(PIXEL_PALETTE.violet, alpha);
+    g.fillRect(cx - 4, cy - 4, 8, 8);
+  }
 }
 
 export function createBadgeIcon(scene, x, y, kind, size = 36, options = {}) {

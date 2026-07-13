@@ -13,6 +13,7 @@ import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
 import { attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, addUiAsset, addVfxAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
+import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 
 export default class ChestScene extends Phaser.Scene {
   constructor() {
@@ -68,29 +69,47 @@ export default class ChestScene extends Phaser.Scene {
       return;
     }
     const g = this.add.graphics();
-    g.fillStyle(0x050404, 0.44);
-    g.fillEllipse(768, 562, 330, 42);
-    g.fillStyle(0x3c2417, 1);
-    g.fillRoundedRect(650, 428, 236, 138, 8);
-    g.fillStyle(0x5e3820, 1);
+    g.fillStyle(PIXEL_PALETTE.void, 0.72);
+    g.fillRect(596, 568, 344, 20);
+    g.fillStyle(PIXEL_PALETTE.void, 1);
+    g.fillRect(632, 422, 272, 148);
+    g.fillStyle(0x3b2418, 1);
+    g.fillRect(644, 434, 248, 124);
+    g.fillStyle(0x684125, 1);
+    g.fillRect(652, 442, 232, 28);
+    g.fillStyle(0x4a2d1c, 1);
+    g.fillRect(652, 478, 232, 72);
     if (open) {
-      g.fillRoundedRect(625, 338, 286, 76, 16);
-      g.lineStyle(8, THEME.colors.darkGold, 0.86);
-      g.strokeRoundedRect(625, 338, 286, 76, 16);
-      g.fillStyle(0xf1c76a, 0.24);
-      g.fillTriangle(660, 430, 768, 270, 880, 430);
-      g.fillCircle(768, 406, 86);
+      g.fillStyle(PIXEL_PALETTE.void, 1);
+      g.fillRect(620, 340, 296, 80);
+      g.fillStyle(0x684125, 1);
+      g.fillRect(632, 352, 272, 56);
+      g.fillStyle(PIXEL_PALETTE.goldDark, 1);
+      g.fillRect(632, 400, 272, 8);
+      g.fillStyle(PIXEL_PALETTE.candle, 0.18);
+      g.fillRect(704, 294, 128, 36);
+      g.fillRect(672, 330, 192, 16);
+      g.fillStyle(PIXEL_PALETTE.gold, 0.54);
+      g.fillRect(744, 314, 48, 12);
+      g.fillRect(720, 338, 96, 8);
     } else {
-      g.fillRoundedRect(635, 386, 266, 88, 16);
+      g.fillStyle(PIXEL_PALETTE.void, 1);
+      g.fillRect(632, 374, 272, 100);
+      g.fillStyle(0x684125, 1);
+      g.fillRect(644, 386, 248, 76);
+      g.fillStyle(0x80502b, 1);
+      g.fillRect(652, 394, 232, 20);
     }
-    g.lineStyle(8, THEME.colors.darkGold, 0.86);
-    g.strokeRoundedRect(635, 386, 266, 180, 14);
-    g.lineStyle(3, 0x1a100b, 0.9);
-    g.lineBetween(638, 474, 898, 474);
-    g.fillStyle(THEME.colors.darkGold, 0.95);
-    g.fillRect(748, 474, 40, 46);
-    g.fillStyle(0x120b08, 0.7);
-    g.fillCircle(768, 498, 6);
+    g.fillStyle(PIXEL_PALETTE.goldDark, 1);
+    g.fillRect(648, 466, 240, 8);
+    g.fillRect(660, 430, 12, 128);
+    g.fillRect(864, 430, 12, 128);
+    g.fillStyle(PIXEL_PALETTE.gold, 1);
+    g.fillRect(744, 466, 48, 52);
+    g.fillStyle(PIXEL_PALETTE.void, 1);
+    g.fillRect(760, 482, 16, 20);
+    g.fillStyle(PIXEL_PALETTE.bone, 0.5);
+    g.fillRect(664, 442, 8, 72);
   }
 
   openChest() {
@@ -105,6 +124,10 @@ export default class ChestScene extends Phaser.Scene {
     const relic = RelicSystem.addRandom(this.run);
     this.run.gold += gold;
     if (cursed) this.run.deck.push(createCardInstance('curse-rot'));
+    delete this.run.pendingScene;
+    delete this.run.pendingBattleType;
+    MapSystem.finishActiveNode(this.run);
+    saveActiveRun(this, this.run);
     this.children.removeAll(true);
     this.drawBackdrop('宝箱开启', '暗金光芒从箱缝中涌出。');
     new UIFrame(this, 768, 462, 820, 500, { fill: THEME.colors.panel, alpha: 0.9, stroke: THEME.colors.darkGold });
@@ -123,8 +146,6 @@ export default class ChestScene extends Phaser.Scene {
   }
 
   leave() {
-    MapSystem.finishActiveNode(this.run);
-    saveActiveRun(this, this.run);
     this.scene.start(SCENES.Map);
   }
 }

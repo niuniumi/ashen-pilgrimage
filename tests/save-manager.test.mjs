@@ -43,15 +43,15 @@ function v1Run() {
   };
 }
 
-test('loadRun migrates valid old saves and persists the repaired v3 value', () => {
+test('loadRun migrates valid old saves and persists the repaired v4 value', () => {
   const storage = installStorage();
   storage.set(SAVE_KEY, JSON.stringify(v1Run()));
 
   const loaded = SaveManager.loadRun();
   const persisted = JSON.parse(storage.get(SAVE_KEY));
 
-  assert.equal(loaded.version, 3);
+  assert.equal(loaded.version, 4);
   assert.equal(loaded.map.activeNode, null);
-  assert.equal(persisted.version, 3);
+  assert.equal(persisted.version, 4);
   assert.ok(persisted.rngState);
 });

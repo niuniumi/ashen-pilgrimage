@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-11T12:06:24.998Z",
+  "generatedAt": "2026-07-12T15:56:15.859Z",
   "simulations": 180,
   "outcomes": {
     "exiled-knight": {
@@ -9,13 +9,13 @@
         "timeout": 0
       },
       "elite": {
-        "won": 19,
-        "lost": 1,
+        "won": 20,
+        "lost": 0,
         "timeout": 0
       },
       "boss": {
-        "won": 5,
-        "lost": 15,
+        "won": 9,
+        "lost": 11,
         "timeout": 0
       }
     },
@@ -31,8 +31,8 @@
         "timeout": 0
       },
       "boss": {
-        "won": 19,
-        "lost": 1,
+        "won": 12,
+        "lost": 8,
         "timeout": 0
       }
     },
@@ -43,13 +43,13 @@
         "timeout": 0
       },
       "elite": {
-        "won": 19,
-        "lost": 1,
+        "won": 20,
+        "lost": 0,
         "timeout": 0
       },
       "boss": {
-        "won": 4,
-        "lost": 16,
+        "won": 10,
+        "lost": 10,
         "timeout": 0
       }
     }

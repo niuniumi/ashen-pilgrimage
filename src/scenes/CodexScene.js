@@ -33,6 +33,7 @@ export default class CodexScene extends Phaser.Scene {
     this.tab = 'cards';
     this.selectedId = null;
     this.page = 0;
+    this.detailPage = 0;
     this.render();
   }
 
@@ -115,6 +116,7 @@ export default class CodexScene extends Phaser.Scene {
     this.tab = tab;
     this.selectedId = null;
     this.page = 0;
+    this.detailPage = 0;
     this.render();
   }
 
@@ -143,6 +145,7 @@ export default class CodexScene extends Phaser.Scene {
       const selected = this.itemKey(item) === (this.selectedId ?? this.itemKey(items[0]));
       new UIButton(this, x, y, 170, 38, item.name, () => {
         this.selectedId = this.itemKey(item);
+        this.detailPage = 0;
         this.render();
       }, {
         fontSize: item.name.length > 5 ? 15 : 17,
@@ -215,12 +218,26 @@ export default class CodexScene extends Phaser.Scene {
       generatedHeight: item.type === 'boss' ? 300 : item.id === 'black-hound' || item.id === 'crownless-hound' ? 220 : 250
     });
     const type = item.type === 'boss' ? '首领' : item.type === 'elite' ? '精英' : '普通敌人';
-    const actions = item.actions.map((action) => `${action.name}：${action.text}`).join('\n');
+    const actionPageSize = 4;
+    const actionPageCount = Math.max(1, Math.ceil(item.actions.length / actionPageSize));
+    this.detailPage = Phaser.Math.Clamp(this.detailPage ?? 0, 0, actionPageCount - 1);
+    const visibleActions = item.actions.slice(this.detailPage * actionPageSize, this.detailPage * actionPageSize + actionPageSize);
+    const actions = visibleActions.map((action) => `${action.name}：${action.text}`).join('\n');
     this.add
-      .text(1048, 356, `类型：${type}\n生命：${item.hp}\n\n行动：\n${actions}`, {
-        ...textStyle(18, THEME.css.body, { lineSpacing: 7 }),
+      .text(1048, 356, `类型：${type}\n生命：${item.hp}\n\n行动 ${this.detailPage + 1}/${actionPageCount}：\n${actions}`, {
+        ...textStyle(17, THEME.css.body, { lineSpacing: 6 }),
         wordWrap: { width: 260 }
       })
       .setOrigin(0, 0);
+    if (actionPageCount > 1) {
+      new UIButton(this, 1058, 708, 126, 38, '上一组', () => {
+        this.detailPage = Math.max(0, this.detailPage - 1);
+        this.render();
+      }, { fontSize: 16, disabled: this.detailPage <= 0 });
+      new UIButton(this, 1192, 708, 126, 38, '下一组', () => {
+        this.detailPage = Math.min(actionPageCount - 1, this.detailPage + 1);
+        this.render();
+      }, { fontSize: 16, disabled: this.detailPage >= actionPageCount - 1 });
+    }
   }
 }

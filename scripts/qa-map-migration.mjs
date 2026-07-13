@@ -73,7 +73,7 @@ async function readMapState(page) {
 }
 
 function verify(state, phase) {
-  assert(state.version === 3, `${phase}: expected run version 3`);
+  assert(state.version === 4, `${phase}: expected run version 4`);
   assert(state.maxRow === 11, `${phase}: expected a twelve-row map`);
   assert(state.floor === 6, `${phase}: floor progress changed`);
   assert(state.hp === 42 && state.gold === 202, `${phase}: core run stats changed`);

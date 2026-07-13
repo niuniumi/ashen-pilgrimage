@@ -1,5 +1,6 @@
 import { COLORS } from '../game/constants.js';
 import { playVfxSequence } from '../art/HandPaintedAssets.js';
+import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 
 export function healEffect(scene, x, y) {
   const seq = playVfxSequence(scene, x, y, ['blessingA', 'blessingB', 'blessingC'], {
@@ -13,11 +14,11 @@ export function healEffect(scene, x, y) {
   });
   if (seq.length) return;
   const g = scene.add.graphics().setDepth(700);
-  g.fillStyle(COLORS.green, 0.28);
-  g.fillCircle(x, y, 62);
-  g.lineStyle(3, 0xb8ef9e, 0.8);
-  g.lineBetween(x - 22, y, x + 22, y);
-  g.lineBetween(x, y - 22, x, y + 22);
+  g.fillStyle(PIXEL_PALETTE.moss, 0.3);
+  g.fillRect(x - 52, y - 52, 104, 104);
+  g.fillStyle(0xb8ef9e, 0.9);
+  g.fillRect(x - 28, y - 6, 56, 12);
+  g.fillRect(x - 6, y - 28, 12, 56);
   scene.tweens.add({
     targets: g,
     alpha: 0,

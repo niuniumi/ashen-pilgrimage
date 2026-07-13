@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { SaveManager } from './SaveManager.js';
 import { resolveBgmProfile } from './AudioProfiles.js';
+import { resolveAudioHintLayout } from './AudioHintLayout.js';
+import { FONT } from '../design/textStyles.js';
 
 const ALIASES = {
   tap: 'uiClick',
@@ -44,6 +46,22 @@ const SFX_KEYS = {
   pauseClose: ['sfx-dialog-close-1', 'sfx-dialog-close-2'],
   error: ['sfx-error-1', 'sfx-error-2'],
   turn: ['sfx-turn-1', 'sfx-turn-2']
+};
+
+const SFX_GAIN = {
+  uiHover: 0.34,
+  uiClick: 0.48,
+  cardHover: 0.38,
+  cardSelect: 0.56,
+  cardPlay: 0.68,
+  swordHit: 0.82,
+  shieldBlock: 0.78,
+  enemyHit: 0.7,
+  playerHit: 0.74,
+  pageTurn: 0.58,
+  storyText: 0.42,
+  coin: 0.64,
+  error: 0.52
 };
 
 function clamp01(value, fallback = 0.3) {
@@ -247,15 +265,19 @@ export class AudioManager {
   showUnlockHint() {
     const scene = this.scene;
     if (!scene?.add || this.unlockHint?.scene) return;
+    const sceneKey = scene.scene?.key ?? scene.sys?.settings?.key ?? '';
+    const layout = resolveAudioHintLayout(sceneKey);
     this.unlockHint = scene.add
-      .text(768, 824, '点击任意位置开启音乐。', {
-        fontFamily: 'Georgia, "Microsoft YaHei", serif',
-        fontSize: 20,
+      .text(layout.x, layout.y, '点击任意位置开启音乐', {
+        fontFamily: FONT,
+        fontSize: 16,
         color: '#f6edd0',
         stroke: '#120b08',
-        strokeThickness: 4
+        strokeThickness: 3,
+        backgroundColor: '#121118dd',
+        padding: { x: 12, y: 6 }
       })
-      .setOrigin(0.5)
+      .setOrigin(...layout.origin)
       .setDepth(30000);
     scene.input?.once?.('pointerdown', () => this.unlock());
   }
@@ -288,7 +310,7 @@ export class AudioManager {
       const variance = Number.isFinite(options.variance) ? options.variance : 0;
       const rate = Number.isFinite(options.rate) ? options.rate : 1 + (variance ? Phaser.Math.FloatBetween(-variance, variance) : 0);
       const detune = Number.isFinite(options.detune) ? options.detune : 0;
-      const volume = clamp01(settings.sfxVolume, 0.75) * (Number.isFinite(options.volume) ? options.volume : 1);
+      const volume = clamp01(settings.sfxVolume, 0.62) * (SFX_GAIN[sound] ?? 0.72) * (Number.isFinite(options.volume) ? options.volume : 1);
       scene.sound.play(key, { volume: clamp01(volume, 0.75), rate, detune });
     } catch (error) {
       console.warn(`SFX play failed: ${key}`, error);

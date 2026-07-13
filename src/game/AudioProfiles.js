@@ -1,17 +1,17 @@
 const BGM_PROFILES = {
-  menu: { key: 'bgm-menu', gain: 0.78, rate: 1 },
-  map: { key: 'bgm-map-act-1', gain: 0.72, rate: 1 },
-  battle: { key: 'bgm-battle-act-1', gain: 0.82, rate: 1 },
-  boss: { key: 'bgm-boss', gain: 1, rate: 1 },
-  story: { key: 'bgm-menu', gain: 0.58, rate: 1 },
-  rest: { key: 'bgm-menu', gain: 0.48, rate: 1 },
-  defeat: { key: 'bgm-menu', gain: 0.42, rate: 0.97 },
-  'map-act-1': { key: 'bgm-map-act-1', gain: 0.7, rate: 1 },
-  'map-act-2': { key: 'bgm-map-act-2', gain: 0.72, rate: 1 },
-  'map-act-3': { key: 'bgm-map-act-3', gain: 0.74, rate: 1 },
-  'battle-act-1': { key: 'bgm-battle-act-1', gain: 0.78, rate: 1 },
-  'battle-act-2': { key: 'bgm-battle-act-2', gain: 0.8, rate: 1 },
-  'battle-act-3': { key: 'bgm-battle-act-3', gain: 0.82, rate: 1 }
+  menu: { key: 'bgm-menu', gain: 0.68, rate: 1 },
+  map: { key: 'bgm-map-act-1', gain: 0.62, rate: 1 },
+  battle: { key: 'bgm-battle-act-1', gain: 0.72, rate: 1 },
+  boss: { key: 'bgm-boss', gain: 0.82, rate: 1 },
+  story: { key: 'bgm-map-act-2', gain: 0.48, rate: 1 },
+  rest: { key: 'bgm-map-act-1', gain: 0.44, rate: 1 },
+  defeat: { key: 'bgm-map-act-3', gain: 0.5, rate: 1 },
+  'map-act-1': { key: 'bgm-map-act-1', gain: 0.58, rate: 1 },
+  'map-act-2': { key: 'bgm-map-act-2', gain: 0.6, rate: 1 },
+  'map-act-3': { key: 'bgm-map-act-3', gain: 0.62, rate: 1 },
+  'battle-act-1': { key: 'bgm-battle-act-1', gain: 0.68, rate: 1 },
+  'battle-act-2': { key: 'bgm-battle-act-2', gain: 0.7, rate: 1 },
+  'battle-act-3': { key: 'bgm-battle-act-3', gain: 0.72, rate: 1 }
 };
 
 const DIRECT_KEYS = new Set([

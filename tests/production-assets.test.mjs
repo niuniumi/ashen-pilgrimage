@@ -24,7 +24,12 @@ test('all production music routes have ogg and mp3 fallbacks', async () => {
   }
 });
 
-test('defeat art uses the transparent production asset', async () => {
-  const info = await stat(path.join(root, 'generated', 'defeat-tombstone-v2.png'));
-  assert.ok(info.size > 100_000);
+test('pixel production backgrounds and Chinese font are bundled locally', async () => {
+  const backgrounds = ['menu.png', 'map.png', 'folio.png', 'battle-act-1.png', 'battle-act-2.png', 'battle-act-3.png'];
+  for (const background of backgrounds) {
+    const info = await stat(path.join(root, 'pixel', 'backgrounds', background));
+    assert.ok(info.size > 500_000, `${background} should contain production pixel art`);
+  }
+  const font = await stat(path.join(root, 'fonts', 'fusion-pixel-10px-zh-hans.woff2'));
+  assert.ok(font.size > 100_000, 'pixel Chinese font should be bundled locally');
 });

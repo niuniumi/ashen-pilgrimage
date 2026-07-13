@@ -1,4 +1,4 @@
-export const FONT = 'Georgia, "Microsoft YaHei", serif';
+export const FONT = 'PixelCN, "Microsoft YaHei", monospace';
 
 export const TEXT_STYLES = {
   title: {

@@ -26,6 +26,7 @@ export default class RewardScene extends Phaser.Scene {
     this.audio?.startAmbience?.('story');
     this.run = getActiveRun(this);
     if (!this.run) return;
+    this.claiming = false;
     if (!this.run.pendingReward) this.run.pendingReward = RewardSystem.createReward(this.run, this.run.lastBattleType ?? 'battle');
     this.drawBackdrop();
     this.drawHeader();
@@ -105,11 +106,17 @@ export default class RewardScene extends Phaser.Scene {
   }
 
   claim(cardId) {
-    if (this.run.rewardClaimed) {
+    if (this.claiming || this.run.rewardClaimed) {
       addToast(this, '奖励已经领取。', 'error');
       return;
     }
     const reward = this.run.pendingReward;
+    if (!reward) {
+      addToast(this, '奖励状态已失效，正在返回地图。', 'error');
+      this.time.delayedCall(240, () => this.scene.start(SCENES.Map));
+      return;
+    }
+    this.claiming = true;
     this.run.gold += reward.gold;
     this.audio?.play('coin');
     if (cardId) {
@@ -124,6 +131,8 @@ export default class RewardScene extends Phaser.Scene {
     }
     this.run.rewardClaimed = true;
     this.run.pendingReward = null;
+    delete this.run.pendingScene;
+    delete this.run.pendingBattleType;
     MapSystem.finishActiveNode(this.run);
     saveActiveRun(this, this.run);
     this.time.delayedCall(500, () => this.scene.start(SCENES.Map));

@@ -15,6 +15,7 @@ import { drawIcon, UIIcon } from '../ui/UIIcon.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
 import { addToast, attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
 import { HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
+import { FONT } from '../design/textStyles.js';
 
 const MAP_BOUNDS = { xMin: 360, xMax: 1160, yTop: 142, yBottom: 704 };
 const SOURCE_X_MIN = 300;
@@ -86,7 +87,7 @@ export default class MapScene extends Phaser.Scene {
     else this.drawVillageGraveMapSketch(g);
     const label = this.add
       .text(768, 724, this.chapter?.shortTitle ?? '', {
-        fontFamily: 'Georgia, "Microsoft YaHei", serif',
+        fontFamily: FONT,
         fontSize: 30,
         color: '#6f5430',
         align: 'center'
@@ -97,9 +98,9 @@ export default class MapScene extends Phaser.Scene {
     label.setBlendMode(Phaser.BlendModes.MULTIPLY);
     const frame = this.add.graphics().setDepth(3);
     frame.lineStyle(3, 0xb88935, 0.24);
-    frame.strokeRoundedRect(310, 128, 916, 608, 18);
+    frame.strokeRect(310, 128, 916, 608);
     frame.lineStyle(1, 0x7b6040, 0.22);
-    frame.strokeRoundedRect(330, 148, 876, 568, 14);
+    frame.strokeRect(330, 148, 876, 568);
     frame.lineStyle(1, 0xf0d08a, 0.18);
     frame.lineBetween(352, 154, 1182, 144);
     frame.lineBetween(348, 710, 1180, 720);
@@ -322,9 +323,10 @@ export default class MapScene extends Phaser.Scene {
     if (!hasTexture(this, HANDPAINTED_KEYS.ui)) {
       const seal = this.add.graphics();
       seal.fillStyle(completed ? 0x3a2d20 : 0x6a3d20, completed ? 0.42 : 0.82);
-      seal.fillCircle(0, 0, selectable ? (compact ? 27 : 32) : compact ? 23 : 27);
+      const size = selectable ? (compact ? 54 : 64) : compact ? 46 : 54;
+      seal.fillRect(-size / 2, -size / 2, size, size);
       seal.lineStyle(selectable ? 3 : 2, selectable ? THEME.colors.candle : THEME.colors.darkGold, selectable ? 1 : 0.6);
-      seal.strokeCircle(0, 0, selectable ? (compact ? 27 : 32) : compact ? 23 : 27);
+      seal.strokeRect(-size / 2, -size / 2, size, size);
       container.add(seal);
     }
     const icon = new UIIcon(this, 0, 0, node.type, {
@@ -341,7 +343,7 @@ export default class MapScene extends Phaser.Scene {
       .setOrigin(0.5);
     container.add(label);
 
-    const hit = this.add.circle(pos.x, pos.y, compact ? 34 : 44, 0xffffff, 0.001).setDepth(40);
+    const hit = this.add.zone(pos.x, pos.y, compact ? 68 : 88, compact ? 68 : 88).setDepth(40);
     hit.setInteractive({ useHandCursor: true });
     hit.on('pointerover', () => {
       this.audio?.play('uiHover');
@@ -381,6 +383,8 @@ export default class MapScene extends Phaser.Scene {
     }
     this.audio?.play('uiClick');
     MapSystem.startNode(this.run, node.id);
+    this.run.pendingScene = node.type === 'boss' ? 'boss-intro' : node.type;
+    this.run.pendingBattleType = node.type === 'elite' ? 'elite' : node.type === 'boss' ? 'boss' : 'battle';
     saveActiveRun(this, this.run);
     if (node.type === 'boss') {
       this.scene.start(SCENES.BossIntro);

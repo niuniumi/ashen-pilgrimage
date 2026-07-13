@@ -1,14 +1,16 @@
 import { isValidCharacterId } from '../data/characters.js';
 import { getCard, isKnownCardId } from '../data/cards.js';
 import { MapSystem } from '../systems/MapSystem.js';
+import { hasPendingRewardCheckpoint } from './RunResume.js';
 import { createRngState, normalizeRngState } from './RunRng.js';
 
-export const CURRENT_RUN_VERSION = 3;
+export const CURRENT_RUN_VERSION = 4;
 
 const CURRENT_MAP_MAX_ROW = 11;
 const MAP_X_MIN = 300;
 const MAP_X_MAX = 850;
 const MAP_NODE_TYPES = new Set(['battle', 'elite', 'event', 'shop', 'rest', 'chest', 'boss']);
+const RUN_STAGES = new Set(['vow', 'battle', 'boss-intro', 'reward', 'event', 'shop', 'rest', 'chest', 'act-clear', 'result']);
 
 function seedFromRun(run) {
   if (Number.isFinite(run.seed)) return Number(run.seed) >>> 0;
@@ -74,9 +76,11 @@ function completedFloor(map) {
 function rebuildIncompatibleMap(run, seed) {
   const oldMap = run.map;
   const checkpointActive = hasRestorableCheckpoint(run);
-  const orphanedActive = Boolean(oldMap.activeNode && !checkpointActive);
+  const rewardActive = hasPendingRewardCheckpoint(run);
+  const resumableActive = checkpointActive || rewardActive;
+  const orphanedActive = Boolean(oldMap.activeNode && !resumableActive);
   const finishedFloor = completedFloor(oldMap);
-  const progressBase = checkpointActive || orphanedActive ? finishedFloor : Math.max(finishedFloor, Number(run.floor) || 0);
+  const progressBase = resumableActive || orphanedActive ? finishedFloor : Math.max(finishedFloor, Number(run.floor) || 0);
   const progress = Math.min(CURRENT_MAP_MAX_ROW, Math.max(0, progressBase));
   const mapSeed = createRngState((seed ^ Math.imul((run.act ?? 1) + 17, 0x9e3779b1)) >>> 0);
   const regenerated = MapSystem.createSeededMap(run.act ?? 1, mapSeed).map;
@@ -99,11 +103,11 @@ function rebuildIncompatibleMap(run, seed) {
   run.floor = progress;
 
   const resumeNode = MapSystem.getNode({ map: regenerated }, regenerated.available[0]);
-  if (checkpointActive && resumeNode) {
+  if (resumableActive && resumeNode) {
     regenerated.activeNode = resumeNode.id;
     regenerated.path.push(resumeNode.id);
     run.floor = Math.max(run.floor, resumeNode.row + 1);
-    run.checkpoint.activeNode = resumeNode.id;
+    if (checkpointActive) run.checkpoint.activeNode = resumeNode.id;
   } else {
     run.checkpoint = null;
     delete run.pendingReward;
@@ -154,6 +158,7 @@ export function migrateRun(raw) {
   run.rngState = raw.rngState ? normalizeRngState(raw.rngState, seed) : createRngState(seed);
   run.checkpoint = raw.checkpoint ?? null;
   run.settlements = Array.isArray(raw.settlements) ? [...new Set(raw.settlements)] : [];
+  run.pendingScene = RUN_STAGES.has(raw.pendingScene) ? raw.pendingScene : null;
   run.act = Number.isFinite(run.act) ? run.act : run.map?.act ?? 1;
   run.actPage = Number.isFinite(run.actPage) ? run.actPage : 0;
   if (!run.map || typeof run.map !== 'object') {
@@ -167,7 +172,21 @@ export function migrateRun(raw) {
   run.eventHistory = Array.isArray(run.eventHistory) ? run.eventHistory : [];
 
   if (!hasCurrentMapSchema(run.map)) rebuildIncompatibleMap(run, seed);
-  else if (run.map.activeNode && !hasRestorableCheckpoint(run)) rollbackOrphanedNode(run);
+
+  if (!run.pendingScene) {
+    if (hasRestorableCheckpoint(run)) run.pendingScene = 'battle';
+    else if (hasPendingRewardCheckpoint(run)) run.pendingScene = 'reward';
+    else if (run.pendingVowOffer?.ids?.length) run.pendingScene = 'vow';
+    else if (run.map.available.length === 0 && run.map.activeNode == null) {
+      const completed = new Set(run.map.completed);
+      const finishedBoss = run.map.nodes.some((node) => node.type === 'boss' && completed.has(node.id));
+      if (finishedBoss) run.pendingScene = 'act-clear';
+    }
+  }
+
+  if (run.map.activeNode && !hasRestorableCheckpoint(run) && !hasPendingRewardCheckpoint(run) && !run.pendingScene) {
+    rollbackOrphanedNode(run);
+  }
   return run;
 }
 

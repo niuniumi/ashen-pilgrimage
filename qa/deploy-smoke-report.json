@@ -1,7 +1,7 @@
 {
   "url": "https://niuniumi.github.io/ashen-pilgrimage/",
-  "buildVersion": "v1.1.1-production",
-  "generatedAt": "2026-07-11T12:47:40.223Z",
+  "buildVersion": "v2.0.0-pixel-rebuild",
+  "generatedAt": "2026-07-13T11:17:25.463Z",
   "screenshots": [
     "qa/screenshots/deploy_art_final_menu.png",
     "qa/screenshots/deploy_release_prologue.png",
@@ -26,23 +26,28 @@
             "character": "exiled-knight"
           },
           {
-            "id": "knight-cleave",
-            "name": "劈砍",
-            "character": "exiled-knight"
-          },
-          {
-            "id": "knight-cleave",
-            "name": "劈砍",
-            "character": "exiled-knight"
-          },
-          {
-            "id": "knight-cleave",
-            "name": "劈砍",
-            "character": "exiled-knight"
-          },
-          {
             "id": "knight-rend",
             "name": "撕裂斩",
+            "character": "exiled-knight"
+          },
+          {
+            "id": "knight-cleave",
+            "name": "劈砍",
+            "character": "exiled-knight"
+          },
+          {
+            "id": "knight-block",
+            "name": "格挡",
+            "character": "exiled-knight"
+          },
+          {
+            "id": "knight-block",
+            "name": "格挡",
+            "character": "exiled-knight"
+          },
+          {
+            "id": "knight-cleave",
+            "name": "劈砍",
             "character": "exiled-knight"
           }
         ]
@@ -61,11 +66,6 @@
             "character": "candle-nun"
           },
           {
-            "id": "nun-prayer-shield",
-            "name": "祷盾",
-            "character": "candle-nun"
-          },
-          {
             "id": "nun-flame",
             "name": "烛火",
             "character": "candle-nun"
@@ -73,6 +73,11 @@
           {
             "id": "nun-flame",
             "name": "烛火",
+            "character": "candle-nun"
+          },
+          {
+            "id": "nun-confession-mark",
+            "name": "忏悔印",
             "character": "candle-nun"
           },
           {
@@ -101,8 +106,8 @@
             "character": "ashblood-alchemist"
           },
           {
-            "id": "alc-leather-guard",
-            "name": "皮革护具",
+            "id": "alc-acid-vial",
+            "name": "酸蚀瓶",
             "character": "ashblood-alchemist"
           },
           {
@@ -111,8 +116,8 @@
             "character": "ashblood-alchemist"
           },
           {
-            "id": "alc-leather-guard",
-            "name": "皮革护具",
+            "id": "alc-forbidden-test",
+            "name": "禁药试验",
             "character": "ashblood-alchemist"
           }
         ]

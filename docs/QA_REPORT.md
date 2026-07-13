@@ -107,7 +107,7 @@
 
 - `BattleScene.js`：按 1536x864 坐标重排顶部状态栏、战斗舞台、右侧日志/提示、结束回合按钮和底部手牌区。
 - `BattleScene.js`：用 Phaser Graphics 程序化绘制暮色天空、多层山体、城堡/教堂尖顶剪影、石路泥地、草屑、碎石、暗角和站立基准线。
-- `BattleScene.js`：重做流亡骑士、腐烂村民、墓园骸髅、黑犬、瘟疫医生和 Boss 的战斗剪影，补充阴影、待机动画、意图图标和对齐的名字/血条。
+- `BattleScene.js`：重做流亡骑士、腐烛苦修者、墓园骸髅、黑犬、瘟疫医生和 Boss 的战斗剪影，补充阴影、待机动画、意图图标和对齐的名字/血条。
 - `UICard.js`：卡牌改为 132x184，重做暗金边框、羊皮纸底、费用宝珠、类型插画、三行描述和底部类型/稀有度。
 - `UIButton.js` / `UIPanel.js` / `UIHealthBar.js` / `UIToast.js` / `UITooltip.js`：统一暗金黑铁 UI 风格，补充 hover/click 声音反馈、disabled 表现、血条平滑刷新和文本边界保护。
 - `effects/`：补强斩击、护盾、受击红闪、飘字和回合横幅。

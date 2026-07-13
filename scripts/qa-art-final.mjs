@@ -332,7 +332,7 @@ async function makeEnemySheet(page) {
     }).setOrigin(0.5);
     scene.dynamicLayer.add(title);
     const enemies = [
-      ['rotting-villager', '腐烂村民', '普通'],
+      ['rotting-villager', '腐烛苦修者', '普通'],
       ['graveyard-skeleton', '墓园骷髅', '普通'],
       ['black-hound', '黑犬', '普通'],
       ['plague-rat-swarm', '瘟疫鼠群', '普通'],

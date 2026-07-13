@@ -32,6 +32,22 @@ export function drawBadgeIcon(g, x, y, kind, size = 36, options = {}) {
     g.fillRect(cx - 12, cy - 12, 24, 24);
     g.fillStyle(PIXEL_PALETTE.goldDark, alpha);
     g.fillRect(cx - 4, cy - 8, 8, 16);
+  } else if (kind === 'moon') {
+    g.fillRect(cx - 8, cy - 16, 12, 4);
+    g.fillRect(cx - 12, cy - 12, 16, 4);
+    g.fillRect(cx - 16, cy - 8, 16, 16);
+    g.fillRect(cx - 12, cy + 8, 16, 4);
+    g.fillRect(cx - 8, cy + 12, 12, 4);
+    g.fillStyle(options.bg ?? PIXEL_PALETTE.black, alpha);
+    g.fillRect(cx - 4, cy - 12, 12, 20);
+    g.fillRect(cx, cy + 8, 8, 4);
+  } else if (kind === 'heart') {
+    g.fillStyle(PIXEL_PALETTE.blood, alpha);
+    g.fillRect(cx - 12, cy - 8, 8, 8);
+    g.fillRect(cx + 4, cy - 8, 8, 8);
+    g.fillRect(cx - 16, cy, 32, 8);
+    g.fillRect(cx - 12, cy + 8, 24, 8);
+    g.fillRect(cx - 8, cy + 16, 16, 4);
   } else if (kind === 'event') {
     g.fillRect(cx - 12, cy - 12, 24, 24);
     g.fillStyle(PIXEL_PALETTE.paperDark, alpha);

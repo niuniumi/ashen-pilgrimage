@@ -1,14 +1,14 @@
 export const enemies = [
   {
     id: 'rotting-villager',
-    name: '腐烂村民',
+    name: '腐烛苦修者',
     type: 'normal',
     hp: 32,
-    visual: '破衣、锈斧、灰皮肤',
+    visual: '腐败布袍、残烛、锈斧',
     palette: [0x5f4637, 0x8a5b36, 0x46503b],
     actions: [
-      { name: '挥击', intent: 'attack', damage: 8, text: '造成 8 点伤害。' },
-      { name: '蹒跚', intent: 'block', block: 5, text: '获得 5 点护甲。' }
+      { name: '锈斧挥击', intent: 'attack', damage: 8, text: '造成 8 点伤害。' },
+      { name: '残烛护身', intent: 'block', block: 5, text: '获得 5 点护甲。' }
     ]
   },
   {

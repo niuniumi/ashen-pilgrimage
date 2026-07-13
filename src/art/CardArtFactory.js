@@ -2,6 +2,7 @@ import { CARD_TYPES, RARITIES } from '../game/constants.js';
 import { THEME } from '../game/Theme.js';
 import { drawCandleFlame, drawPixelGrain, drawSlashMarks } from './PixelSpriteFactory.js';
 import { PIXEL_PALETTE, snapPixel, stablePixelHash } from './PixelArtSystem.js';
+import { resolveCardArtKind } from './CardVisualCatalog.js';
 
 export const CARD_TYPE_COLORS = {
   [CARD_TYPES.ATTACK]: 0x77302b,
@@ -28,6 +29,138 @@ export const CARD_RARITY_FACE_COLORS = {
   [RARITIES.ABSOLUTE]: 0xefc6b8
 };
 
+function drawCardGlyph(g, kind, cx, cy, alpha) {
+  const gold = PIXEL_PALETTE.candle;
+  const bone = PIXEL_PALETTE.bone;
+  const blood = PIXEL_PALETTE.blood;
+  const iron = PIXEL_PALETTE.ironLight;
+  if (kind === 'blade' || kind === 'marked-blade') {
+    g.fillStyle(bone, alpha);
+    for (let i = -20; i <= 16; i += 4) g.fillRect(cx + i, cy - i - 4, 4, 8);
+    g.fillStyle(gold, alpha);
+    g.fillRect(cx - 18, cy + 14, 24, 4);
+    if (kind === 'marked-blade') {
+      g.fillStyle(blood, alpha);
+      g.fillRect(cx + 8, cy - 16, 8, 8);
+      g.fillRect(cx + 12, cy - 8, 8, 4);
+    }
+    return;
+  }
+  if (kind === 'volley') {
+    g.fillStyle(gold, alpha);
+    for (let offset = -12; offset <= 12; offset += 12) {
+      for (let i = -12; i <= 12; i += 4) g.fillRect(cx + i + offset, cy - i - 4, 4, 4);
+    }
+    g.fillStyle(blood, alpha);
+    g.fillRect(cx - 22, cy + 16, 44, 4);
+    return;
+  }
+  if (kind === 'heavy-blade') {
+    g.fillStyle(iron, alpha);
+    g.fillRect(cx - 8, cy - 22, 16, 36);
+    g.fillRect(cx - 12, cy - 18, 24, 24);
+    g.fillStyle(bone, alpha);
+    g.fillRect(cx - 4, cy - 18, 8, 30);
+    g.fillStyle(gold, alpha);
+    g.fillRect(cx - 20, cy + 10, 40, 8);
+    g.fillStyle(blood, alpha);
+    g.fillRect(cx - 4, cy + 18, 8, 8);
+    return;
+  }
+  if (kind === 'shield') {
+    g.fillStyle(PIXEL_PALETTE.blue, alpha);
+    g.fillRect(cx - 18, cy - 18, 36, 12);
+    g.fillRect(cx - 16, cy - 6, 32, 16);
+    g.fillRect(cx - 12, cy + 10, 24, 8);
+    g.fillRect(cx - 6, cy + 18, 12, 4);
+    g.fillStyle(gold, alpha);
+    g.fillRect(cx - 2, cy - 14, 4, 28);
+    return;
+  }
+  if (kind === 'candle') {
+    g.fillStyle(bone, alpha);
+    g.fillRect(cx - 10, cy - 2, 20, 24);
+    g.fillStyle(PIXEL_PALETTE.ember, alpha);
+    g.fillRect(cx - 8, cy - 14, 16, 12);
+    g.fillStyle(gold, alpha);
+    g.fillRect(cx - 4, cy - 22, 8, 16);
+    g.fillRect(cx - 22, cy + 18, 44, 4);
+    return;
+  }
+  if (kind === 'prayer') {
+    g.fillStyle(PIXEL_PALETTE.paper, alpha);
+    g.fillRect(cx - 22, cy - 16, 18, 32);
+    g.fillRect(cx + 4, cy - 16, 18, 32);
+    g.fillStyle(PIXEL_PALETTE.paperDark, alpha);
+    g.fillRect(cx - 4, cy - 12, 8, 32);
+    g.fillStyle(gold, alpha);
+    g.fillRect(cx - 2, cy - 20, 4, 24);
+    g.fillRect(cx - 10, cy - 12, 20, 4);
+    return;
+  }
+  if (kind === 'vial' || kind === 'injection') {
+    g.fillStyle(bone, alpha);
+    if (kind === 'vial') {
+      g.fillRect(cx - 8, cy - 22, 16, 8);
+      g.fillRect(cx - 16, cy - 14, 32, 32);
+      g.fillStyle(PIXEL_PALETTE.teal, alpha);
+      g.fillRect(cx - 12, cy + 2, 24, 12);
+      g.fillRect(cx - 8, cy - 2, 16, 4);
+    } else {
+      g.fillRect(cx - 22, cy - 6, 40, 12);
+      g.fillRect(cx + 14, cy - 14, 8, 28);
+      g.fillStyle(blood, alpha);
+      g.fillRect(cx - 14, cy - 2, 24, 4);
+      g.fillStyle(gold, alpha);
+      g.fillRect(cx - 26, cy - 2, 8, 4);
+    }
+    return;
+  }
+  if (kind === 'smoke') {
+    g.fillStyle(PIXEL_PALETTE.ironLight, 0.72 * alpha);
+    g.fillRect(cx - 22, cy + 8, 40, 12);
+    g.fillRect(cx - 14, cy - 4, 28, 12);
+    g.fillRect(cx - 4, cy - 16, 20, 12);
+    g.fillRect(cx + 6, cy - 24, 12, 8);
+    return;
+  }
+  if (kind === 'lotus') {
+    g.fillStyle(bone, alpha);
+    g.fillRect(cx - 6, cy - 20, 12, 24);
+    g.fillRect(cx - 22, cy - 12, 16, 24);
+    g.fillRect(cx + 6, cy - 12, 16, 24);
+    g.fillStyle(PIXEL_PALETTE.teal, alpha);
+    g.fillRect(cx - 26, cy + 12, 52, 8);
+    g.fillStyle(gold, alpha);
+    g.fillRect(cx - 4, cy - 4, 8, 8);
+    return;
+  }
+  if (kind === 'anvil') {
+    g.fillStyle(iron, alpha);
+    g.fillRect(cx - 22, cy - 10, 44, 12);
+    g.fillRect(cx - 14, cy + 2, 28, 12);
+    g.fillRect(cx - 20, cy + 14, 40, 8);
+    g.fillStyle(gold, alpha);
+    g.fillRect(cx + 8, cy - 22, 8, 16);
+    return;
+  }
+  if (kind === 'curse' || kind === 'wound') {
+    g.fillStyle(kind === 'curse' ? PIXEL_PALETTE.violet : blood, alpha);
+    g.fillRect(cx - 18, cy - 14, 36, 28);
+    g.fillStyle(PIXEL_PALETTE.void, alpha);
+    g.fillRect(cx - 10, cy - 6, 8, 8);
+    g.fillRect(cx + 2, cy - 6, 8, 8);
+    g.fillRect(cx - 4, cy + 8, 8, 8);
+    return;
+  }
+  g.fillStyle(PIXEL_PALETTE.paper, alpha);
+  g.fillRect(cx - 22, cy - 16, 44, 32);
+  g.fillStyle(PIXEL_PALETTE.paperDark, alpha);
+  g.fillRect(cx - 14, cy - 8, 28, 4);
+  g.fillRect(cx - 14, cy, 24, 4);
+  g.fillRect(cx - 14, cy + 8, 28, 4);
+}
+
 export function drawCardIllustration(g, card, x, y, width, height, alpha = 1) {
   const left = snapPixel(x);
   const top = snapPixel(y);
@@ -44,49 +177,14 @@ export function drawCardIllustration(g, card, x, y, width, height, alpha = 1) {
     g.fillStyle(i % 2 ? PIXEL_PALETTE.black : PIXEL_PALETTE.ironLight, 0.16 * alpha);
     g.fillRect(left + 8 + ((hash + i * 19) % Math.max(4, w - 20)), top + 8 + ((hash + i * 13) % Math.max(4, h - 20)), 4, 4);
   }
-  g.fillStyle(PIXEL_PALETTE.candle, alpha);
-  switch (card.type) {
-    case CARD_TYPES.ATTACK:
-      for (let i = -16; i <= 16; i += 4) g.fillRect(cx + i, cy - i - 4, 4, 8);
-      g.fillStyle(PIXEL_PALETTE.blood, alpha);
-      g.fillRect(cx - 20, cy + 12, 20, 4);
-      break;
-    case CARD_TYPES.DEFENSE:
-      g.fillStyle(PIXEL_PALETTE.blue, alpha);
-      g.fillRect(cx - 16, cy - 16, 32, 12);
-      g.fillRect(cx - 12, cy - 4, 24, 16);
-      g.fillRect(cx - 8, cy + 12, 16, 8);
-      break;
-    case CARD_TYPES.SKILL:
-      g.fillStyle(PIXEL_PALETTE.paper, alpha);
-      g.fillRect(cx - 20, cy - 16, 40, 32);
-      g.fillStyle(PIXEL_PALETTE.paperDark, alpha);
-      g.fillRect(cx - 12, cy - 8, 24, 4);
-      g.fillRect(cx - 12, cy, 20, 4);
-      g.fillRect(cx - 12, cy + 8, 24, 4);
-      break;
-    case CARD_TYPES.SPELL:
-      g.fillStyle(PIXEL_PALETTE.violet, alpha);
-      g.fillRect(cx - 16, cy + 4, 32, 16);
-      g.fillStyle(PIXEL_PALETTE.ember, alpha);
-      g.fillRect(cx - 8, cy - 8, 16, 16);
-      g.fillStyle(PIXEL_PALETTE.candle, alpha);
-      g.fillRect(cx - 4, cy - 20, 8, 16);
-      break;
-    case CARD_TYPES.CURSE:
-      g.fillStyle(PIXEL_PALETTE.violet, alpha);
-      g.fillRect(cx - 16, cy - 12, 32, 28);
-      g.fillStyle(PIXEL_PALETTE.void, alpha);
-      g.fillRect(cx - 10, cy - 4, 8, 8);
-      g.fillRect(cx + 2, cy - 4, 8, 8);
-      g.fillRect(cx - 4, cy + 8, 8, 8);
-      break;
-    default:
-      g.fillStyle(PIXEL_PALETTE.moss, alpha);
-      g.fillRect(cx - 20, cy - 4, 40, 8);
-      g.fillRect(cx - 4, cy - 20, 8, 40);
-      break;
-  }
+  const characterTint = card.character === 'ashblood-alchemist'
+    ? PIXEL_PALETTE.teal
+    : card.character === 'candle-nun'
+      ? PIXEL_PALETTE.goldDark
+      : PIXEL_PALETTE.bloodDark;
+  g.fillStyle(characterTint, 0.18 * alpha);
+  g.fillRect(left + 8, top + h - 12, w - 16, 4);
+  drawCardGlyph(g, resolveCardArtKind(card), cx, cy, alpha);
 }
 
 export function cardTypeBorder(card) {

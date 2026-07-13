@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import { gameConfig } from './game/GameConfig.js';
 import { installQABridge } from './game/QABridge.js';
+import { waitForBootFonts } from './game/BootReadiness.js';
 
 window.addEventListener('load', async () => {
-  await document.fonts?.ready;
+  await waitForBootFonts(document.fonts);
   window.__ASHEN_GAME__ = new Phaser.Game(gameConfig);
   window.__ASHEN_QA__ = installQABridge(window.__ASHEN_GAME__);
   window.setTimeout(() => {

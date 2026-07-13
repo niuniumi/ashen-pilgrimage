@@ -188,6 +188,20 @@ export class MapSystem {
     return node;
   }
 
+  static abandonActiveNode(run) {
+    if (!run?.map?.activeNode) return null;
+
+    run.checkpoint = null;
+    delete run.pendingScene;
+    delete run.pendingBattleType;
+    delete run.pendingReward;
+    run.rewardClaimed = false;
+
+    const node = this.cancelActiveNode(run);
+    if (!node) run.map.activeNode = null;
+    return node;
+  }
+
   static getNodeLabel(type) {
     return NODE_LABELS[type] ?? '未知';
   }

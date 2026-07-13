@@ -6,7 +6,8 @@ import { addHandPaintedBackground, addVfxAsset, HANDPAINTED_KEYS } from '../art/
 import { VowSystem } from '../systems/VowSystem.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UIFrame } from '../ui/UIFrame.js';
-import { drawDivider, drawVignette, drawWaxSeal } from '../ui/UIOrnament.js';
+import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
+import { UIIcon } from '../ui/UIIcon.js';
 import { attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
 
 export default class VowScene extends Phaser.Scene {
@@ -67,7 +68,12 @@ export default class VowScene extends Phaser.Scene {
       stroke: THEME.colors.darkGold,
       lineWidth: 2
     });
-    drawWaxSeal(this, x, y - 174, 32, 0x91303a);
+    new UIIcon(this, x, y - 174, vow.icon, {
+      size: 64,
+      bg: 0x2a1115,
+      stroke: 0xb06a45,
+      color: 0xf1c15d
+    }).setDepth(6);
     this.add.text(x, y - 112, vow.name, titleStyle(29)).setOrigin(0.5);
     this.add
       .text(x, y - 60, vow.motto, {

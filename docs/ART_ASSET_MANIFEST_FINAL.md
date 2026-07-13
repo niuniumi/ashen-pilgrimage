@@ -16,7 +16,7 @@
 | `public/assets/art/heroes/exiled-knight-battle.svg` | 流亡骑士战斗 sprite | Battle | final-svg |
 | `public/assets/art/heroes/candle-nun-battle.svg` | 圣烛修女战斗 sprite | Battle | final-svg |
 | `public/assets/art/heroes/ashblood-alchemist-battle.svg` | 灰血炼金师战斗 sprite | Battle | final-svg |
-| `public/assets/art/enemies/rotten-villager.svg` | 腐烂村民 | Battle, QA sheet | final-svg |
+| `public/assets/art/enemies/rotten-villager.svg` | 腐烛苦修者 | Battle, QA sheet | final-svg |
 | `public/assets/art/enemies/grave-skeleton.svg` | 墓园骷髅 | Battle, QA sheet | final-svg |
 | `public/assets/art/enemies/black-hound.svg` | 黑犬 | Battle, QA sheet | final-svg |
 | `public/assets/art/enemies/plague-rats.svg` | 瘟疫鼠群 | Battle, QA sheet | final-svg |

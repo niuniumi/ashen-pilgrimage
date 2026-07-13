@@ -294,7 +294,7 @@ await page.evaluate(() => {
     {
       id: 'rotting-villager',
       uid: 'qa-dead-villager',
-      name: '腐烂村民',
+      name: '腐烛苦修者',
       hp: 0,
       maxHp: 32,
       block: 0,

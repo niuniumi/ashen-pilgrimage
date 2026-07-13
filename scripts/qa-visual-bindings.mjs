@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { characters } from '../src/data/characters.js';
 import { enemies } from '../src/data/enemies.js';
-import { PIXEL_ASSETS } from '../src/art/PixelAssetCatalog.js';
+import { PIXEL_ASSETS, resolvePixelActorAsset } from '../src/art/PixelAssetCatalog.js';
 
 const root = process.cwd();
 const actorSource = fs.readFileSync(path.join(root, 'src/art/PixelActorFactory.js'), 'utf8');
@@ -25,4 +25,15 @@ for (const asset of Object.values(PIXEL_ASSETS)) {
   assert.ok(fs.existsSync(path.join(root, 'public', asset.url)), `missing pixel asset ${asset.url}`);
 }
 
-console.log(JSON.stringify({ ok: true, heroes: characters.length, enemies: enemies.length, pixelAssets: Object.keys(PIXEL_ASSETS).length }, null, 2));
+for (const enemy of enemies) {
+  const resolved = resolvePixelActorAsset(enemy.id);
+  assert.ok(resolved, `enemy ${enemy.id} must resolve to a production pixel actor`);
+  if (enemy.id === 'graveyard-skeleton') {
+    assert.equal(resolved.assetId, 'grave-skeleton');
+  } else {
+    assert.equal(resolved.assetId, enemy.id, `enemy ${enemy.id} must not reuse ${resolved.assetId}`);
+  }
+  assert.equal(resolved.asset.facing === 'left' || resolved.asset.facing === 'right', true);
+}
+
+console.log(JSON.stringify({ ok: true, heroes: characters.length, enemies: enemies.length, pixelAssets: Object.keys(PIXEL_ASSETS).length, boundEnemies: enemies.length }, null, 2));

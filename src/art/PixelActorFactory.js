@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { getEnemy } from '../data/enemies.js';
 import { PIXEL_PALETTE, snapPixel, stablePixelHash } from './PixelArtSystem.js';
-import { PIXEL_ACTORS } from './PixelAssetCatalog.js';
+import { resolvePixelActorAsset } from './PixelAssetCatalog.js';
 
 const BEAST_IDS = new Set(['black-hound', 'crownless-hound', 'plague-rat-swarm']);
 const FLYING_IDS = new Set(['crow-messenger', 'scripture-moth-swarm']);
@@ -18,24 +18,6 @@ const CASTER_IDS = new Set([
 ]);
 const BOSS_IDS = new Set(['headless-grave-knight', 'pale-wax-matron', 'hollow-crown-regent']);
 
-const ENEMY_SPRITES = {
-  'armor-broken-militia': 'broken-militia',
-  'rotting-villager': 'broken-militia',
-  'graveyard-skeleton': 'grave-skeleton',
-  'crownless-hound': 'black-hound',
-  'plague-rat-swarm': 'black-hound',
-  'wax-novice': 'candle-monk',
-  'cinder-acolyte': 'candle-monk',
-  'ash-veiled-prioress': 'pointed-witch',
-  'choir-exorcist': 'pointed-witch',
-  'clockwork-confessor': 'plague-doctor',
-  'crow-messenger': 'gutter-fire-archer',
-  'bell-tower-sentry': 'reliquary-jailer',
-  'gate-iron-vicar': 'reliquary-jailer',
-  'fallen-paladin': 'reliquary-jailer',
-  'royal-pyre-knight': 'reliquary-jailer'
-};
-
 function rect(g, x, y, w, h, color, alpha = 1) {
   g.fillStyle(color, alpha);
   g.fillRect(snapPixel(x), snapPixel(y), Math.max(4, snapPixel(w)), Math.max(4, snapPixel(h)));
@@ -49,10 +31,12 @@ function pixelShadow(g, width, y) {
 function addPoseController(container, actor, direction = 1) {
   const baseX = actor.x;
   const baseY = actor.y;
+  const baseScaleX = actor.scaleX;
+  const baseScaleY = actor.scaleY;
   container.actorSprite = actor;
   container.setBattlePose = (pose = 'idle') => {
     actor.setPosition(baseX, baseY);
-    actor.setScale(1);
+    actor.setScale(baseScaleX, baseScaleY);
     actor.setAngle(0);
     if (pose === 'attack') actor.setPosition(baseX + 12 * direction, baseY - 4);
     else if (pose === 'defend') actor.setPosition(baseX - 8 * direction, baseY + 4);
@@ -64,7 +48,8 @@ function addPoseController(container, actor, direction = 1) {
 }
 
 function drawAtlasActor(scene, spriteName, x, y, scale, options = {}, actorType = 'enemy') {
-  const asset = PIXEL_ACTORS[spriteName];
+  const resolved = resolvePixelActorAsset(spriteName);
+  const asset = resolved?.asset;
   if (!asset || !scene.textures.exists(asset.key)) return null;
   const isBoss = actorType === 'enemy' && (options.type === 'boss' || BOSS_IDS.has(spriteName));
   const height = options.generatedHeight ?? (options.artPortrait ? 260 * scale : (isBoss ? 356 : 280) * scale);
@@ -73,16 +58,18 @@ function drawAtlasActor(scene, spriteName, x, y, scale, options = {}, actorType 
   const shadow = scene.add.graphics();
   shadow.fillStyle(PIXEL_PALETTE.void, 0.58);
   shadow.fillRect(-Math.round(height * 0.28), 108, Math.round(height * 0.56), 16);
-  const actor = scene.add.image(0, 112, asset.key).setOrigin(0.5, 1).setDisplaySize(
-    Math.round((scene.textures.get(asset.key).getSourceImage().width / scene.textures.get(asset.key).getSourceImage().height) * height),
-    Math.round(height)
-  );
+  const actor = scene.add.image(0, 112, asset.key, asset.frame).setOrigin(0.5, 1);
+  const frameWidth = actor.frame.realWidth || actor.frame.width;
+  const frameHeight = actor.frame.realHeight || actor.frame.height;
+  actor.setDisplaySize(Math.round((frameWidth / frameHeight) * height), Math.round(height));
+  actor.setFlipX(actorType === 'enemy' ? asset.facing !== 'left' : asset.facing === 'left');
   actor.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
   container.add([shadow, actor]);
   addPoseController(container, actor, actorType === 'hero' ? 1 : -1);
   actor.setData('battleActor', true);
   actor.setData('actorType', actorType);
-  actor.setData('assetId', spriteName);
+  actor.setData('assetId', resolved.assetId);
+  actor.setData('sourceAssetId', resolved.assetId);
   return container;
 }
 
@@ -170,10 +157,9 @@ function drawAlchemist(g, s, dark, mid, accent, metal) {
 }
 
 export function drawPixelEnemy(scene, enemyId, x = 0, y = 0, scale = 1, options = {}) {
-  const spriteName = PIXEL_ACTORS[enemyId] ? enemyId : ENEMY_SPRITES[enemyId];
-  const atlasActor = drawAtlasActor(scene, spriteName, x, y, scale, options, 'enemy');
+  const atlasActor = drawAtlasActor(scene, enemyId, x, y, scale, options, 'enemy');
   if (atlasActor) {
-    atlasActor.actorSprite?.setData('assetId', enemyId);
+    atlasActor.actorSprite?.setData('enemyId', enemyId);
     return atlasActor;
   }
   const definition = getEnemy(enemyId) ?? { palette: [0x4d4b43, 0x77634b, 0x8f3138], type: options.type ?? 'normal' };

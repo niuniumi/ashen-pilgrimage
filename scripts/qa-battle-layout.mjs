@@ -42,7 +42,7 @@ assert.equal(bossLayout.length, 5);
 assertNoOverlap('boss summons', bossLayout);
 
 const afterDeathLayout = computeEnemyLayout([
-  { id: 'rotting-villager', name: '腐烂村民', hp: 0, maxHp: 32 },
+  { id: 'rotting-villager', name: '腐烛苦修者', hp: 0, maxHp: 32 },
   { id: 'black-hound', name: '黑犬', hp: 22, maxHp: 22 }
 ]);
 
@@ -51,7 +51,7 @@ assert.equal(afterDeathLayout[0].originalIndex, 1);
 assert.equal(afterDeathLayout[0].enemy.id, 'black-hound');
 
 const tripleLayout = computeEnemyLayout([
-  { id: 'rotting-villager', name: '腐烂村民', hp: 32, maxHp: 32 },
+  { id: 'rotting-villager', name: '腐烛苦修者', hp: 32, maxHp: 32 },
   { id: 'candle-monk', name: '烛誓修士', hp: 34, maxHp: 34 },
   { id: 'black-hound', name: '黑犬', hp: 22, maxHp: 22 }
 ]);

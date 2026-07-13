@@ -3,6 +3,7 @@ import { pickMany } from '../game/RunRng.js';
 export const vows = [
   {
     id: 'iron-pilgrimage',
+    icon: 'shield',
     name: '铁身圣途',
     motto: '让盔甲先记住苦难。',
     boon: '最大生命 +10。',
@@ -12,6 +13,7 @@ export const vows = [
   },
   {
     id: 'blood-price',
+    icon: 'attack',
     name: '血价誓约',
     motto: '每一道伤口都应当留下回声。',
     boon: '所有攻击伤害 +1。',
@@ -21,6 +23,7 @@ export const vows = [
   },
   {
     id: 'candle-tithe',
+    icon: 'flame',
     name: '烛税誓约',
     motto: '先献出所得，再索取庇护。',
     boon: '每场战斗开始获得 8 护甲。',
@@ -29,6 +32,7 @@ export const vows = [
   },
   {
     id: 'open-hand',
+    icon: 'coin',
     name: '空手戒律',
     motto: '不占有，才能穿过王城。',
     boon: '商店价格降低 15%。',
@@ -38,6 +42,7 @@ export const vows = [
   },
   {
     id: 'long-night',
+    icon: 'moon',
     name: '长夜守望',
     motto: '比敌人更早看见黎明。',
     boon: '首回合额外抽 1 张牌。',
@@ -46,6 +51,7 @@ export const vows = [
   },
   {
     id: 'ashen-mercy',
+    icon: 'heart',
     name: '灰烬慈悲',
     motto: '在火堆旁原谅一次软弱。',
     boon: '休息额外回复 6 生命。',

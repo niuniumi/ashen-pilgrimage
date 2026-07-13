@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { drawBadgeIcon } from '../art/IconFactory.js';
+import { THEME } from '../game/Theme.js';
 
 export class UIIcon extends Phaser.GameObjects.Container {
   constructor(scene, x, y, type, options = {}) {

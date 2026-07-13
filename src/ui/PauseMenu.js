@@ -228,8 +228,7 @@ export class PauseMenu {
   prepareRunForMapReturn() {
     const run = this.scene.registry.get('run') ?? SaveManager.loadRun();
     if (!run) return null;
-    const hasResumableStage = Boolean(run.pendingScene || run.pendingReward || run.checkpoint);
-    if (run.map?.activeNode && !hasResumableStage) MapSystem.cancelActiveNode(run);
+    if (run.map?.activeNode && !run.pendingReward) MapSystem.abandonActiveNode(run);
     this.scene.registry.set('run', run);
     return run;
   }

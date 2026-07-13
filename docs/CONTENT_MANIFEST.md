@@ -136,7 +136,7 @@ Version: `v0.3.0-release-candidate`
 
 ### Normal
 
-- 腐烂村民
+- 腐烛苦修者
 - 墓园骷髅
 - 黑犬
 - 瘟疫鼠群

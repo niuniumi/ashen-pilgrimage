@@ -37,3 +37,36 @@ test('different seeds vary node placement without breaking required pacing', () 
     assert.equal(types.has('elite'), true);
   }
 });
+
+test('abandoning an active node clears resumable state and restores map selection', () => {
+  const map = MapSystem.createSeededMap(1, createRngState(712)).map;
+  const nodeId = map.available[0];
+  const run = {
+    act: 1,
+    floor: 0,
+    highestFloor: 0,
+    map,
+    pendingScene: 'battle',
+    pendingBattleType: 'elite',
+    pendingReward: { cards: ['ash-strike'] },
+    checkpoint: { sceneKey: 'BattleScene', activeNode: nodeId },
+    rewardClaimed: true
+  };
+
+  assert.ok(MapSystem.startNode(run, nodeId));
+  assert.equal(MapSystem.canSelect(run, nodeId), false);
+
+  const abandoned = MapSystem.abandonActiveNode(run);
+
+  assert.equal(abandoned?.id, nodeId);
+  assert.equal(run.map.activeNode, null);
+  assert.equal(run.map.path.includes(nodeId), false);
+  assert.equal(run.map.available.includes(nodeId), true);
+  assert.equal(MapSystem.canSelect(run, nodeId), true);
+  assert.equal(run.floor, 0);
+  assert.equal(run.checkpoint, null);
+  assert.equal(run.pendingScene, undefined);
+  assert.equal(run.pendingBattleType, undefined);
+  assert.equal(run.pendingReward, undefined);
+  assert.equal(run.rewardClaimed, false);
+});

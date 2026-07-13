@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { PIXEL_ACTORS, PIXEL_ASSETS } from '../src/art/PixelAssetCatalog.js';
+import { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_TEXTURE_ASSETS } from '../src/art/PixelAssetCatalog.js';
 
 const root = process.cwd();
 const assets = Object.values(PIXEL_ASSETS);
@@ -17,7 +17,7 @@ for (const asset of assets) {
   else if (fs.statSync(file).size < 500_000) issues.push(`production pixel asset too small: ${asset.url}`);
 }
 
-for (const asset of actors) {
+for (const asset of PIXEL_TEXTURE_ASSETS.filter((item) => !assets.includes(item))) {
   if (!asset.key || !asset.url) issues.push(`invalid pixel actor: ${JSON.stringify(asset)}`);
   if (keys.has(asset.key)) issues.push(`duplicate asset key: ${asset.key}`);
   keys.add(asset.key);
@@ -29,7 +29,11 @@ for (const asset of actors) {
 const font = path.join(root, 'public/assets/fonts/fusion-pixel-10px-zh-hans.woff2');
 if (!fs.existsSync(font) || fs.statSync(font).size < 100_000) issues.push('missing production pixel Chinese font');
 
-const report = { ok: issues.length === 0, count: assets.length + actors.length + 1, issues };
+for (const actor of actors) {
+  if (!actor.key || !actor.url || !actor.facing) issues.push(`invalid pixel actor binding: ${JSON.stringify(actor)}`);
+}
+
+const report = { ok: issues.length === 0, count: PIXEL_TEXTURE_ASSETS.length + 1, actorBindings: actors.length, issues };
 if (!report.ok) {
   console.error(JSON.stringify(report, null, 2));
   process.exit(1);

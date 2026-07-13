@@ -176,153 +176,43 @@ export default class MainMenuScene extends Phaser.Scene {
   addTitleParchment() {
     const [title, subtitle] = SCENE_TITLES.menu;
     this.add
-      .text(92, 104, title, {
+      .text(720, 92, title, {
         ...titleStyle(68),
         color: '#f4e7c5',
         stroke: '#08090d',
         strokeThickness: 8
       })
-      .setOrigin(0, 0.5)
+      .setOrigin(0.5)
       .setDepth(5);
     this.add
-      .text(102, 166, subtitle, {
+      .text(720, 154, subtitle, {
         ...textStyle(26, '#d0a24f'),
         stroke: '#08090d',
         strokeThickness: 5
       })
-      .setOrigin(0, 0.5)
+      .setOrigin(0.5)
       .setDepth(5);
-    drawDivider(this, 294, 208, 388, { color: 0xd0a24f, alpha: 0.9 }).setDepth?.(5);
+    drawDivider(this, 720, 194, 390, { color: 0xd0a24f, alpha: 0.9 }).setDepth?.(5);
     this.add
-      .text(104, 250, '余烬照亮旅途，也照见每一次抉择。', {
+      .text(720, 235, '余烬照亮旅途，也照见每一次抉择。', {
         ...textStyle(19, '#d6c7a5'),
         stroke: '#08090d',
-        strokeThickness: 4
+        strokeThickness: 4,
+        align: 'center'
       })
-      .setOrigin(0, 0.5)
+      .setOrigin(0.5)
       .setDepth(5);
     this.add
-      .text(104, 300, '穿过暮鸦村、墓园与修道院，整理牌组，\n点亮营火，寻找灰白圣火的源头。', {
+      .text(720, 294, '穿过暮鸦村、墓园与修道院，整理牌组，\n点亮营火，寻找灰白圣火的源头。', {
         ...textStyle(18, '#b99862'),
         stroke: '#08090d',
         strokeThickness: 4,
-        lineSpacing: 8
+        lineSpacing: 8,
+        align: 'center',
+        wordWrap: { width: 520 }
       })
-      .setOrigin(0, 0.5)
+      .setOrigin(0.5)
       .setDepth(5);
-    return;
-    if (this.hasJourneyBackdrop()) {
-      this.add
-        .text(720, 92, title, {
-          ...titleStyle(68),
-          color: '#815f35',
-          stroke: '#fff2d7',
-          strokeThickness: 6
-        })
-        .setOrigin(0.5)
-        .setDepth(4);
-      this.add
-        .text(720, 154, subtitle, {
-          ...textStyle(28, '#634934'),
-          stroke: '#fff2d7',
-          strokeThickness: 3
-        })
-        .setOrigin(0.5)
-        .setDepth(4);
-      drawDivider(this, 720, 194, 390).setDepth?.(4);
-      this.add
-        .text(720, 235, '“余烬照亮旅途，也照见每一次抉择。”', {
-          ...textStyle(21, '#594638', { align: 'center' }),
-          stroke: '#fff2d7',
-          strokeThickness: 2
-        })
-        .setOrigin(0.5)
-        .setDepth(4);
-      this.add
-        .text(720, 294, '穿过暮带村、墓园与修道院，整理牌组，点亮营火，寻找灰白圣火的源头。', {
-          ...textStyle(20, '#4f4132', { align: 'center' }),
-          stroke: '#fff2d7',
-          strokeThickness: 2,
-          wordWrap: { width: 520 }
-        })
-        .setOrigin(0.5)
-        .setDepth(4);
-      return;
-    }
-    if (hasTexture(this, HANDPAINTED_KEYS.menuJourneyBg)) {
-      this.add
-        .text(836, 102, title, {
-          ...titleStyle(66),
-          color: '#815f35',
-          stroke: '#fff2d7',
-          strokeThickness: 6
-        })
-        .setOrigin(0, 0.5)
-        .setDepth(4);
-      this.add
-        .text(846, 164, subtitle, {
-          ...textStyle(28, '#634934'),
-          stroke: '#fff2d7',
-          strokeThickness: 3
-        })
-        .setOrigin(0, 0.5)
-        .setDepth(4);
-      drawDivider(this, 1036, 205, 380).setDepth?.(4);
-      this.add
-        .text(848, 242, '“愿余烬照亮旅途，也照见每一次抉择。”', {
-          ...textStyle(21, '#594638', { align: 'left' }),
-          stroke: '#fff2d7',
-          strokeThickness: 2
-        })
-        .setOrigin(0, 0.5)
-        .setDepth(4);
-      this.add
-        .text(848, 304, '穿过暮鸦村、墓园与修道院，整理牌组，点亮营火，寻找灰白圣火的源头。', {
-          ...textStyle(20, '#4f4132'),
-          stroke: '#fff2d7',
-          strokeThickness: 2,
-          wordWrap: { width: 470 }
-        })
-        .setOrigin(0, 0.5)
-        .setDepth(4);
-      return;
-    }
-    this.add
-      .text(112, 132, title, {
-        ...titleStyle(74),
-        color: '#8b6734',
-        stroke: '#f7ecd5',
-        strokeThickness: 5
-      })
-      .setOrigin(0, 0.5)
-      .setDepth(4);
-    this.add
-      .text(124, 198, subtitle, {
-        ...textStyle(30, '#6d5233'),
-        stroke: '#f7ecd5',
-        strokeThickness: 3
-      })
-      .setOrigin(0, 0.5)
-      .setDepth(4);
-    drawDivider(this, 318, 238, 390).setDepth?.(4);
-    this.add
-      .text(152, 257, '“愿余烬照亮旅途，也照见每一次抉择。”', {
-        ...textStyle(22, '#66513c', { align: 'center' }),
-        stroke: '#f7ecd5',
-        strokeThickness: 2
-      })
-      .setOrigin(0, 0.5)
-      .setDepth(4);
-    this.add
-      .text(128, 320, '穿过暮鸦村、墓园与修道院，整理牌组、点亮营火，寻找灰白圣火的源头。', {
-        ...textStyle(21, '#594638'),
-        stroke: '#f7ecd5',
-        strokeThickness: 2,
-        wordWrap: { width: 470 }
-      })
-      .setOrigin(0, 0.5)
-      .setDepth(4);
-    this.drawLeftNotes();
   }
 
   addMenuParchment() {

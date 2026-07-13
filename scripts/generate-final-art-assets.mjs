@@ -267,7 +267,7 @@ ${body}
 }
 
 const enemies = {
-  'rotten-villager.svg': ['腐烂村民', `
+  'rotten-villager.svg': ['腐烛苦修者', `
 <path d="M75 88 C82 62 119 54 139 78 L147 151 L66 159Z" fill="#506144"/>
 <circle cx="112" cy="55" r="24" fill="#6b7b5c"/><circle cx="103" cy="51" r="4" fill="#141712"/><circle cx="122" cy="52" r="4" fill="${P.blood}"/>
 <path d="M69 91 L38 174 L59 183 L83 110Z" fill="#5f4637"/><path d="M144 96 L181 177 L160 186 L131 113Z" fill="#5f4637"/>

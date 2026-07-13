@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../game/constants.js';
-import { PIXEL_ACTORS, PIXEL_ASSETS } from './PixelAssetCatalog.js';
+import { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_ATLASES, PIXEL_TEXTURE_ASSETS } from './PixelAssetCatalog.js';
 
-export { PIXEL_ACTORS, PIXEL_ASSETS } from './PixelAssetCatalog.js';
+export { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_ATLASES } from './PixelAssetCatalog.js';
 
 export const PIXEL_GRID = 4;
 
@@ -33,15 +33,33 @@ export function snapPixel(value, grid = PIXEL_GRID) {
 }
 
 export function queuePixelAssets(scene) {
-  [...Object.values(PIXEL_ASSETS), ...Object.values(PIXEL_ACTORS)].forEach((asset) => scene.load.image(asset.key, asset.url));
+  PIXEL_TEXTURE_ASSETS.forEach((asset) => scene.load.image(asset.key, asset.url));
 }
 
 export function applyPixelFilters(scene) {
-  [...Object.values(PIXEL_ASSETS), ...Object.values(PIXEL_ACTORS)].forEach((asset) => {
+  Object.values(PIXEL_ATLASES).forEach((atlas) => registerAtlasFrames(scene, atlas));
+  PIXEL_TEXTURE_ASSETS.forEach((asset) => {
     if (scene.textures.exists(asset.key)) {
       scene.textures.get(asset.key).setFilter(Phaser.Textures.FilterMode.NEAREST);
     }
   });
+}
+
+function registerAtlasFrames(scene, atlas) {
+  if (!scene.textures.exists(atlas.key)) return;
+  const texture = scene.textures.get(atlas.key);
+  const source = texture.getSourceImage();
+  const frameWidth = Math.floor(source.width / atlas.columns);
+  const frameHeight = Math.floor(source.height / atlas.rows);
+  for (let row = 0; row < atlas.rows; row += 1) {
+    for (let column = 0; column < atlas.columns; column += 1) {
+      const frameIndex = row * atlas.columns + column;
+      const frameName = `${atlas.framePrefix}-${frameIndex}`;
+      if (!texture.has(frameName)) {
+        texture.add(frameName, 0, column * frameWidth, row * frameHeight, frameWidth, frameHeight);
+      }
+    }
+  }
 }
 
 export function pixelBackgroundKey(variant, act = 1) {

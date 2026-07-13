@@ -14,7 +14,7 @@ assert(TOKENS.colors.gold, 'missing gold color');
 assert(TOKENS.colors.danger, 'missing danger color');
 assert(TOKENS.css.body, 'missing css body color');
 assert(TOKENS.spacing[8] === 8, 'spacing token 8 must equal 8');
-assert(TOKENS.radius.md >= 6, 'medium radius must support game panels');
+assert(TOKENS.radius.sm === 0 && TOKENS.radius.md === 0 && TOKENS.radius.lg === 0, 'pixel UI must keep hard-edged panels');
 assert(LAYOUTS.canvas.width === 1536, 'canvas width must be 1536');
 assert(LAYOUTS.canvas.height === 864, 'canvas height must be 864');
 assert(LAYOUTS.battleStage.baseline > LAYOUTS.battleStage.y, 'battle baseline must be inside the stage');

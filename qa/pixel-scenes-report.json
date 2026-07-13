@@ -1,12 +1,12 @@
 {
   "url": "http://127.0.0.1:4184/",
-  "generatedAt": "2026-07-12T15:56:52.177Z",
+  "generatedAt": "2026-07-13T11:02:18.610Z",
   "scenes": [
     {
       "slug": "01_prologue",
       "sceneKey": "PrologueScene",
       "screenshot": "qa/screenshots/pixel_scenes/01_prologue.png",
-      "bytes": 767280,
+      "bytes": 786771,
       "active": true,
       "textCount": 0,
       "fonts": [],
@@ -36,7 +36,7 @@
       "slug": "03_chest",
       "sceneKey": "ChestScene",
       "screenshot": "qa/screenshots/pixel_scenes/03_chest.png",
-      "bytes": 943699,
+      "bytes": 943681,
       "active": true,
       "textCount": 2,
       "fonts": [
@@ -84,7 +84,7 @@
       "slug": "06_boss_intro",
       "sceneKey": "BossIntroScene",
       "screenshot": "qa/screenshots/pixel_scenes/06_boss_intro.png",
-      "bytes": 1315548,
+      "bytes": 1271353,
       "active": true,
       "textCount": 2,
       "fonts": [
@@ -100,7 +100,7 @@
       "slug": "07_act_clear",
       "sceneKey": "ActClearScene",
       "screenshot": "qa/screenshots/pixel_scenes/07_act_clear.png",
-      "bytes": 1041116,
+      "bytes": 1006400,
       "active": true,
       "textCount": 2,
       "fonts": [
@@ -116,7 +116,7 @@
       "slug": "08_result_defeat",
       "sceneKey": "ResultScene",
       "screenshot": "qa/screenshots/pixel_scenes/08_result_defeat.png",
-      "bytes": 749521,
+      "bytes": 749530,
       "active": true,
       "textCount": 8,
       "fonts": [
@@ -132,7 +132,7 @@
       "slug": "09_result_victory",
       "sceneKey": "ResultScene",
       "screenshot": "qa/screenshots/pixel_scenes/09_result_victory.png",
-      "bytes": 931138,
+      "bytes": 934571,
       "active": true,
       "textCount": 8,
       "fonts": [

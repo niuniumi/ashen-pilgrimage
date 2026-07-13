@@ -82,9 +82,6 @@ export default class MapScene extends Phaser.Scene {
     const g = this.add.graphics().setDepth(2);
     g.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.drawMapWash(g, act);
-    if (act === 2) this.drawAbbeyMapSketch(g);
-    else if (act === 3) this.drawOldCapitalMapSketch(g);
-    else this.drawVillageGraveMapSketch(g);
     const label = this.add
       .text(768, 724, this.chapter?.shortTitle ?? '', {
         fontFamily: FONT,
@@ -101,9 +98,6 @@ export default class MapScene extends Phaser.Scene {
     frame.strokeRect(310, 128, 916, 608);
     frame.lineStyle(1, 0x7b6040, 0.22);
     frame.strokeRect(330, 148, 876, 568);
-    frame.lineStyle(1, 0xf0d08a, 0.18);
-    frame.lineBetween(352, 154, 1182, 144);
-    frame.lineBetween(348, 710, 1180, 720);
   }
 
   drawMapWash(g, act) {
@@ -112,10 +106,6 @@ export default class MapScene extends Phaser.Scene {
     g.fillEllipse(770, 420, 620, 390);
     g.fillStyle(0xffffff, 0.06);
     g.fillEllipse(640, 282, 340, 110);
-    g.lineStyle(1, tint, 0.12);
-    for (let i = 0; i < 7; i += 1) {
-      this.sketchMapLine(g, 416 + i * 105, 180 + (i % 2) * 18, 494 + i * 78, 676 - (i % 3) * 26, tint, 0.18, 5);
-    }
   }
 
   drawVillageGraveMapSketch(g) {
@@ -291,24 +281,29 @@ export default class MapScene extends Phaser.Scene {
   drawRoute(g, from, to, node, target) {
     const completed = this.run.map.completed.includes(node.id) || this.run.map.path.includes(target.id);
     const selectable = this.run.map.available.includes(target.id) || this.run.map.available.includes(node.id);
-    const alpha = completed ? 0.64 : selectable ? 0.54 : 0.18;
-    g.lineStyle(3, 0x3f2415, alpha * 0.68);
-    this.drawJitterLine(g, from, to);
-    g.lineStyle(1, selectable ? THEME.colors.candle : 0x8a6335, selectable ? 0.88 : 0.42);
-    this.drawJitterLine(g, from, to, 3);
+    const points = this.routePoints(from, to);
+    if (!completed && !selectable) {
+      g.lineStyle(1, 0x5f4a33, 0.12);
+      g.strokePoints(points);
+      return;
+    }
+    g.lineStyle(4, 0x2b170d, completed ? 0.55 : 0.42);
+    g.strokePoints(points);
+    g.lineStyle(2, completed ? 0xd0a24f : THEME.colors.candle, completed ? 0.9 : 0.78);
+    g.strokePoints(points);
   }
 
-  drawJitterLine(g, from, to, jitter = 4) {
+  routePoints(from, to) {
     const points = [];
     for (let i = 0; i <= 5; i += 1) {
       const t = i / 5;
-      const x = Phaser.Math.Linear(from.x, to.x, t) + (i > 0 && i < 5 ? ((i % 2 ? 1 : -1) * jitter) : 0);
-      const y = Phaser.Math.Linear(from.y, to.y, t) + (i > 0 && i < 5 ? ((i % 3) - 1) * 5 : 0);
-      points.push([x, y]);
+      const interior = i > 0 && i < 5;
+      points.push(new Phaser.Geom.Point(
+        Phaser.Math.Linear(from.x, to.x, t) + (interior ? (i % 2 ? 2 : -2) : 0),
+        Phaser.Math.Linear(from.y, to.y, t) + (interior ? ((i % 3) - 1) * 2 : 0)
+      ));
     }
-    for (let i = 0; i < points.length - 1; i += 1) {
-      g.lineBetween(points[i][0], points[i][1], points[i + 1][0], points[i + 1][1]);
-    }
+    return points;
   }
 
   createNode(node) {

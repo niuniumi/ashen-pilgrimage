@@ -4,10 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>灰烬圣途 Ashen Pilgrimage</title>
+    <link rel="preload" href="./assets/fonts/fusion-pixel-10px-zh-hans.woff2" as="font" type="font/woff2" crossorigin />
     <style>
       @font-face {
         font-family: "PixelCN";
-        src: url("/assets/fonts/fusion-pixel-10px-zh-hans.woff2") format("woff2");
+        src: url("./assets/fonts/fusion-pixel-10px-zh-hans.woff2") format("woff2");
         font-display: swap;
       }
 
@@ -24,17 +25,7 @@
         position: relative;
         width: 100vw;
         height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #11131a;
-        background-image:
-          linear-gradient(45deg, #1b1d24 25%, transparent 25%),
-          linear-gradient(-45deg, #1b1d24 25%, transparent 25%),
-          linear-gradient(45deg, transparent 75%, #1b1d24 75%),
-          linear-gradient(-45deg, transparent 75%, #1b1d24 75%);
-        background-size: 16px 16px;
-        background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+        background: #08090d;
       }
 
       canvas {
@@ -74,7 +65,7 @@
 
       @media (prefers-reduced-motion: reduce) {
         #game {
-          background: #15100d;
+          background: #08090d;
         }
       }
     </style>

@@ -10,7 +10,7 @@
 | `hero.exiled-knight.battle` | 骑士战斗 Sprite | Battle | 是 | final | `qa/screenshots/art/battle_knight_sprite.png` |
 | `hero.candle-nun.battle` | 修女战斗 Sprite | Battle | 是 | final | `qa/screenshots/art/battle_nun_sprite.png` |
 | `hero.ashblood-alchemist.battle` | 炼金师战斗 Sprite | Battle | 是 | final | `qa/screenshots/art/battle_alchemist_sprite.png` |
-| `enemy.rotting-villager` | 腐烂村民 | Battle, Codex | 是 | final | `qa/screenshots/art/enemy_sheet_polished.png` |
+| `enemy.rotting-villager` | 腐烛苦修者 | Battle, Codex | 是 | final | `qa/screenshots/art/enemy_sheet_polished.png` |
 | `enemy.graveyard-skeleton` | 墓园骷髅 | Battle, Codex | 是 | final | `qa/screenshots/art/enemy_sheet_polished.png` |
 | `enemy.black-hound` | 黑犬 | Battle, Codex | 是 | final | `qa/screenshots/art/enemy_sheet_polished.png` |
 | `enemy.plague-rat-swarm` | 瘟疫鼠群 | Battle, Codex | 是 | final | `qa/screenshots/art/enemy_sheet_polished.png` |

@@ -26,6 +26,11 @@ export const gameConfig = {
   backgroundColor: '#070604',
   pixelArt: true,
   roundPixels: true,
+  loader: {
+    maxParallelDownloads: 4,
+    maxRetries: 4,
+    timeout: 60000
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

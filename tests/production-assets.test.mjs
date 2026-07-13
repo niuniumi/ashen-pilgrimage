@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { enemies } from '../src/data/enemies.js';
+import { resolvePixelActorAsset } from '../src/art/PixelAssetCatalog.js';
 
 const root = path.resolve(import.meta.dirname, '..', 'public', 'assets');
 
@@ -32,4 +34,18 @@ test('pixel production backgrounds and Chinese font are bundled locally', async 
   }
   const font = await stat(path.join(root, 'fonts', 'fusion-pixel-10px-zh-hans.woff2'));
   assert.ok(font.size > 100_000, 'pixel Chinese font should be bundled locally');
+});
+
+test('every production enemy has a semantic pixel asset binding', () => {
+  const atlasFrames = new Set();
+  for (const enemy of enemies) {
+    const resolved = resolvePixelActorAsset(enemy.id);
+    assert.ok(resolved, `${enemy.id} should resolve to a pixel asset`);
+    assert.equal(resolved.assetId, enemy.id === 'graveyard-skeleton' ? 'grave-skeleton' : enemy.id);
+    if (Number.isInteger(resolved.asset.frameIndex)) {
+      assert.equal(atlasFrames.has(resolved.asset.frameIndex), false, `${enemy.id} reuses atlas frame ${resolved.asset.frameIndex}`);
+      atlasFrames.add(resolved.asset.frameIndex);
+    }
+  }
+  assert.equal(atlasFrames.size, 16);
 });

@@ -1,0 +1,178 @@
+import { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_DECORATIONS, resolvePixelActorAsset } from '../art/PixelAssetCatalog.js';
+import { characters } from '../data/characters.js';
+import { ENCOUNTER_POOLS } from '../data/encounters.js';
+import { createBgmAsset, createSfxPoolAssets } from './AudioCatalog.js';
+import { SCENES } from './constants.js';
+
+const DEFAULT_ACT = 1;
+const DEFAULT_CHARACTER_ID = characters[0].id;
+const CHARACTER_IDS = new Set(characters.map((character) => character.id));
+const COMBAT_SFX = ['card-play', 'attack', 'block', 'hit', 'turn', 'heal', 'buff', 'debuff', 'success', 'fail', 'error'];
+const FOLIO_SFX = ['page', 'dialog-open', 'dialog-close'];
+
+function audioPools(names) {
+  return names.flatMap((name) => createSfxPoolAssets(name));
+}
+
+const STATIC_BUNDLES = {
+  boot: {
+    images: [],
+    audio: [createBgmAsset('menu'), ...audioPools(['ui-click', 'ui-hover'])]
+  },
+  menu: {
+    images: [PIXEL_ASSETS.menu],
+    audio: [createBgmAsset('menu')]
+  },
+  'character-select': {
+    images: [PIXEL_ASSETS.folio, ...characters.map((character) => PIXEL_ACTORS[character.id])],
+    audio: [createBgmAsset('menu'), ...audioPools(['card-select'])]
+  },
+  folio: {
+    images: [PIXEL_ASSETS.folio],
+    audio: []
+  },
+  'story-audio': {
+    images: [],
+    audio: [createBgmAsset('map-act-2'), ...audioPools(FOLIO_SFX)]
+  },
+  'rest-audio': {
+    images: [],
+    audio: [createBgmAsset('map-act-1'), ...audioPools(['heal', 'relic'])]
+  },
+  'reward-audio': {
+    images: [],
+    audio: [...audioPools(['coin', 'card-select', 'relic', 'success'])]
+  },
+  'result-victory': {
+    images: [],
+    audio: [createBgmAsset('map-act-2'), ...audioPools(['success'])]
+  },
+  'result-defeat': {
+    images: [PIXEL_DECORATIONS.defeatTombstone],
+    audio: [createBgmAsset('map-act-3'), ...audioPools(['fail'])]
+  },
+  codex: {
+    images: Object.values(PIXEL_ACTORS),
+    audio: []
+  }
+};
+
+function normalizeAct(value) {
+  const act = Math.trunc(Number(value));
+  return ENCOUNTER_POOLS[act] ? act : DEFAULT_ACT;
+}
+
+function normalizeCharacterId(value) {
+  return CHARACTER_IDS.has(value) ? value : DEFAULT_CHARACTER_ID;
+}
+
+function uniqueByKey(assets) {
+  const seen = new Set();
+  return assets.filter((asset) => {
+    if (!asset || seen.has(asset.key)) return false;
+    seen.add(asset.key);
+    return true;
+  });
+}
+
+function enemyAssetsForAct(act, battleType) {
+  const pools = ENCOUNTER_POOLS[act];
+  const encounterGroups = battleType === 'boss'
+    ? pools.boss
+    : [...pools.battle, ...pools.elite];
+  return uniqueByKey(
+    encounterGroups
+      .flat()
+      .map((enemyId) => resolvePixelActorAsset(enemyId)?.asset)
+  );
+}
+
+function createActBundle(name) {
+  const match = /^(map|battle|boss)-act-([1-3])$/.exec(name);
+  if (!match) return null;
+  const [, kind, actText] = match;
+  const act = Number(actText);
+
+  if (kind === 'map') {
+    return {
+      images: [PIXEL_ASSETS.map],
+      audio: [createBgmAsset(`map-act-${act}`)]
+    };
+  }
+
+  const boss = kind === 'boss';
+  return {
+    images: [PIXEL_ASSETS[`battle${act}`], ...enemyAssetsForAct(act, boss ? 'boss' : 'battle')],
+    audio: [
+      createBgmAsset(boss ? 'boss' : `battle-act-${act}`),
+      ...audioPools([...COMBAT_SFX, ...(boss ? ['boss'] : [])])
+    ]
+  };
+}
+
+function createHeroBundle(name) {
+  if (!name.startsWith('hero-')) return null;
+  const characterId = name.slice('hero-'.length);
+  if (!CHARACTER_IDS.has(characterId)) return null;
+  return { images: [PIXEL_ACTORS[characterId]], audio: [] };
+}
+
+function resolveBundle(name) {
+  return STATIC_BUNDLES[name] ?? createActBundle(name) ?? createHeroBundle(name);
+}
+
+export function getSceneBundleNames(sceneKey, context = {}) {
+  const act = normalizeAct(context.act);
+  const heroBundle = `hero-${normalizeCharacterId(context.characterId)}`;
+
+  switch (sceneKey) {
+    case SCENES.Preload:
+      return ['boot'];
+    case SCENES.MainMenu:
+    case SCENES.Guide:
+    case SCENES.Settings:
+      return ['menu'];
+    case SCENES.CharacterSelect:
+      return ['character-select'];
+    case SCENES.Map:
+      return [`map-act-${act}`];
+    case SCENES.Battle:
+      return [context.battleType === 'boss' ? `boss-act-${act}` : `battle-act-${act}`, heroBundle];
+    case SCENES.BossIntro:
+      return [`boss-act-${act}`];
+    case SCENES.Result:
+      return context.victory === false ? ['folio', 'result-defeat'] : ['folio', 'result-victory', heroBundle];
+    case SCENES.Rest:
+    case SCENES.Shop:
+    case SCENES.Chest:
+      return ['folio', 'rest-audio'];
+    case SCENES.Reward:
+      return ['folio', 'story-audio', 'reward-audio'];
+    case SCENES.Codex:
+      return ['folio', 'story-audio', 'codex'];
+    case SCENES.Vow:
+    case SCENES.Prologue:
+    case SCENES.ActClear:
+    case SCENES.Event:
+      return ['folio', 'story-audio'];
+    default:
+      return ['folio'];
+  }
+}
+
+export function resolveAssetBundles(bundleNames = []) {
+  const images = [];
+  const audio = [];
+
+  for (const name of bundleNames) {
+    const bundle = resolveBundle(name);
+    if (!bundle) throw new Error(`Unknown asset bundle: ${name}`);
+    images.push(...bundle.images);
+    audio.push(...bundle.audio);
+  }
+
+  return {
+    images: uniqueByKey(images),
+    audio: uniqueByKey(audio)
+  };
+}

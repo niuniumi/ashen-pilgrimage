@@ -32,20 +32,35 @@ export const SFX_POOLS = {
   relic: 2
 };
 
-function queueBgm(scene, name) {
+export function createBgmAsset(name) {
   const key = `bgm-${name}`;
-  if (scene.cache.audio.exists(key)) return 0;
-  scene.load.audio(key, [`assets/audio/v2/${key}.ogg`, `assets/audio/v2/${key}.mp3`]);
+  return {
+    key,
+    urls: [`assets/audio/v2/${key}.ogg`, `assets/audio/v2/${key}.mp3`]
+  };
+}
+
+export function createSfxPoolAssets(name, count = SFX_POOLS[name] ?? 0) {
+  return Array.from({ length: count }, (_, index) => {
+    const key = `sfx-${name}-${index + 1}`;
+    return { key, urls: [`assets/audio/v2/${key}.ogg`] };
+  });
+}
+
+function queueAudioAsset(scene, asset) {
+  if (scene.cache.audio.exists(asset.key)) return 0;
+  scene.load.audio(asset.key, asset.urls);
   return 1;
+}
+
+function queueBgm(scene, name) {
+  return queueAudioAsset(scene, createBgmAsset(name));
 }
 
 function queueSfxPool(scene, name, count) {
   let queued = 0;
-  for (let variant = 1; variant <= count; variant += 1) {
-    const key = `sfx-${name}-${variant}`;
-    if (scene.cache.audio.exists(key)) continue;
-    scene.load.audio(key, `assets/audio/v2/${key}.ogg`);
-    queued += 1;
+  for (const asset of createSfxPoolAssets(name, count)) {
+    queued += queueAudioAsset(scene, asset);
   }
   return queued;
 }

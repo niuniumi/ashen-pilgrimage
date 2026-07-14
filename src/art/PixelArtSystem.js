@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../game/constants.js';
 import { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_ATLASES, PIXEL_TEXTURE_ASSETS } from './PixelAssetCatalog.js';
 
-export { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_ATLASES } from './PixelAssetCatalog.js';
+export { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_ATLASES, PIXEL_TEXTURE_ASSETS } from './PixelAssetCatalog.js';
 
 export const PIXEL_GRID = 4;
 
@@ -33,7 +33,13 @@ export function snapPixel(value, grid = PIXEL_GRID) {
 }
 
 export function queuePixelAssets(scene) {
-  PIXEL_TEXTURE_ASSETS.forEach((asset) => scene.load.image(asset.key, asset.url));
+  let queued = 0;
+  for (const asset of PIXEL_TEXTURE_ASSETS) {
+    if (scene.textures.exists(asset.key)) continue;
+    scene.load.image(asset.key, asset.url);
+    queued += 1;
+  }
+  return queued;
 }
 
 export function applyPixelFilters(scene) {

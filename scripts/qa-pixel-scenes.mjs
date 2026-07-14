@@ -52,6 +52,7 @@ async function inspectScene(page, sceneKey) {
       fonts,
       legacyFonts,
       overflow,
+      defeatTombstone: scene.children.list.some((item) => item?.name === 'defeat-tombstone-art'),
       pixelBackgrounds: scene.children.list.filter((item) => String(item?.name ?? '').startsWith('pixel-background-')).map((item) => item.name)
     };
   }, sceneKey);
@@ -100,6 +101,7 @@ try {
     assert(bytes > 80_000, `${sceneKey} screenshot looks blank (${bytes} bytes)`);
     assert(inspection.active, `${sceneKey} is not active`);
     assert(inspection.legacyFonts.length === 0, `${sceneKey} still uses legacy fonts: ${inspection.legacyFonts.join(', ')}`);
+    if (slug === '08_result_defeat') assert(inspection.defeatTombstone, 'defeat result did not render the curated tombstone asset');
   }
 
   assert(report.errors.length === 0, report.errors.join('\n'));

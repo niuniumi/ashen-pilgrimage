@@ -1,6 +1,6 @@
 {
   "name": "ashen-pilgrimage",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.7.0",
@@ -22,6 +22,8 @@
     "qa:simulation": "node scripts/qa-run-simulation.mjs",
     "qa:map-migration": "node scripts/qa-map-migration.mjs",
     "qa:progression": "node scripts/qa-progression-regression.mjs",
+    "qa:chapter-transition": "node scripts/qa-chapter-transition.mjs",
+    "qa:actor-roster": "node scripts/qa-actor-roster.mjs",
     "qa:resume-stages": "node scripts/qa-resume-stages.mjs",
     "qa:product-upgrade-scenes": "node scripts/qa-product-upgrade-scenes.mjs",
     "qa:pixel-scenes": "node scripts/qa-pixel-scenes.mjs",

@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "url": "http://127.0.0.1:4186/",
+  "states": [
+    {
+      "phase": "restored-legacy-boss",
+      "activeScenes": [
+        "BattleScene"
+      ],
+      "act": 1,
+      "mapAct": 1,
+      "activeNode": "n25",
+      "available": [
+        "n25"
+      ],
+      "pendingScene": "battle",
+      "pendingBattleType": "boss",
+      "battleType": "boss",
+      "selectable": []
+    },
+    {
+      "phase": "act-two-map",
+      "activeScenes": [
+        "MapScene"
+      ],
+      "act": 2,
+      "mapAct": 2,
+      "activeNode": null,
+      "available": [
+        "n0"
+      ],
+      "pendingScene": null,
+      "pendingBattleType": null,
+      "battleType": null,
+      "selectable": [
+        {
+          "id": "n0",
+          "x": 760,
+          "y": 704
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

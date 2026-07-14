@@ -12,7 +12,13 @@ export function hasPendingRewardCheckpoint(run) {
 
 export function getRunResumeTarget(run, options = {}) {
   const checkpoint = options.checkpoint ?? restoreBattleCheckpoint(run);
-  if (checkpoint) return { sceneKey: SCENES.Battle, data: { restoredBattle: checkpoint.battle } };
+  if (checkpoint) {
+    const activeNode = run?.map?.nodes?.find((node) => node.id === run?.map?.activeNode);
+    const inferredBattleType = checkpoint.battle?.battleType ?? run?.pendingBattleType ?? activeNode?.type ?? 'battle';
+    const data = { restoredBattle: checkpoint.battle };
+    if (!checkpoint.battle?.battleType && inferredBattleType !== 'battle') data.battleType = inferredBattleType;
+    return { sceneKey: SCENES.Battle, data };
+  }
   const stageTargets = {
     vow: { sceneKey: SCENES.Vow, data: {} },
     battle: { sceneKey: SCENES.Battle, data: { battleType: run?.pendingBattleType ?? 'battle' } },

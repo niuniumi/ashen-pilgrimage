@@ -3,7 +3,10 @@ dist/
 .netlify/
 .codex_audio_tmp/
 qa/audio-source/
-qa/source-art/
+qa/source-art/*
+!qa/source-art/curated-actors/
+!qa/source-art/curated-actors/**
+!qa/source-art/defeat-tombstone-source.png
 qa/screenshots/
 qa/problem_screenshots/
 qa/tmp/

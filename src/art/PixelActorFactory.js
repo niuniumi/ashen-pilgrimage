@@ -52,13 +52,14 @@ function drawAtlasActor(scene, spriteName, x, y, scale, options = {}, actorType 
   const asset = resolved?.asset;
   if (!asset || !scene.textures.exists(asset.key)) return null;
   const isBoss = actorType === 'enemy' && (options.type === 'boss' || BOSS_IDS.has(spriteName));
-  const height = options.generatedHeight ?? (options.artPortrait ? 260 * scale : (isBoss ? 356 : 280) * scale);
+  const baseHeight = options.generatedHeight ?? (options.artPortrait ? 260 * scale : (isBoss ? 356 : 280) * scale);
+  const height = Math.round(baseHeight * (asset.displayScale ?? 1));
   const container = scene.add.container(snapPixel(x), snapPixel(y));
   if (Number.isFinite(options.depth)) container.setDepth(options.depth);
   const shadow = scene.add.graphics();
   shadow.fillStyle(PIXEL_PALETTE.void, 0.58);
   shadow.fillRect(-Math.round(height * 0.28), 108, Math.round(height * 0.56), 16);
-  const actor = scene.add.image(0, 112, asset.key, asset.frame).setOrigin(0.5, 1);
+  const actor = scene.add.image(0, 112 + (asset.offsetY ?? 0), asset.key, asset.frame).setOrigin(0.5, 1);
   const frameWidth = actor.frame.realWidth || actor.frame.width;
   const frameHeight = actor.frame.realHeight || actor.frame.height;
   actor.setDisplaySize(Math.round((frameWidth / frameHeight) * height), Math.round(height));

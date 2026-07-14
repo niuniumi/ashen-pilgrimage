@@ -8,6 +8,12 @@ const actors = Object.values(PIXEL_ACTORS);
 const issues = [];
 const keys = new Set();
 
+function pngDimensions(file) {
+  const data = fs.readFileSync(file);
+  if (data.length < 24 || data.toString('ascii', 1, 4) !== 'PNG') return null;
+  return { width: data.readUInt32BE(16), height: data.readUInt32BE(20) };
+}
+
 for (const asset of assets) {
   if (!asset.key || !asset.url) issues.push(`invalid pixel asset: ${JSON.stringify(asset)}`);
   if (keys.has(asset.key)) issues.push(`duplicate asset key: ${asset.key}`);
@@ -23,7 +29,12 @@ for (const asset of PIXEL_TEXTURE_ASSETS.filter((item) => !assets.includes(item)
   keys.add(asset.key);
   const file = path.join(root, 'public', asset.url);
   if (!fs.existsSync(file)) issues.push(`missing pixel actor: ${asset.url}`);
-  else if (fs.statSync(file).size < 10_000) issues.push(`pixel actor too small: ${asset.url}`);
+  else {
+    const dimensions = pngDimensions(file);
+    if (!dimensions || dimensions.width < 16 || dimensions.height < 16) {
+      issues.push(`pixel actor has invalid PNG dimensions: ${asset.url}`);
+    }
+  }
 }
 
 const font = path.join(root, 'public/assets/fonts/fusion-pixel-10px-zh-hans.woff2');

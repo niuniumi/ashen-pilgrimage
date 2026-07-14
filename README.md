@@ -1,6 +1,6 @@
 # 灰烬圣途 Ashen Pilgrimage
 
-[在线试玩](https://niuniumi.github.io/ashen-pilgrimage/) | 当前版本 `v2.0.0-pixel-rebuild`
+[在线试玩](https://niuniumi.github.io/ashen-pilgrimage/) | 当前版本 `v2.1.0-curated-actors`
 
 《灰烬圣途》是一款使用 Phaser 3 制作的单机网页 Roguelike 牌组构筑游戏。玩家从三名行者中选择一人，穿过三章共 36 层路线，构筑牌组、承担誓约、处理角色事件，并挑战拥有独立阶段规则的首领。
 
@@ -60,10 +60,12 @@ pnpm run qa:pixel-scenes -- --url=http://127.0.0.1:4173
 pnpm run qa:role-matrix -- --url=http://127.0.0.1:4173
 pnpm run qa:release-flow -- --url=http://127.0.0.1:4173
 pnpm run qa:progression -- --url=http://127.0.0.1:4173
+pnpm run qa:chapter-transition -- --url=http://127.0.0.1:4173
+pnpm run qa:actor-roster -- --url=http://127.0.0.1:4173
 pnpm run qa:pause-menu -- --url=http://127.0.0.1:4173
 ```
 
-主要报告位于 `qa/`。素材与许可证见 [像素资产清单](docs/PIXEL_ASSET_MANIFEST.md) 和 [音频素材清单](docs/AUDIO_ASSET_MANIFEST.md)，版本变更见 [v2.0 发布说明](docs/RELEASE_NOTES_2.0.md)。
+主要报告位于 `qa/`。素材与许可证见 [像素资产清单](docs/PIXEL_ASSET_MANIFEST.md) 和 [音频素材清单](docs/AUDIO_ASSET_MANIFEST.md)，版本变更见 [v2.1 发布说明](docs/RELEASE_NOTES_2.1.md)。
 
 ## 技术栈
 

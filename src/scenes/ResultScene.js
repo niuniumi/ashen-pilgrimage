@@ -13,6 +13,7 @@ import { drawHeroArt } from '../ui/UICharacterArt.js';
 import { attachSceneServices } from './SceneHelpers.js';
 import { addHandPaintedBackground, addVfxAsset, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
+import { PIXEL_DECORATIONS } from '../art/PixelAssetCatalog.js';
 
 export default class ResultScene extends Phaser.Scene {
   constructor() {
@@ -198,6 +199,15 @@ export default class ResultScene extends Phaser.Scene {
     if (this.victory) {
       drawHeroArt(this, run.characterId ?? 'exiled-knight', 420, 476, 0.88, { idle: false, battle: true, generatedHeight: 320 });
       new UIIcon(this, 420, 652, 'flame', { size: 72 });
+      return;
+    }
+    const tombstone = PIXEL_DECORATIONS.defeatTombstone;
+    if (this.textures.exists(tombstone.key)) {
+      this.add
+        .image(420, 506, tombstone.key)
+        .setDisplaySize(340, 340)
+        .setDepth(6)
+        .setName('defeat-tombstone-art');
       return;
     }
     const g = this.add.graphics().setDepth(6);

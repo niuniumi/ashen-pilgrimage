@@ -1,17 +1,18 @@
 {
-  "url": "http://127.0.0.1:4184/",
-  "generatedAt": "2026-07-13T11:02:18.610Z",
+  "url": "http://127.0.0.1:4186/",
+  "generatedAt": "2026-07-14T09:49:18.829Z",
   "scenes": [
     {
       "slug": "01_prologue",
       "sceneKey": "PrologueScene",
       "screenshot": "qa/screenshots/pixel_scenes/01_prologue.png",
-      "bytes": 786771,
+      "bytes": 787326,
       "active": true,
       "textCount": 0,
       "fonts": [],
       "legacyFonts": [],
       "overflow": [],
+      "defeatTombstone": false,
       "pixelBackgrounds": [
         "pixel-background-folio"
       ]
@@ -28,6 +29,7 @@
       ],
       "legacyFonts": [],
       "overflow": [],
+      "defeatTombstone": false,
       "pixelBackgrounds": [
         "pixel-background-folio"
       ]
@@ -44,6 +46,7 @@
       ],
       "legacyFonts": [],
       "overflow": [],
+      "defeatTombstone": false,
       "pixelBackgrounds": [
         "pixel-background-folio"
       ]
@@ -60,6 +63,7 @@
       ],
       "legacyFonts": [],
       "overflow": [],
+      "defeatTombstone": false,
       "pixelBackgrounds": [
         "pixel-background-folio"
       ]
@@ -76,6 +80,7 @@
       ],
       "legacyFonts": [],
       "overflow": [],
+      "defeatTombstone": false,
       "pixelBackgrounds": [
         "pixel-background-folio"
       ]
@@ -84,7 +89,7 @@
       "slug": "06_boss_intro",
       "sceneKey": "BossIntroScene",
       "screenshot": "qa/screenshots/pixel_scenes/06_boss_intro.png",
-      "bytes": 1271353,
+      "bytes": 1273391,
       "active": true,
       "textCount": 2,
       "fonts": [
@@ -92,6 +97,7 @@
       ],
       "legacyFonts": [],
       "overflow": [],
+      "defeatTombstone": false,
       "pixelBackgrounds": [
         "pixel-background-battle"
       ]
@@ -100,7 +106,7 @@
       "slug": "07_act_clear",
       "sceneKey": "ActClearScene",
       "screenshot": "qa/screenshots/pixel_scenes/07_act_clear.png",
-      "bytes": 1006400,
+      "bytes": 996886,
       "active": true,
       "textCount": 2,
       "fonts": [
@@ -108,6 +114,7 @@
       ],
       "legacyFonts": [],
       "overflow": [],
+      "defeatTombstone": false,
       "pixelBackgrounds": [
         "pixel-background-folio"
       ]
@@ -116,7 +123,7 @@
       "slug": "08_result_defeat",
       "sceneKey": "ResultScene",
       "screenshot": "qa/screenshots/pixel_scenes/08_result_defeat.png",
-      "bytes": 749530,
+      "bytes": 832834,
       "active": true,
       "textCount": 8,
       "fonts": [
@@ -124,6 +131,7 @@
       ],
       "legacyFonts": [],
       "overflow": [],
+      "defeatTombstone": true,
       "pixelBackgrounds": [
         "pixel-background-folio"
       ]
@@ -140,6 +148,7 @@
       ],
       "legacyFonts": [],
       "overflow": [],
+      "defeatTombstone": false,
       "pixelBackgrounds": [
         "pixel-background-folio"
       ]

@@ -47,5 +47,42 @@ test('battle checkpoint remains authoritative while a battle stage is pending', 
     map: { activeNode: 'n7' },
     checkpoint: { sceneKey: 'BattleScene', activeNode: 'n7', battle }
   };
-  assert.deepEqual(getRunResumeTarget(run), { sceneKey: 'BattleScene', data: { restoredBattle: battle } });
+  assert.deepEqual(getRunResumeTarget(run), {
+    sceneKey: 'BattleScene',
+    data: { restoredBattle: battle, battleType: 'elite' }
+  });
+});
+
+test('legacy boss checkpoints without battleType resume as boss battles', () => {
+  const battle = { turn: 4, player: {}, deck: { hand: [] }, enemies: [] };
+  const run = {
+    pendingScene: 'battle',
+    pendingBattleType: 'boss',
+    map: {
+      activeNode: 'n11',
+      nodes: [{ id: 'n11', type: 'boss' }]
+    },
+    checkpoint: { sceneKey: 'BattleScene', activeNode: 'n11', battle }
+  };
+
+  assert.deepEqual(getRunResumeTarget(run), {
+    sceneKey: 'BattleScene',
+    data: { restoredBattle: battle, battleType: 'boss' }
+  });
+});
+
+test('boss node identity recovers the battle type when legacy stage metadata is missing', () => {
+  const battle = { turn: 4, player: {}, deck: { hand: [] }, enemies: [] };
+  const run = {
+    map: {
+      activeNode: 'n11',
+      nodes: [{ id: 'n11', type: 'boss' }]
+    },
+    checkpoint: { sceneKey: 'BattleScene', activeNode: 'n11', battle }
+  };
+
+  assert.deepEqual(getRunResumeTarget(run), {
+    sceneKey: 'BattleScene',
+    data: { restoredBattle: battle, battleType: 'boss' }
+  });
 });

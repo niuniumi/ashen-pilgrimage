@@ -5,17 +5,21 @@ import { resolveAssetBundles } from './AssetBundleCatalog.js';
 export function queueAssetBundles(scene, bundleNames) {
   const assets = resolveAssetBundles(bundleNames);
   const keys = [];
+  const onAdd = (key) => keys.push(key);
 
-  for (const image of assets.images) {
-    if (scene.textures.exists(image.key)) continue;
-    scene.load.image(image.key, image.url);
-    keys.push(image.key);
-  }
+  scene.load.on('addfile', onAdd);
+  try {
+    for (const image of assets.images) {
+      if (scene.textures.exists(image.key)) continue;
+      scene.load.image(image.key, image.url);
+    }
 
-  for (const audio of assets.audio) {
-    if (scene.cache.audio.exists(audio.key)) continue;
-    scene.load.audio(audio.key, audio.urls);
-    keys.push(audio.key);
+    for (const audio of assets.audio) {
+      if (scene.cache.audio.exists(audio.key)) continue;
+      scene.load.audio(audio.key, audio.urls);
+    }
+  } finally {
+    scene.load.off('addfile', onAdd);
   }
 
   return { queued: keys.length, keys };

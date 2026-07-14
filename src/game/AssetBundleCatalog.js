@@ -7,8 +7,9 @@ import { SCENES } from './constants.js';
 const DEFAULT_ACT = 1;
 const DEFAULT_CHARACTER_ID = characters[0].id;
 const CHARACTER_IDS = new Set(characters.map((character) => character.id));
-const COMBAT_SFX = ['card-play', 'attack', 'block', 'hit', 'turn', 'heal', 'buff', 'debuff', 'success', 'fail', 'error'];
-const FOLIO_SFX = ['page', 'dialog-open', 'dialog-close'];
+const SHARED_SFX = ['ui-click', 'ui-hover', 'dialog-open', 'dialog-close', 'error'];
+const COMBAT_SFX = ['card-play', 'attack', 'block', 'hit', 'turn', 'heal', 'buff', 'debuff', 'success', 'fail'];
+const STORY_SFX = ['page'];
 
 function audioPools(names) {
   return names.flatMap((name) => createSfxPoolAssets(name));
@@ -17,7 +18,7 @@ function audioPools(names) {
 const STATIC_BUNDLES = {
   boot: {
     images: [],
-    audio: [createBgmAsset('menu'), ...audioPools(['ui-click', 'ui-hover'])]
+    audio: [createBgmAsset('menu'), ...audioPools(SHARED_SFX)]
   },
   menu: {
     images: [PIXEL_ASSETS.menu],
@@ -33,7 +34,11 @@ const STATIC_BUNDLES = {
   },
   'story-audio': {
     images: [],
-    audio: [createBgmAsset('map-act-2'), ...audioPools(FOLIO_SFX)]
+    audio: [createBgmAsset('map-act-2'), ...audioPools(STORY_SFX)]
+  },
+  'story-sfx': {
+    images: [],
+    audio: audioPools(STORY_SFX)
   },
   'rest-audio': {
     images: [],
@@ -42,6 +47,18 @@ const STATIC_BUNDLES = {
   'reward-audio': {
     images: [],
     audio: [...audioPools(['coin', 'card-select', 'relic', 'success'])]
+  },
+  'coin-sfx': {
+    images: [],
+    audio: audioPools(['coin'])
+  },
+  'relic-sfx': {
+    images: [],
+    audio: audioPools(['relic'])
+  },
+  'success-sfx': {
+    images: [],
+    audio: audioPools(['success'])
   },
   'result-victory': {
     images: [],
@@ -139,11 +156,13 @@ export function getSceneBundleNames(sceneKey, context = {}) {
     case SCENES.Battle:
       return [context.battleType === 'boss' ? `boss-act-${act}` : `battle-act-${act}`, heroBundle];
     case SCENES.BossIntro:
-      return [`boss-act-${act}`];
+      return [`boss-act-${act}`, 'story-sfx'];
     case SCENES.Result:
       return context.victory === false ? ['folio', 'result-defeat'] : ['folio', 'result-victory', heroBundle];
     case SCENES.Rest:
+      return ['folio', 'rest-audio'];
     case SCENES.Shop:
+      return ['folio', 'rest-audio', 'coin-sfx'];
     case SCENES.Chest:
       return ['folio', 'rest-audio'];
     case SCENES.Reward:
@@ -151,8 +170,10 @@ export function getSceneBundleNames(sceneKey, context = {}) {
     case SCENES.Codex:
       return ['folio', 'story-audio', 'codex'];
     case SCENES.Vow:
-    case SCENES.Prologue:
+      return ['folio', 'story-audio', 'relic-sfx'];
     case SCENES.ActClear:
+      return ['folio', 'story-audio', 'success-sfx'];
+    case SCENES.Prologue:
     case SCENES.Event:
       return ['folio', 'story-audio'];
     default:

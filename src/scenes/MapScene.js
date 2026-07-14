@@ -13,7 +13,7 @@ import { UIFrame } from '../ui/UIFrame.js';
 import { drawBackArrowButton, drawDivider, drawVignette, drawWaxSeal } from '../ui/UIOrnament.js';
 import { drawIcon, UIIcon } from '../ui/UIIcon.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
-import { addToast, attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 import { FONT } from '../design/textStyles.js';
 
@@ -24,6 +24,10 @@ const SOURCE_X_MAX = 850;
 export default class MapScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Map);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Map, { title: '展开旅途地图' });
   }
 
   create() {

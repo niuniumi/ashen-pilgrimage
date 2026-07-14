@@ -8,12 +8,16 @@ import { UIButton } from '../ui/UIButton.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { drawCandle, drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
-import { addToast, attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, addUiAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 
 export default class EventScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Event);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Event, { title: '展开旅途事件' });
   }
 
   create() {

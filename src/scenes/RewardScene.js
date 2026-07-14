@@ -13,12 +13,16 @@ import { UIFrame } from '../ui/UIFrame.js';
 import { UIIcon } from '../ui/UIIcon.js';
 import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
-import { addToast, attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 
 export default class RewardScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Reward);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Reward, { title: '整理战利品' });
   }
 
   create() {

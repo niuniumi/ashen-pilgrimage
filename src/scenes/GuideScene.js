@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, GAME_WIDTH, SCENES } from '../game/constants.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UIPanel } from '../ui/UIPanel.js';
-import { addBackButton, addSceneTitle, attachSceneServices, drawGameBackdrop } from './SceneHelpers.js';
+import { addBackButton, addSceneTitle, attachSceneServices, drawGameBackdrop, preloadSceneAssets } from './SceneHelpers.js';
 import { FONT } from '../design/textStyles.js';
 import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 
@@ -56,6 +56,10 @@ function wrapCjk(text, maxChars = 28) {
 export default class GuideScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Guide);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Guide, { title: '展开旅途指南' });
   }
 
   create() {

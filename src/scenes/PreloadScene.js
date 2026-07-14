@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, SCENES } from '../game/constants.js';
-import { queueCoreAudio } from '../game/AudioCatalog.js';
-import { applyPixelFilters, PIXEL_PALETTE, queuePixelAssets } from '../art/PixelArtSystem.js';
+import { getSceneBundleNames } from '../game/AssetBundleCatalog.js';
+import { queueAssetBundles } from '../game/SceneAssetLoader.js';
+import { applyPixelFilters, PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 import { FONT } from '../design/textStyles.js';
 
 export default class PreloadScene extends Phaser.Scene {
@@ -14,8 +15,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.on('loaderror', (file) => {
       console.warn(`Asset load failed: ${file?.key ?? 'unknown'}`);
     });
-    queuePixelAssets(this);
-    queueCoreAudio(this);
+    queueAssetBundles(this, getSceneBundleNames(SCENES.Preload));
   }
 
   create() {

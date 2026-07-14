@@ -11,12 +11,16 @@ import { UIDialog } from '../ui/UIDialog.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { drawHeroArt } from '../ui/UICharacterArt.js';
 import { drawCandle, drawDivider, drawVignette } from '../ui/UIOrnament.js';
-import { addToast, attachSceneServices } from './SceneHelpers.js';
+import { addToast, attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
 import { HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 
 export default class MainMenuScene extends Phaser.Scene {
   constructor() {
     super(SCENES.MainMenu);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.MainMenu, { title: '点燃主菜单' });
   }
 
   create() {

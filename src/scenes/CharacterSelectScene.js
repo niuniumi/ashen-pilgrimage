@@ -10,12 +10,16 @@ import { SCENE_TITLES, THEME, textStyle, titleStyle } from '../game/Theme.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { drawBackArrowButton, drawDivider } from '../ui/UIOrnament.js';
-import { addToast, attachSceneServices } from './SceneHelpers.js';
+import { addToast, attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
 import { addUiAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 
 export default class CharacterSelectScene extends Phaser.Scene {
   constructor() {
     super(SCENES.CharacterSelect);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.CharacterSelect, { title: '整理旅者名册' });
   }
 
   create() {

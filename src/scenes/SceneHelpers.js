@@ -6,48 +6,83 @@ import { UIButton } from '../ui/UIButton.js';
 import { UIToast } from '../ui/UIToast.js';
 import { drawBackArrowButton } from '../ui/UIOrnament.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
-import { queueDeferredAudio } from '../game/AudioCatalog.js';
-import { queueDeferredVisuals } from '../game/VisualCatalog.js';
+import { getSceneBundleNames } from '../game/AssetBundleCatalog.js';
+import { installSceneLoadingView, queueAssetBundles } from '../game/SceneAssetLoader.js';
 import { FONT } from '../design/textStyles.js';
+
+export function preloadSceneAssets(scene, sceneKey, options = {}) {
+  const { title, run: providedRun, restartData = {}, ...context } = options;
+  const run = providedRun ?? scene.registry.get('run') ?? SaveManager.loadRun();
+  const bundleNames = getSceneBundleNames(sceneKey, {
+    act: run?.act ?? run?.map?.act ?? 1,
+    characterId: run?.characterId,
+    ...context
+  });
+  const result = queueAssetBundles(scene, bundleNames);
+  if (result.queued === 0) return result;
+
+  const view = installSceneLoadingView(scene, { title });
+  const failedKeys = new Set();
+  const recoveryObjects = [];
+
+  const cleanup = () => {
+    scene.load.off('loaderror', onLoadError);
+    scene.load.off('complete', onComplete);
+    scene.events.off('create', showRecovery);
+    scene.events.off('shutdown', cleanup);
+    recoveryObjects.splice(0).forEach((object) => object.destroy());
+  };
+  const leaveLoadingView = (action) => {
+    view.destroy();
+    cleanup();
+    action();
+  };
+  const showRecovery = () => {
+    if (recoveryObjects.length > 0) return;
+    const depth = 21000;
+    const veil = scene.add.graphics().setDepth(depth);
+    veil.fillStyle(0x08090d, 0.97);
+    veil.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    const message = scene.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 92, `以下资源加载失败：\n${[...failedKeys].join(', ')}`, {
+        fontFamily: FONT,
+        fontSize: 20,
+        color: '#f4e7c5',
+        align: 'center',
+        wordWrap: { width: 920 }
+      })
+      .setOrigin(0.5)
+      .setDepth(depth + 1);
+    const retry = new UIButton(scene, GAME_WIDTH / 2 - 126, GAME_HEIGHT / 2 + 62, 220, 52, '重试加载', () => {
+      leaveLoadingView(() => scene.scene.restart(restartData));
+    }, { fontSize: 20, hitDepth: depth + 3 }).setDepth(depth + 2);
+    const safeReturn = new UIButton(scene, GAME_WIDTH / 2 + 126, GAME_HEIGHT / 2 + 62, 220, 52, '安全返回', () => {
+      leaveLoadingView(() => {
+        if (sceneKey === SCENES.MainMenu) return;
+        scene.scene.start(SCENES.MainMenu);
+      });
+    }, { fontSize: 20, hitDepth: depth + 3 }).setDepth(depth + 2);
+    recoveryObjects.push(veil, message, retry, safeReturn);
+  };
+  const onLoadError = (file) => failedKeys.add(file?.key ?? 'unknown');
+  const onComplete = () => {
+    if (failedKeys.size === 0) {
+      cleanup();
+      return;
+    }
+    scene.events.once('create', showRecovery);
+  };
+
+  scene.load.on('loaderror', onLoadError);
+  scene.load.once('complete', onComplete);
+  scene.events.once('shutdown', cleanup);
+  return result;
+}
 
 export function attachSceneServices(scene) {
   scene.audio = scene.registry.get('audio');
   scene.audio?.attachScene?.(scene);
   scene.input?.once?.('pointerdown', () => scene.audio?.unlock?.());
-  scene.time?.delayedCall?.(180, () => ensureDeferredAssets(scene));
-}
-
-function ensureDeferredAssets(scene) {
-  if (!scene?.sys?.isActive?.()) return;
-  const state = scene.registry.get('deferredAssetsState');
-  if (state === 'ready' || state === 'loading') return;
-  if (scene.load.isLoading()) {
-    scene.time.delayedCall(240, () => ensureDeferredAssets(scene));
-    return;
-  }
-  const owner = `${scene.sys.settings.key}:${scene.time.now}`;
-  scene.registry.set('deferredAssetsState', 'loading');
-  scene.registry.set('deferredAssetsOwner', owner);
-  const queued = queueDeferredAudio(scene) + queueDeferredVisuals(scene);
-  if (queued === 0) {
-    scene.registry.set('deferredAssetsState', 'ready');
-    scene.registry.set('deferredAssetsReady', true);
-    scene.registry.remove('deferredAssetsOwner');
-    return;
-  }
-  scene.load.once('complete', () => {
-    if (scene.registry.get('deferredAssetsOwner') !== owner) return;
-    scene.registry.set('deferredAssetsState', 'ready');
-    scene.registry.set('deferredAssetsReady', true);
-    scene.registry.remove('deferredAssetsOwner');
-  });
-  scene.load.on('loaderror', (file) => console.warn(`Deferred audio load failed: ${file?.key ?? 'unknown'}`));
-  scene.events.once('shutdown', () => {
-    if (scene.registry.get('deferredAssetsOwner') !== owner) return;
-    scene.registry.remove('deferredAssetsOwner');
-    scene.registry.remove('deferredAssetsState');
-  });
-  scene.load.start();
 }
 
 export function addToast(scene, message, kind = 'info') {

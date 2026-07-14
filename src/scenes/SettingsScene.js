@@ -5,7 +5,7 @@ import { THEME, textStyle, titleStyle } from '../game/Theme.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { drawDivider } from '../ui/UIOrnament.js';
-import { addBackButton, addToast, attachSceneServices, drawGameBackdrop } from './SceneHelpers.js';
+import { addBackButton, addToast, attachSceneServices, drawGameBackdrop, preloadSceneAssets } from './SceneHelpers.js';
 import { FONT } from '../design/textStyles.js';
 import { PIXEL_PALETTE, snapPixel } from '../art/PixelArtSystem.js';
 
@@ -13,6 +13,10 @@ import { PIXEL_PALETTE, snapPixel } from '../art/PixelArtSystem.js';
 export default class SettingsScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Settings);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Settings, { title: '整理旅途设置' });
   }
 
   create() {

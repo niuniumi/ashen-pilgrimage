@@ -13,12 +13,16 @@ import { UIFrame } from '../ui/UIFrame.js';
 import { UIIcon } from '../ui/UIIcon.js';
 import { drawCandle, drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
-import { addToast, attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, addVfxAsset, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 
 export default class RestScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Rest);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Rest, { title: '点燃休憩营火' });
   }
 
   create() {

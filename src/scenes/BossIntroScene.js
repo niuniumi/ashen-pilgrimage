@@ -8,13 +8,17 @@ import { screenShake } from '../effects/ScreenShake.js';
 import { StoryDialog } from '../ui/StoryDialog.js';
 import { SceneTransition } from '../ui/SceneTransition.js';
 import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
-import { attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { drawEnemyArt } from '../ui/UICharacterArt.js';
 
 export default class BossIntroScene extends Phaser.Scene {
   constructor() {
     super(SCENES.BossIntro);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.BossIntro, { title: '召来本章首领' });
   }
 
   create() {

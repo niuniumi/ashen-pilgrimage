@@ -8,11 +8,15 @@ import { UIButton } from '../ui/UIButton.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { UIIcon } from '../ui/UIIcon.js';
-import { attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 
 export default class VowScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Vow);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Vow, { title: '展开誓约' });
   }
 
   create() {

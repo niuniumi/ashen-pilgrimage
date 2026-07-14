@@ -7,13 +7,17 @@ import { addAmbientAsh } from '../effects/AmbientParticles.js';
 import { StoryDialog } from '../ui/StoryDialog.js';
 import { SceneTransition } from '../ui/SceneTransition.js';
 import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
-import { attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, addVfxAsset, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { MapSystem } from '../systems/MapSystem.js';
 
 export default class ActClearScene extends Phaser.Scene {
   constructor() {
     super(SCENES.ActClear);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.ActClear, { title: '整理章节终幕' });
   }
 
   create() {

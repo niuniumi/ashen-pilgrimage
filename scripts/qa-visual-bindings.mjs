@@ -8,6 +8,7 @@ import { PIXEL_ASSETS, resolvePixelActorAsset } from '../src/art/PixelAssetCatal
 const root = process.cwd();
 const actorSource = fs.readFileSync(path.join(root, 'src/art/PixelActorFactory.js'), 'utf8');
 const preloadSource = fs.readFileSync(path.join(root, 'src/scenes/PreloadScene.js'), 'utf8');
+const sceneHelpersSource = fs.readFileSync(path.join(root, 'src/scenes/SceneHelpers.js'), 'utf8');
 const visualCatalog = fs.readFileSync(path.join(root, 'src/game/VisualCatalog.js'), 'utf8');
 
 assert.equal(characters.length, 3, 'all three production heroes must remain available');
@@ -15,7 +16,12 @@ assert.ok(enemies.length >= 28, 'full production enemy roster must remain availa
 assert.ok(actorSource.includes('drawPixelHero'), 'pixel hero factory is not bound');
 assert.ok(actorSource.includes('drawPixelEnemy'), 'pixel enemy factory is not bound');
 assert.ok(actorSource.includes('getEnemy(enemyId)'), 'enemy visuals must derive from the production roster');
-assert.ok(preloadSource.includes('queuePixelAssets'), 'preload must bind pixel production assets');
+assert.ok(preloadSource.includes('getSceneBundleNames(SCENES.Preload'), 'preload must resolve the boot bundle');
+assert.ok(preloadSource.includes('queueAssetBundles(this'), 'preload must queue the boot bundle');
+assert.equal(preloadSource.includes('queuePixelAssets'), false, 'preload must not queue all pixel assets');
+assert.equal(preloadSource.includes('queueCoreAudio'), false, 'preload must not queue all audio assets');
+assert.ok(sceneHelpersSource.includes('preloadSceneAssets'), 'release scenes must use scene-scoped asset loading');
+assert.equal(sceneHelpersSource.includes('ensureDeferredAssets'), false, 'global deferred loading must remain removed');
 assert.equal(preloadSource.includes('flattenFinalArtAssets'), false, 'legacy SVG assets must not be preloaded');
 assert.equal(preloadSource.includes('flattenRelicAssets'), false, 'legacy relic bitmaps must not be preloaded');
 assert.equal(visualCatalog.includes('assets/generated'), false, 'deferred visuals must not restore generated legacy assets');

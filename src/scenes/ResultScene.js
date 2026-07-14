@@ -10,7 +10,7 @@ import { UIFrame } from '../ui/UIFrame.js';
 import { UIIcon } from '../ui/UIIcon.js';
 import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { drawHeroArt } from '../ui/UICharacterArt.js';
-import { attachSceneServices } from './SceneHelpers.js';
+import { attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
 import { addHandPaintedBackground, addVfxAsset, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 import { PIXEL_DECORATIONS } from '../art/PixelAssetCatalog.js';
@@ -23,6 +23,15 @@ export default class ResultScene extends Phaser.Scene {
   init(data) {
     this.victory = Boolean(data?.victory);
     this.resultRun = data?.run ?? null;
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Result, {
+      run: this.resultRun,
+      victory: this.victory,
+      restartData: { victory: this.victory, run: this.resultRun },
+      title: this.victory ? '整理胜利铭文' : '刻下旅途终点'
+    });
   }
 
   create() {

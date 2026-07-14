@@ -4,7 +4,7 @@ import { SaveManager } from '../game/SaveManager.js';
 import { UIButton } from '../ui/UIButton.js';
 import { SceneTransition } from '../ui/SceneTransition.js';
 import { drawBackArrowButton } from '../ui/UIOrnament.js';
-import { attachSceneServices } from './SceneHelpers.js';
+import { attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { drawPixelPanel, PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 import { FONT } from '../design/textStyles.js';
@@ -35,6 +35,10 @@ const PROLOGUE_PAGES = [
 export default class PrologueScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Prologue);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Prologue, { title: '展开序章' });
   }
 
   create() {

@@ -11,13 +11,17 @@ import { UIFrame } from '../ui/UIFrame.js';
 import { UIIcon } from '../ui/UIIcon.js';
 import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
-import { attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, addUiAsset, addVfxAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 
 export default class ChestScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Chest);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Chest, { title: '开启圣途宝箱' });
   }
 
   create() {

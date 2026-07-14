@@ -12,7 +12,7 @@ import { UIFrame } from '../ui/UIFrame.js';
 import { UIIcon } from '../ui/UIIcon.js';
 import { drawBackArrowButton, drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { drawEnemyArt } from '../ui/UICharacterArt.js';
-import { attachSceneServices } from './SceneHelpers.js';
+import { attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 
 const TABS = [
@@ -25,6 +25,10 @@ const TABS = [
 export default class CodexScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Codex);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Codex, { title: '整理灰烬图鉴' });
   }
 
   create() {

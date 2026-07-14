@@ -26,7 +26,7 @@ import { drawEnemyArt, drawHeroArt } from '../ui/UICharacterArt.js';
 import { UIHealthBar } from '../ui/UIHealthBar.js';
 import { UIPanel } from '../ui/UIPanel.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
-import { addToast, attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addUiAsset, addVfxAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 import { BattleInputController } from '../input/BattleInputController.js';
 
@@ -82,6 +82,15 @@ export default class BattleScene extends Phaser.Scene {
     this.battleType = data?.battleType ?? 'battle';
     this.restoredBattle = data?.restoredBattle ?? null;
     if (this.restoredBattle?.battleType) this.battleType = this.restoredBattle.battleType;
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Battle, {
+      run: this.registry.get('run'),
+      battleType: this.battleType,
+      restartData: { battleType: this.battleType, restoredBattle: this.restoredBattle },
+      title: this.battleType === 'boss' ? '展开首领战场' : '展开本章战场'
+    });
   }
 
   create() {

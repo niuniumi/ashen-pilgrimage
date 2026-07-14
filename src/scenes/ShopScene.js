@@ -14,12 +14,16 @@ import { UIFrame } from '../ui/UIFrame.js';
 import { UIIcon } from '../ui/UIIcon.js';
 import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
-import { addToast, attachSceneServices, getActiveRun, saveActiveRun } from './SceneHelpers.js';
+import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 
 export default class ShopScene extends Phaser.Scene {
   constructor() {
     super(SCENES.Shop);
+  }
+
+  preload() {
+    preloadSceneAssets(this, SCENES.Shop, { title: '打开黑铁商店' });
   }
 
   create() {

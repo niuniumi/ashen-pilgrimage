@@ -1706,23 +1706,22 @@ export default class BattleScene extends Phaser.Scene {
     this.tutorialPanel?.destroy();
     const log = LAYOUT.log;
     const centerX = log.x + log.w / 2;
-    const centerY = log.y + log.h / 2 + 22;
+    const centerY = log.y + log.h / 2 + 16;
     this.tutorialPanel = this.add.container(centerX, centerY).setDepth(920);
-    const panel = new UIPanel(this, 0, 0, log.w - 28, log.h - 70, { fill: 0x1a1110, alpha: 0.98, stroke: 0x9b7438, lineWidth: 2 });
+    const panel = new UIPanel(this, 0, 0, log.w - 28, 400, { fill: 0x1a1110, alpha: 0.98, stroke: 0x9b7438, lineWidth: 2 });
     const title = this.add
-      .text(0, -166, `战斗教学\n${steps[this.tutorialStep][0]}`, {
+      .text(0, -142, `战斗教学 · ${steps[this.tutorialStep][0]}`, {
         fontFamily: FONT,
         fontSize: 20,
         color: TEXT.primary,
         align: 'center',
         stroke: '#120b08',
         strokeThickness: 4,
-        lineSpacing: 6,
         wordWrap: { width: log.w - 74, useAdvancedWrap: true }
       })
       .setOrigin(0.5);
     const body = this.add
-      .text(0, -42, wrapCjkText(steps[this.tutorialStep][1], 12), {
+      .text(0, -36, wrapCjkText(steps[this.tutorialStep][1], 13), {
         fontFamily: FONT,
         fontSize: 16,
         color: TEXT.body,
@@ -1734,7 +1733,7 @@ export default class BattleScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     const pageText = this.add
-      .text(0, 102, `${this.tutorialStep + 1} / ${steps.length}`, {
+      .text(0, 82, `${this.tutorialStep + 1} / ${steps.length}`, {
         fontFamily: FONT,
         fontSize: 15,
         color: TEXT.muted,
@@ -1742,23 +1741,19 @@ export default class BattleScene extends Phaser.Scene {
         strokeThickness: 2
       })
       .setOrigin(0.5);
-    this.tutorialPanel.add([panel, title, body, pageText]);
-    if (this.tutorialStep > 0) {
-      this.tutorialPanel.add(new UIButton(this, -72, 154, 118, 38, '上一步', () => this.showTutorial(this.tutorialStep - 1), { fontSize: 16 }));
-    }
-    if (this.tutorialStep < steps.length - 1) {
-      this.tutorialPanel.add(new UIButton(this, this.tutorialStep > 0 ? 72 : -72, 154, 118, 38, '下一步', () => this.showTutorial(this.tutorialStep + 1), { fontSize: 16 }));
-    }
-    this.tutorialPanel.add(new UIButton(this, -72, 204, 118, 38, '我知道了', () => this.closeTutorial(), { fontSize: 16 }));
-    this.tutorialPanel.add(
-      new UIButton(this, 72, 204, 118, 38, '不再提示', () => {
-        const settings = SaveManager.readSettings();
-        settings.tutorialSeen = true;
-        settings.tutorialEnabled = false;
-        SaveManager.saveSettings(settings);
-        this.closeTutorial();
-      }, { fontSize: 18 })
-    );
+    const progress = this.add.graphics();
+    steps.forEach((_, index) => {
+      progress.fillStyle(index <= this.tutorialStep ? 0xd0a24f : 0x40352a, index <= this.tutorialStep ? 1 : 0.8);
+      progress.fillRect(-86 + index * 30, 108, 24, 4);
+    });
+    this.tutorialPanel.add([panel, title, body, pageText, progress]);
+
+    const backLabel = this.tutorialStep > 0 ? '上一步' : '跳过';
+    const backAction = this.tutorialStep > 0 ? () => this.showTutorial(this.tutorialStep - 1) : () => this.closeTutorial();
+    const nextLabel = this.tutorialStep < steps.length - 1 ? '下一步' : '开始战斗';
+    const nextAction = this.tutorialStep < steps.length - 1 ? () => this.showTutorial(this.tutorialStep + 1) : () => this.closeTutorial();
+    this.tutorialPanel.add(new UIButton(this, -72, 154, 118, 40, backLabel, backAction, { fontSize: 16 }));
+    this.tutorialPanel.add(new UIButton(this, 72, 154, 118, 40, nextLabel, nextAction, { fontSize: 16, fill: 0x31515a }));
   }
 
   closeTutorial() {

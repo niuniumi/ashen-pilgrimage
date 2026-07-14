@@ -12,7 +12,6 @@ const directActorNames = [
   'candle-nun',
   'ashblood-alchemist',
   'rotting-villager',
-  'broken-militia',
   'grave-skeleton',
   'black-hound',
   'plague-rat-swarm',
@@ -42,10 +41,38 @@ const directActorNames = [
   'scripture-moth-swarm'
 ];
 
-const leftFacingActors = new Set([
-  'plague-rat-swarm',
-  'crownless-hound'
-]);
+const playableActorNames = new Set(['exiled-knight', 'candle-nun', 'ashblood-alchemist']);
+
+const versionedActorFiles = {
+  'exiled-knight': 'exiled-knight-v3',
+  'candle-nun': 'candle-nun-v3',
+  'ashblood-alchemist': 'ashblood-alchemist-v3',
+  'plague-rat-swarm': 'plague-rat-swarm-v2',
+  'rotting-villager': 'rotting-villager-v3',
+  'grave-skeleton': 'grave-skeleton-v3',
+  'crow-messenger': 'crow-messenger-v3',
+  'armor-broken-militia': 'armor-broken-militia-v3',
+  'candle-monk': 'candle-monk-v3',
+  'pointed-witch': 'pointed-witch-v3',
+  'plague-doctor': 'plague-doctor-v3',
+  'iron-maiden-nun': 'iron-maiden-nun-v3',
+  'fallen-paladin': 'fallen-paladin-v3',
+  'headless-grave-knight': 'headless-grave-knight-v3',
+  'wax-novice': 'wax-novice-v3',
+  'cinder-acolyte': 'cinder-acolyte-v3',
+  'bell-tower-sentry': 'bell-tower-sentry-v3',
+  'choir-exorcist': 'choir-exorcist-v3',
+  'reliquary-jailer': 'reliquary-jailer-v3',
+  'ash-veiled-prioress': 'ash-veiled-prioress-v3',
+  'pale-wax-matron': 'pale-wax-matron-v3',
+  'hollow-spearman': 'hollow-spearman-v3',
+  'ashen-banneret': 'ashen-banneret-v3',
+  'gutter-fire-archer': 'gutter-fire-archer-v3',
+  'gate-iron-vicar': 'gate-iron-vicar-v3',
+  'royal-pyre-knight': 'royal-pyre-knight-v3',
+  'clockwork-confessor': 'clockwork-confessor-v3',
+  'hollow-crown-regent': 'hollow-crown-regent-v3'
+};
 
 export const PIXEL_ATLASES = {};
 
@@ -59,10 +86,10 @@ export const PIXEL_DECORATIONS = {
 const directActors = Object.fromEntries(
   directActorNames.map((name) => [name, {
     key: `pixel-actor-${name}`,
-    url: `assets/pixel/actors/sprites/${name === 'candle-nun' ? 'candle-nun-v2' : name}.png`,
-    facing: leftFacingActors.has(name) ? 'left' : 'right',
+    url: `assets/pixel/actors/sprites/${versionedActorFiles[name] ?? name}.png`,
+    facing: playableActorNames.has(name) ? 'right' : 'left',
     ...(name === 'crow-messenger' ? { displayScale: 0.5, offsetY: -48 } : {}),
-    ...(name === 'plague-rat-swarm' ? { displayScale: 0.7 } : {}),
+    ...(name === 'plague-rat-swarm' ? { displayScale: 0.46, offsetY: -30 } : {}),
     ...(name === 'crownless-hound' ? { displayScale: 0.9 } : {})
   }])
 );

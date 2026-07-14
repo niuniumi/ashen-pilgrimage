@@ -1,0 +1,90 @@
+{
+  "url": "http://127.0.0.1:4186",
+  "results": [
+    {
+      "viewport": {
+        "width": 1150,
+        "height": 768
+      },
+      "selectState": {
+        "selected": "exiled-knight",
+        "startDisabled": false,
+        "heroTextures": [
+          "pixel-actor-exiled-knight",
+          "pixel-actor-candle-nun",
+          "pixel-actor-ashblood-alchemist"
+        ],
+        "heroFlipX": [
+          false,
+          false,
+          false
+        ],
+        "canvas": {
+          "x": 0,
+          "y": 60,
+          "width": 1150,
+          "height": 646.875
+        },
+        "scroll": {
+          "width": 1150,
+          "height": 768
+        }
+      },
+      "battleState": {
+        "playerTexture": "pixel-actor-ashblood-alchemist",
+        "enemyTexture": "pixel-actor-plague-rat-swarm",
+        "playerFlipX": false,
+        "enemyFlipX": false,
+        "tutorial": {
+          "x": 0,
+          "y": 0,
+          "width": 1454,
+          "height": 556.5
+        }
+      }
+    },
+    {
+      "viewport": {
+        "width": 1171,
+        "height": 731
+      },
+      "selectState": {
+        "selected": "exiled-knight",
+        "startDisabled": false,
+        "heroTextures": [
+          "pixel-actor-exiled-knight",
+          "pixel-actor-candle-nun",
+          "pixel-actor-ashblood-alchemist"
+        ],
+        "heroFlipX": [
+          false,
+          false,
+          false
+        ],
+        "canvas": {
+          "x": 0,
+          "y": 36,
+          "width": 1171,
+          "height": 658.6875
+        },
+        "scroll": {
+          "width": 1171,
+          "height": 731
+        }
+      },
+      "battleState": {
+        "playerTexture": "pixel-actor-ashblood-alchemist",
+        "enemyTexture": "pixel-actor-plague-rat-swarm",
+        "playerFlipX": false,
+        "enemyFlipX": false,
+        "tutorial": {
+          "x": 0,
+          "y": 0,
+          "width": 1454,
+          "height": 556.5
+        }
+      }
+    }
+  ],
+  "errors": []
+}

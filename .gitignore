@@ -6,6 +6,10 @@ qa/audio-source/
 qa/source-art/*
 !qa/source-art/curated-actors/
 !qa/source-art/curated-actors/**
+!qa/source-art/generated-enemies-v3/
+!qa/source-art/generated-enemies-v3/**
+!qa/source-art/enemy-facing-source-v1/
+!qa/source-art/enemy-facing-source-v1/**
 !qa/source-art/defeat-tombstone-source.png
 qa/screenshots/
 qa/problem_screenshots/

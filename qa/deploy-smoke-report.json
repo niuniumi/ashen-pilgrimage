@@ -1,7 +1,7 @@
 {
-  "url": "https://niuniumi.github.io/ashen-pilgrimage/",
-  "buildVersion": "v2.0.0-pixel-rebuild",
-  "generatedAt": "2026-07-13T11:17:25.463Z",
+  "url": "http://127.0.0.1:4186",
+  "buildVersion": "v2.2.0-facing-art",
+  "generatedAt": "2026-07-14T12:33:54.632Z",
   "screenshots": [
     "qa/screenshots/deploy_art_final_menu.png",
     "qa/screenshots/deploy_release_prologue.png",
@@ -31,18 +31,13 @@
             "character": "exiled-knight"
           },
           {
+            "id": "knight-block",
+            "name": "格挡",
+            "character": "exiled-knight"
+          },
+          {
             "id": "knight-cleave",
             "name": "劈砍",
-            "character": "exiled-knight"
-          },
-          {
-            "id": "knight-block",
-            "name": "格挡",
-            "character": "exiled-knight"
-          },
-          {
-            "id": "knight-block",
-            "name": "格挡",
             "character": "exiled-knight"
           },
           {
@@ -61,28 +56,28 @@
         "playerArtKey": "nun-battle",
         "hand": [
           {
+            "id": "nun-flame",
+            "name": "烛火",
+            "character": "candle-nun"
+          },
+          {
+            "id": "nun-flame",
+            "name": "烛火",
+            "character": "candle-nun"
+          },
+          {
             "id": "nun-prayer-shield",
             "name": "祷盾",
             "character": "candle-nun"
           },
           {
-            "id": "nun-flame",
-            "name": "烛火",
+            "id": "nun-prayer-shield",
+            "name": "祷盾",
             "character": "candle-nun"
           },
           {
-            "id": "nun-flame",
-            "name": "烛火",
-            "character": "candle-nun"
-          },
-          {
-            "id": "nun-confession-mark",
-            "name": "忏悔印",
-            "character": "candle-nun"
-          },
-          {
-            "id": "nun-flame",
-            "name": "烛火",
+            "id": "nun-prayer-shield",
+            "name": "祷盾",
             "character": "candle-nun"
           }
         ]
@@ -96,13 +91,13 @@
         "playerArtKey": "alchemist-battle",
         "hand": [
           {
-            "id": "alc-acid-vial",
-            "name": "酸蚀瓶",
+            "id": "alc-leather-guard",
+            "name": "皮革护具",
             "character": "ashblood-alchemist"
           },
           {
-            "id": "alc-acid-vial",
-            "name": "酸蚀瓶",
+            "id": "alc-forbidden-test",
+            "name": "禁药试验",
             "character": "ashblood-alchemist"
           },
           {
@@ -116,8 +111,8 @@
             "character": "ashblood-alchemist"
           },
           {
-            "id": "alc-forbidden-test",
-            "name": "禁药试验",
+            "id": "alc-leather-guard",
+            "name": "皮革护具",
             "character": "ashblood-alchemist"
           }
         ]

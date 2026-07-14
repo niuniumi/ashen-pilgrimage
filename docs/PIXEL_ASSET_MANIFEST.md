@@ -1,6 +1,6 @@
 # 像素视觉资产清单
 
-更新日期：2026-07-14
+更新日期：2026-07-14（v2.2 左向战斗资产重建）
 
 `v2.0.0-pixel-rebuild` 使用单一像素视觉管线。生产构建只发布 `public/assets/pixel/`、`public/assets/fonts/` 与 `public/assets/audio/`，不再包含旧版手绘、SVG、占位图或生成图集。
 
@@ -19,13 +19,15 @@
 
 ## 角色资产
 
-- 生产目录：`public/assets/pixel/actors/sprites/`，共 32 个直接透明 PNG，包含 3 名主角与覆盖 28 种敌人的语义化资产。
+- 生产目录：`public/assets/pixel/actors/sprites/`，运行时绑定 3 名主角与 28 种敌人的语义化透明 PNG。
 - 独立绑定：除 `graveyard-skeleton` 为兼容旧存档而指向 `grave-skeleton` 外，每个生产敌人 ID 都指向同名 PNG，不再共用程序化图集帧。
-- 主角分离：`candle-nun-v2.png` 是手持烛杖的圣烛修女；`ash-veiled-prioress.png` 是四烛冠与圣匣造型，两者使用不同源图。
-- 朝向约束：`PixelAssetCatalog.js` 记录每张源图的实际朝向，`PixelActorFactory.js` 仅在敌人需要面向左侧玩家时做水平翻转。
+- 主角统一：三名主角来自同一张 v3 生成设定板，使用一致的像素密度、轮廓、光源、站高与右向战斗姿态。圣烛修女只持单支烛杖，不使用头顶烛冠。
+- 敌我分离：`ash-veiled-prioress-v3.png` 保留四烛冠与圣匣，是独立敌方造型，不再与圣烛修女共用视觉语言。
+- 朝向约束：所有主角生产源 PNG 朝右，所有 28 种敌人生产源 PNG 朝左。`PixelActorFactory.js` 不需要在正常生产路径临时翻转角色来修补朝向。
+- 敌人重建：24 种敌人（23 种人形与乌鸦信使）使用明确左向的 v3 生成资产；黑犬、无冠猎犬、经文蛾群保持已验证的左向或无方向资产；瘟疫鼠群使用重新生成的三鼠左向组合。
 - 运行时：`PixelArtSystem.js` 统一预加载并设置最近邻过滤；资产缺失时才会进入程序化降级造型。
 
-角色主体来自项目生成设定图，经绿幕去底、连通域清理、独立裁切和透明边界修整。乌鸦信使使用 Smithy Games 的 [Crow Sprite](https://smithygames.itch.io/crow-sprite)（CC0 1.0）；瘟疫鼠群使用 OpenGameArt 的 [Forest Animals Sprite Sheet](https://opengameart.org/content/forest-animals-sprite-sheet)（CC0）。仓库内可复现源图和说明位于 `qa/source-art/curated-actors/`。
+角色主体来自项目生成设定图，经色键去底、连通域清理、独立裁切和透明边界修整。v3 生产乌鸦与瘟疫鼠群均为项目生成资产；旧 CC0 源图只保留作来源追溯，不再进入生产绑定。可复现源图与说明位于 `qa/source-art/curated-actors/` 和 `qa/source-art/generated-enemies-v3/`。
 
 卡牌、遗物、节点图标、状态条与特效由相关 UI 组件按 4 px 网格实时绘制。
 失败结算的 `pixel/ui/defeat-tombstone.png` 由项目墓碑设定图经绿幕透明化、调色板量化和最近邻显示后生成，失败页不再使用绿幕原图或简化几何墓碑。
@@ -45,4 +47,5 @@
 - 固定格式 UI 使用 4 px 网格、直角双边框和有限色板。
 - 所有生产背景和角色位图都由资产审计检查存在性、PNG 尺寸和纹理键唯一性。
 - `scripts/qa-asset-manifest.mjs` 检查生产文件；`scripts/qa-actor-roster.mjs` 在真实战斗场景逐个检查 28 种敌人的资产 ID、朝向、非空尺寸和截图。
+- `scripts/qa-responsive-facing.mjs` 在 1150×768 与 1171×731 两种问题视口检查选角默认状态、画布边界、主角右向、鼠群左向与教程面板边界。
 - `scripts/qa-visual-bindings.mjs` 阻止旧素材重新进入预加载或延迟加载路径。

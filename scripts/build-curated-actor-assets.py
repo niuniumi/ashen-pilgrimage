@@ -7,7 +7,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / 'qa' / 'source-art' / 'curated-actors'
 CONTACT = SOURCE_ROOT / 'generated-actor-contact.png'
 CROW = SOURCE_ROOT / 'smithy-crow-cc0.png'
-RATS = SOURCE_ROOT / 'forest-animals-cc0.png'
+PLAYABLES = SOURCE_ROOT / 'generated-playable-lineup-v3-alpha.png'
+RATS = SOURCE_ROOT / 'generated-plague-rats-v2-alpha.png'
 ATLAS = ROOT / 'public' / 'assets' / 'pixel' / 'actors' / 'gothic-enemies-atlas-v2.png'
 LEGACY_NUN = ROOT / 'public' / 'assets' / 'pixel' / 'actors' / 'sprites' / 'candle-nun.png'
 OUTPUT = ROOT / 'public' / 'assets' / 'pixel' / 'actors' / 'sprites'
@@ -99,14 +100,27 @@ def save_crow():
     trim_and_pad(frame, 4).save(OUTPUT / 'crow-messenger.png', optimize=True)
 
 
+def save_playable(name, box):
+    source = Image.open(PLAYABLES).convert('RGBA')
+    frame = keep_largest_component(source.crop(box))
+    sprite = trim_and_pad(frame, 12)
+    if sprite.height > 660:
+        width = round(sprite.width * 660 / sprite.height)
+        sprite = sprite.resize((width, 660), Image.Resampling.NEAREST)
+    sprite.save(OUTPUT / f'{name}-v3.png', optimize=True)
+
+
 def save_rat_swarm():
     source = Image.open(RATS).convert('RGBA')
-    frame = source.crop((0, 232, 113, 314))
-    trim_and_pad(frame, 6).save(OUTPUT / 'plague-rat-swarm.png', optimize=True)
+    sprite = trim_and_pad(source, 12)
+    if sprite.width > 900:
+        height = round(sprite.height * 900 / sprite.width)
+        sprite = sprite.resize((900, height), Image.Resampling.NEAREST)
+    sprite.save(OUTPUT / 'plague-rat-swarm-v2.png', optimize=True)
 
 
 def main():
-    missing = [path for path in (CONTACT, CROW, RATS, ATLAS, LEGACY_NUN) if not path.exists()]
+    missing = [path for path in (CONTACT, CROW, PLAYABLES, RATS, ATLAS, LEGACY_NUN) if not path.exists()]
     if missing:
         raise FileNotFoundError(f'Missing source assets: {missing}')
     OUTPUT.mkdir(parents=True, exist_ok=True)
@@ -128,6 +142,14 @@ def main():
     }
     for name, box in crops.items():
         save_contact_crop(name, box)
+
+    playable_crops = {
+        'exiled-knight': (8, 42, 720, 842),
+        'candle-nun': (688, 42, 1142, 842),
+        'ashblood-alchemist': (1174, 42, 1748, 842)
+    }
+    for name, box in playable_crops.items():
+        save_playable(name, box)
 
     save_crow()
     save_rat_swarm()

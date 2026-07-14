@@ -46,11 +46,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
     characters.forEach((character, index) => this.createNewCharacterCard(character, layout[index].x, layout[index].y));
     this.startButton = new UIButton(this, 1324, 798, 236, 56, '开始旅途', () => this.startRun(), {
       fontSize: 24,
-      disabled: true,
+      disabled: false,
       fill: 0x31515a
     });
     this.startButton.setDepth(26);
-    this.updateCharacterDetail(characters[0], false);
+    this.selectCharacter(characters[0].id, { silent: true });
   }
 
   createDetailPanel() {
@@ -84,19 +84,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
       .setDepth(22);
     this.detailBody = this.add
       .text(1210, 324, '', {
-        ...textStyle(17, '#d6c7a5', { lineSpacing: 8 }),
+        ...textStyle(16, '#d6c7a5', { lineSpacing: 6 }),
         stroke: '#08090d',
         strokeThickness: 2,
-        wordWrap: { width: 226, useAdvancedWrap: true }
-      })
-      .setOrigin(0, 0)
-      .setDepth(22);
-    this.detailHint = this.add
-      .text(1210, 690, '移入角色卡可展开立绘与说明，点击后锁定选择。', {
-        ...textStyle(16, '#9a8c72', { lineSpacing: 7 }),
-        stroke: '#08090d',
-        strokeThickness: 2,
-        wordWrap: { width: 226, useAdvancedWrap: true }
+        wordWrap: { width: 232, useAdvancedWrap: true }
       })
       .setOrigin(0, 0)
       .setDepth(22);
@@ -148,16 +139,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
         })
         .setOrigin(0.5)
     );
-    container.add(
-      this.add
-        .text(0, 184, '移入翻开完整立绘', {
-          ...textStyle(15, '#9a8c72', { align: 'center' }),
-          stroke: '#08090d',
-          strokeThickness: 2,
-          wordWrap: { width: 230 }
-        })
-        .setOrigin(0.5)
-    );
+    container.add(drawDivider(this, 0, 188, 190, { color: accent, alpha: 0.36 }));
     this.addDeckTagsParchment(container, character);
 
     const hit = this.add.zone(x, y, w, h).setOrigin(0.5).setInteractive({ useHandCursor: true });
@@ -171,6 +153,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
     hit.on('pointerout', () => {
       card.hovered = false;
       if (this.selected !== character.id) this.revealCharacterCard(card, false, true);
+      const selectedCharacter = characters.find((item) => item.id === this.selected);
+      if (selectedCharacter) this.updateCharacterDetail(selectedCharacter, true);
       this.tweens.add({ targets: container, scale: this.selected === character.id ? 1.025 : 1, duration: 130, ease: 'Sine.Out' });
     });
     hit.on('pointerup', () => this.selectCharacter(character.id));
@@ -180,11 +164,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
   createCharacterCardFaceImages(characterId, x, y, width, height) {
     const front = drawPixelHero(this, characterId, x, y + height * 0.17, 1.12, {
       artPortrait: true,
-      idle: false
+      idle: false,
+      maxWidth: width - 8
     });
     const back = drawPixelHero(this, characterId, x, y + height * 0.17, 1.28, {
       artPortrait: true,
-      idle: false
+      idle: false,
+      maxWidth: width - 8
     });
     back.setAlpha(0).setVisible(false);
     return { front, back };
@@ -248,26 +234,19 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.detailBody.setText(
       active
         ? [
-            `定位：${this.wrapPanelText(character.role, 12)}`,
-            `机制：${character.mechanic}`,
-            `生命：${character.maxHp ?? character.hp}    能量：${character.energyMax ?? character.energy}`,
-            `难度：${character.difficulty}`,
+            '战斗定位',
+            character.role,
             '',
-            this.wrapPanelText(character.mechanicText, 13),
+            `核心机制  ${character.mechanic}`,
+            character.mechanicText,
             '',
-            this.wrapPanelText(character.recommendation, 13)
+            `生命：${character.maxHp ?? character.hp}  ·  能量：${character.energyMax ?? character.energy}`,
+            `上手难度  ${character.difficulty}`,
+            '',
+            `建议：${character.recommendation}`
           ].join('\n')
         : ['三名行者通往灰白圣火的道路不同。', '', '移入角色卡查看完整立绘、机制说明与初始牌组。'].join('\n')
     );
-  }
-
-  wrapPanelText(text, limit = 13) {
-    const clean = String(text ?? '').replace(/\s+/g, '').trim();
-    const lines = [];
-    for (let i = 0; i < clean.length; i += limit) {
-      lines.push(clean.slice(i, i + limit));
-    }
-    return lines.join('\n');
   }
 
   addHeaderParchment() {
@@ -298,24 +277,20 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   addDeckTagsParchment(container, character) {
     const entries = this.deckEntries(character);
-    entries.forEach((entry, index) => {
-      const x = -96 + index * 96;
-      const y = 238;
-      const tag = this.add.graphics();
-      drawPixelPanel(tag, x, y, 88, 32, {
-        fill: PIXEL_PALETTE.paperDark,
-        inner: PIXEL_PALETTE.black,
-        stroke: PIXEL_PALETTE.goldDark,
-        dither: false
-      });
-      const text = this.add
-        .text(x, y, entry, {
-          ...textStyle(11, '#d6c7a5', { align: 'center', strokeThickness: 2 }),
-          stroke: '#08090d'
-        })
-        .setOrigin(0.5);
-      container.add([tag, text]);
+    const tag = this.add.graphics();
+    drawPixelPanel(tag, 0, 238, 244, 40, {
+      fill: PIXEL_PALETTE.paperDark,
+      inner: PIXEL_PALETTE.black,
+      stroke: PIXEL_PALETTE.goldDark,
+      dither: false
     });
+    const text = this.add
+      .text(0, 238, `牌组  ${entries.join(' · ')}`, {
+        ...textStyle(13, '#d6c7a5', { align: 'center', strokeThickness: 2 }),
+        stroke: '#08090d'
+      })
+      .setOrigin(0.5);
+    container.add([tag, text]);
   }
 
   deckEntries(character) {
@@ -326,12 +301,12 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const nameMap = {
       'knight-cleave': '劈砍',
       'knight-block': '格挡',
-      'knight-rend': '撕裂斩',
+      'knight-rend': '撕裂',
       'nun-flame': '烛火',
       'nun-prayer-shield': '祷盾',
-      'nun-confession-mark': '忏悔印',
+      'nun-confession-mark': '忏悔',
       'alc-acid-vial': '酸蚀',
-      'alc-leather-guard': '皮革护具',
+      'alc-leather-guard': '护具',
       'alc-forbidden-test': '禁药'
     };
     return Object.entries(counts)
@@ -339,9 +314,9 @@ export default class CharacterSelectScene extends Phaser.Scene {
       .map(([id, count]) => `${nameMap[id] ?? id} x${count}`);
   }
 
-  selectCharacter(characterId) {
+  selectCharacter(characterId, options = {}) {
     this.selected = characterId;
-    this.audio?.play('cardSelect');
+    if (!options.silent) this.audio?.play('cardSelect');
     this.startButton.setDisabled(false);
     const selectedCharacter = characters.find((item) => item.id === characterId);
     if (selectedCharacter) this.updateCharacterDetail(selectedCharacter, true);

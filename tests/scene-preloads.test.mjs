@@ -86,11 +86,14 @@ test('battle defers business initialization until critical preload assets are re
   );
 });
 
-test('recovery UI owns a full-screen blocker and restores keyboard state', () => {
+test('recovery UI suspends existing pointer targets and restores pointer and keyboard state', () => {
   const source = fs.readFileSync(path.join(root, 'src', 'scenes', 'SceneHelpers.js'), 'utf8');
 
   assert.match(source, /scene\.add\s*\.zone\(/);
   assert.equal(source.includes('.setInteractive()'), true);
+  assert.equal(source.includes('suspendedPointerInputs'), true);
+  assert.equal(source.includes('object.input.enabled = false'), true);
+  assert.equal(source.includes('object.input.enabled = enabled'), true);
   assert.equal(source.includes('scene.input.keyboard.enabled = false'), true);
   assert.equal(source.includes('scene.input.keyboard.enabled = previousKeyboardEnabled'), true);
 });

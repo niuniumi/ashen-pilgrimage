@@ -31,10 +31,29 @@ export function preloadSceneAssets(scene, sceneKey, options = {}) {
   const view = installSceneLoadingView(scene, { title });
   const failedKeys = new Set();
   const recoveryObjects = [];
+  const suspendedPointerInputs = new Map();
   let keyboardSuspended = false;
   let previousKeyboardEnabled = true;
 
+  const suspendPointerInput = () => {
+    const visited = new Set();
+    const suspend = (object) => {
+      if (!object || visited.has(object)) return;
+      visited.add(object);
+      if (object.input) {
+        const enabled = object.input.enabled;
+        suspendedPointerInputs.set(object, enabled);
+        object.input.enabled = false;
+      }
+      if (Array.isArray(object.list)) object.list.forEach(suspend);
+    };
+    scene.children?.list?.forEach(suspend);
+  };
   const restoreInput = () => {
+    for (const [object, enabled] of suspendedPointerInputs) {
+      if (object.input) object.input.enabled = enabled;
+    }
+    suspendedPointerInputs.clear();
     if (!keyboardSuspended) return;
     if (scene.input?.keyboard) scene.input.keyboard.enabled = previousKeyboardEnabled;
     keyboardSuspended = false;
@@ -56,6 +75,7 @@ export function preloadSceneAssets(scene, sceneKey, options = {}) {
   const showRecovery = () => {
     if (recoveryObjects.length > 0) return;
     const depth = 21000;
+    suspendPointerInput();
     if (scene.input?.keyboard) {
       previousKeyboardEnabled = scene.input.keyboard.enabled;
       scene.input.keyboard.enabled = false;

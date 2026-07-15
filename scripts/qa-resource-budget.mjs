@@ -188,14 +188,14 @@ async function verifyMissingAssetRecovery(browser, targetUrl) {
   }
 }
 
-async function createScenarioPageWithRoute(browser, targetUrl, persistedRun, installRoute) {
+async function createScenarioPageWithRoute(browser, targetUrl, persistedRun, installRoute, options = {}) {
   const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 1 });
   await context.addInitScript(({ run, saveKey, settings, settingsKey }) => {
     window.localStorage.clear();
     window.sessionStorage.clear();
     window.localStorage.setItem(settingsKey, JSON.stringify(settings));
     if (run) window.localStorage.setItem(saveKey, JSON.stringify(run));
-  }, { run: persistedRun, saveKey: SAVE_KEY, settings: QA_SETTINGS, settingsKey: SETTINGS_KEY });
+  }, { run: persistedRun, saveKey: SAVE_KEY, settings: options.settings ?? QA_SETTINGS, settingsKey: SETTINGS_KEY });
   const page = await context.newPage();
   context.__allowAsset = await installRoute(page);
   await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 120_000 });
@@ -205,6 +205,65 @@ async function createScenarioPageWithRoute(browser, targetUrl, persistedRun, ins
     { timeout: 120_000 }
   );
   return { context, page };
+}
+
+async function verifyPrologueRecoveryPointerBlock(browser, targetUrl) {
+  const run = createScenarioRun();
+  const settings = { ...QA_SETTINGS, storySeen: false };
+  const { context, page } = await createScenarioPageWithRoute(browser, targetUrl, run, async (candidate) => {
+    await candidate.route('**/assets/pixel/backgrounds/folio.png', (route) => route.abort('failed'));
+    return () => {};
+  }, { settings });
+
+  try {
+    await page.evaluate((registryRun) => {
+      window.__ASHEN_GAME__.registry.set('run', structuredClone(registryRun));
+      window.__ASHEN_QA__.startScene('PrologueScene');
+    }, run);
+    await page.waitForFunction(() => {
+      const scene = window.__ASHEN_GAME__?.scene?.keys?.PrologueScene;
+      return scene?.scene?.isActive() && scene.children.list.some((child) => child.label === '重试加载');
+    }, undefined, { timeout: 120_000 });
+
+    const before = await page.evaluate(() => {
+      const scene = window.__ASHEN_GAME__.scene.keys.PrologueScene;
+      const skip = scene.children.list.find((child) => child.label === '跳过剧情');
+      const blocker = scene.children.list.find((child) => child.name === 'scene-loading-recovery-blocker');
+      const stored = JSON.parse(window.localStorage.getItem('ashen-pilgrimage-settings-v1'));
+      return {
+        blockerDepth: blocker?.depth ?? null,
+        skipDepth: skip?.hitZone?.depth ?? null,
+        skipPoint: skip ? { x: skip.hitZone.x, y: skip.hitZone.y } : null,
+        storySeen: stored.storySeen
+      };
+    });
+    assert.ok(before.skipPoint, 'Prologue skip control not found');
+    assert.equal(before.storySeen, false, 'Prologue test must begin before story completion');
+
+    const canvasBox = await page.locator('canvas').boundingBox();
+    assert.ok(canvasBox, 'game canvas not found');
+    await page.mouse.click(
+      canvasBox.x + before.skipPoint.x * canvasBox.width / VIEWPORT.width,
+      canvasBox.y + before.skipPoint.y * canvasBox.height / VIEWPORT.height
+    );
+    await page.waitForTimeout(650);
+
+    const after = await page.evaluate(() => {
+      const scene = window.__ASHEN_GAME__.scene.keys.PrologueScene;
+      const stored = JSON.parse(window.localStorage.getItem('ashen-pilgrimage-settings-v1'));
+      return {
+        active: window.__ASHEN_GAME__.scene.getScenes(true).map((activeScene) => activeScene.scene.key),
+        recoveryVisible: scene.children.list.some((child) => child.label === '重试加载'),
+        storySeen: stored.storySeen
+      };
+    });
+    assert.deepEqual(after.active, ['PrologueScene'], 'covered Prologue skip changed the active scene');
+    assert.equal(after.recoveryVisible, true, 'covered Prologue skip dismissed recovery');
+    assert.equal(after.storySeen, false, 'covered Prologue skip persisted story completion');
+    return { ...after, blockerDepth: before.blockerDepth, skipDepth: before.skipDepth };
+  } finally {
+    await context.close();
+  }
 }
 
 async function verifyRecoveryShutdownAndReturn(browser, targetUrl) {
@@ -506,11 +565,15 @@ const localServer = useLocalBuild ? await startDistServer() : null;
 const targetUrl = explicitUrl ?? localServer?.url ?? process.env.QA_URL ?? 'http://127.0.0.1:4173/';
 const browser = await chromium.launch({ headless: true });
 const battleRetryOnly = process.argv.includes('--battle-retry-only');
+const prologueRecoveryOnly = process.argv.includes('--prologue-recovery-only');
 
 try {
   if (battleRetryOnly) {
     const battleRetry = await verifyBattleRetryState(browser, targetUrl);
     console.log(JSON.stringify({ battleRetry }, null, 2));
+  } else if (prologueRecoveryOnly) {
+    const prologueRecovery = await verifyPrologueRecoveryPointerBlock(browser, targetUrl);
+    console.log(JSON.stringify({ prologueRecovery }, null, 2));
   } else {
   const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 1 });
   await context.addInitScript(() => {
@@ -572,6 +635,8 @@ try {
   await context.close();
   const recovery = await verifyMissingAssetRecovery(browser, targetUrl);
   console.log(JSON.stringify({ missingAssetRecovery: recovery }, null, 2));
+  const prologueRecovery = await verifyPrologueRecoveryPointerBlock(browser, targetUrl);
+  console.log(JSON.stringify({ prologueRecovery }, null, 2));
   const recoveryLifecycle = await verifyRecoveryShutdownAndReturn(browser, targetUrl);
   console.log(JSON.stringify({ recoveryLifecycle }, null, 2));
   const battleRetry = await verifyBattleRetryState(browser, targetUrl);

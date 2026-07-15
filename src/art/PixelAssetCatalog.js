@@ -79,7 +79,10 @@ export const PIXEL_ATLASES = {};
 export const PIXEL_DECORATIONS = {
   defeatTombstone: {
     key: 'pixel-ui-defeat-tombstone',
-    url: 'assets/pixel/ui/defeat-tombstone.webp'
+    url: 'assets/pixel/ui/defeat-tombstone.webp',
+    sourceWidth: 400,
+    sourceHeight: 640,
+    displayHeight: 560
   }
 };
 

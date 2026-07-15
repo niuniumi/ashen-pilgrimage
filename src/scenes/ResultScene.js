@@ -1,19 +1,35 @@
 import Phaser from 'phaser';
-import { getCard } from '../data/cards.js';
 import { GAME_HEIGHT, GAME_WIDTH, SCENES } from '../game/constants.js';
 import { SaveManager } from '../game/SaveManager.js';
-import { formatRunProgress } from '../game/RunProgress.js';
+import { buildResultSummary, recordResultStats } from '../game/ResultSummary.js';
 import { EndingSystem } from '../systems/EndingSystem.js';
-import { SCENE_TITLES, THEME, textStyle, titleStyle } from '../game/Theme.js';
+import { THEME, textStyle } from '../game/Theme.js';
 import { UIButton } from '../ui/UIButton.js';
-import { UIFrame } from '../ui/UIFrame.js';
-import { UIIcon } from '../ui/UIIcon.js';
-import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
+import { drawVignette } from '../ui/UIOrnament.js';
 import { drawHeroArt } from '../ui/UICharacterArt.js';
 import { attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
-import { addHandPaintedBackground, addVfxAsset, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 import { PIXEL_DECORATIONS } from '../art/PixelAssetCatalog.js';
+
+const RESULT_REGIONS = {
+  figure: { name: 'result-figure', x: 330, y: 430, width: 560, height: 660 },
+  narrative: { name: 'result-narrative', x: 1080, y: 137, width: 790, height: 180 },
+  stats: { name: 'result-stats', x: 880, y: 465, width: 360, height: 380 },
+  deck: { name: 'result-deck', x: 1280, y: 465, width: 360, height: 380 },
+  actions: { name: 'result-actions', x: 1080, y: 772, width: 760, height: 100 }
+};
+
+function formatElapsed(seconds) {
+  const value = Math.max(0, Number(seconds) || 0);
+  const minutes = Math.floor(value / 60);
+  const remainder = Math.floor(value % 60);
+  return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+}
+
+function compactName(value, maxLength = 11) {
+  const text = String(value ?? '未知卡牌');
+  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+}
 
 export default class ResultScene extends Phaser.Scene {
   constructor() {
@@ -36,227 +52,339 @@ export default class ResultScene extends Phaser.Scene {
 
   create() {
     attachSceneServices(this);
-    this.audio?.startAmbience?.(this.victory ? 'story' : 'defeat');
-    this.run = this.resultRun ?? this.registry.get('run') ?? SaveManager.loadRun();
+    this.run = this.resultRun ?? this.registry.get('run') ?? SaveManager.loadRun() ?? {};
     this.ending = EndingSystem.resolve(this.run, this.victory);
+    this.summary = buildResultSummary(this.run);
+    this.motionEnabled = SaveManager.readSettings().animation !== false;
+    this.audio?.startAmbience?.(this.victory ? 'story' : 'defeat');
+
     this.drawBackdrop();
-    this.drawHeader();
-    new UIFrame(this, 768, 466, 980, 560, {
-      fill: THEME.colors.panel,
-      alpha: 0.9,
-      stroke: this.victory ? THEME.colors.candle : THEME.colors.blood
-    });
+    this.createQARegions();
     this.recordStats();
-    this.renderResult();
+    const figureTargets = this.drawResultFigure(this.run);
+    const narrativeTargets = this.drawNarrativePanel();
+    const statsTargets = this.drawStatistics();
+    const deckTargets = this.drawDeckSummary();
+    this.drawActions();
+    this.playEntrance({ figureTargets, narrativeTargets, statsTargets, deckTargets });
     this.audio?.play(this.victory ? 'victory' : 'defeat');
   }
 
+  createQARegions() {
+    for (const region of Object.values(RESULT_REGIONS)) {
+      this.add.zone(region.x, region.y, region.width, region.height).setName(region.name);
+    }
+  }
+
   drawBackdrop() {
-    if (addHandPaintedBackground(this, HANDPAINTED_KEYS.folioBg, { depth: 0 })) {
-      addVfxAsset(this, this.victory ? 'blessingC' : 'dustD', 768, 420, {
-        displayWidth: 470,
-        displayHeight: 350,
-        alpha: this.victory ? 0.34 : 0.26,
-        depth: 2
-      });
-      if (!this.victory) this.addDefeatStorm();
-      return;
-    }
-    const g = this.add.graphics();
-    const bottom = this.victory ? 0x3f2718 : 0x2b1414;
-    g.fillGradientStyle(0x14101d, 0x14101d, bottom, 0x090606, 1);
-    g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    g.fillStyle(0x0d0a08, 0.96);
-    g.fillRect(0, 610, GAME_WIDTH, 254);
+    const g = this.add.graphics().setDepth(0);
     if (this.victory) {
-      g.fillStyle(0xf1c76a, 0.12);
-      g.fillCircle(768, 356, 250);
-      for (let i = 0; i < 7; i += 1) {
-        g.lineStyle(4, 0xb88935, 0.28);
-        g.lineBetween(620 + i * 48, 606, 662 + i * 48, 368);
-      }
+      g.fillGradientStyle(0x100b0d, 0x100b0d, 0x2d1510, 0x130b0d, 1);
+      g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      g.fillStyle(0x5d2a18, 0.34);
+      g.fillCircle(298, 384, 282);
+      g.fillStyle(0xd79d45, 0.12);
+      g.fillCircle(298, 384, 210);
+      g.fillStyle(0xffdc86, 0.08);
+      g.fillCircle(298, 384, 132);
+      g.fillStyle(0x090708, 0.62);
+      g.fillRect(646, 0, 890, GAME_HEIGHT);
+      g.fillStyle(0xb88935, 0.48);
+      g.fillRect(640, 0, 4, GAME_HEIGHT);
+      g.fillStyle(0x6f291d, 0.74);
+      g.fillTriangle(116, 704, 324, 204, 504, 704);
+      g.fillStyle(0x171014, 0.82);
+      g.fillTriangle(146, 704, 324, 276, 470, 704);
+      this.addVictoryEmbers();
     } else {
-      g.fillStyle(0x090808, 0.94);
-      g.fillRoundedRect(610, 334, 84, 256, 14);
-      g.fillRoundedRect(846, 356, 92, 234, 14);
-      g.fillStyle(0x5a1f25, 0.16);
-      g.fillCircle(768, 420, 220);
+      g.fillGradientStyle(0x090a0e, 0x0c0b10, 0x191017, 0x08080b, 1);
+      g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      g.fillStyle(0x171923, 0.9);
+      g.fillTriangle(0, 174, 498, 72, 654, 316);
+      g.fillStyle(0x25222c, 0.64);
+      g.fillTriangle(0, 320, 420, 158, 684, 386);
+      g.fillStyle(0x08080b, 0.68);
+      g.fillRect(646, 0, 890, GAME_HEIGHT);
+      g.fillStyle(0x76232a, 0.7);
+      g.fillRect(640, 0, 4, 306);
+      g.fillRect(640, 348, 4, 516);
+      g.fillStyle(0x27151b, 0.48);
+      g.fillEllipse(292, 706, 590, 138);
+      this.addDefeatStorm();
     }
+    g.fillStyle(0x070607, 0.76);
+    g.fillRect(0, 786, GAME_WIDTH, 78);
     drawVignette(this, 3);
-    if (!this.victory) this.addDefeatStorm();
+  }
+
+  addVictoryEmbers() {
+    const embers = this.add.graphics().setDepth(2);
+    const points = [
+      [118, 616, 4], [168, 532, 3], [218, 638, 4], [276, 486, 3],
+      [338, 594, 4], [392, 442, 3], [454, 612, 4], [516, 520, 3]
+    ];
+    embers.fillStyle(0xe6ad55, 0.72);
+    for (const [x, y, size] of points) embers.fillRect(x, y, size, size * 2);
+    if (!this.motionEnabled) return;
+    this.tweens.add({
+      targets: embers,
+      y: -12,
+      alpha: 0.46,
+      duration: 1900,
+      ease: 'Sine.InOut',
+      yoyo: true,
+      repeat: -1
+    });
   }
 
   addDefeatStorm() {
-    const motionEnabled = SaveManager.readSettings().animation !== false;
-    const veil = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x09070a, 0.28).setDepth(1.5);
-    const fog = this.add.graphics().setDepth(3);
-    fog.fillStyle(0x1a1c26, 0.22);
-    fog.fillEllipse(768, 610, 970, 96);
-    fog.fillStyle(0x3f2b35, 0.16);
-    fog.fillEllipse(610, 525, 520, 80);
-    if (!motionEnabled) return;
+    const fog = this.add.graphics().setDepth(2);
+    fog.fillStyle(0x30323d, 0.25);
+    fog.fillEllipse(306, 620, 660, 90);
+    fog.fillStyle(0x4b343e, 0.18);
+    fog.fillEllipse(170, 548, 440, 68);
+    if (!this.motionEnabled) return;
     this.tweens.add({
       targets: fog,
-      x: 40,
-      alpha: 0.36,
+      x: 24,
+      alpha: 0.68,
+      duration: 3600,
+      ease: 'Sine.InOut',
       yoyo: true,
-      repeat: -1,
-      duration: 4200,
-      ease: 'Sine.InOut'
-    });
-    this.tweens.add({
-      targets: veil,
-      alpha: 0.36,
-      yoyo: true,
-      repeat: -1,
-      duration: 2400,
-      ease: 'Sine.InOut'
+      repeat: -1
     });
     const strike = () => {
-      const lightning = this.add.graphics().setDepth(18);
-      lightning.lineStyle(5, 0xe8eef7, 0.86);
+      if (!this.scene.isActive()) return;
+      const lightning = this.add.graphics().setDepth(12);
+      lightning.lineStyle(4, 0xc8ccd8, 0.72);
       lightning.beginPath();
-      lightning.moveTo(1030, 70);
-      lightning.lineTo(988, 144);
-      lightning.lineTo(1032, 170);
-      lightning.lineTo(966, 260);
-      lightning.lineTo(1008, 286);
-      lightning.lineTo(926, 394);
+      lightning.moveTo(516, 36);
+      lightning.lineTo(478, 114);
+      lightning.lineTo(512, 142);
+      lightning.lineTo(448, 242);
       lightning.strokePath();
-      lightning.lineStyle(2, 0x8797ff, 0.58);
-      lightning.lineBetween(1000, 176, 936, 212);
-      lightning.lineBetween(983, 286, 908, 318);
-      this.cameras.main.flash(110, 210, 220, 255, false);
+      this.cameras.main.flash(90, 178, 182, 198, false);
       this.tweens.add({
         targets: lightning,
         alpha: 0,
-        duration: 210,
+        duration: 180,
         ease: 'Sine.Out',
         onComplete: () => lightning.destroy()
       });
-      this.time.delayedCall(2800 + Phaser.Math.Between(0, 2400), strike);
+      this.time.delayedCall(3600 + Phaser.Math.Between(0, 2200), strike);
     };
-    this.time.delayedCall(900, strike);
-  }
-
-  drawHeader() {
-    this.add.text(768, 52, this.ending.title, titleStyle(48)).setOrigin(0.5);
-    this.add.text(768, 98, this.ending.subtitle, textStyle(19, THEME.css.muted, { align: 'center' })).setOrigin(0.5);
-    drawDivider(this, 768, 126, 520, { color: this.victory ? THEME.colors.candle : THEME.colors.blood });
-  }
-
-  recordStats() {
-    const settings = SaveManager.readSettings();
-    const stats = settings.stats ?? { victories: 0, failures: 0, highestFloor: 0 };
-    if (!settings.lastResultRecorded || settings.lastResultRecorded !== this.run?.id) {
-      if (this.victory) stats.victories += 1;
-      else stats.failures += 1;
-      stats.highestFloor = Math.max(stats.highestFloor ?? 0, this.run?.highestFloor ?? this.run?.floor ?? 0);
-      settings.stats = stats;
-      settings.lastResultRecorded = this.run?.id ?? `result-${Date.now()}`;
-      SaveManager.saveSettings(settings);
-    }
-  }
-
-  renderResult() {
-    const run = this.run ?? {};
-    const elapsed = run.startTime ? Math.max(1, Math.round((Date.now() - run.startTime) / 1000)) : 0;
-    const deckNames = this.formatDeckNames((run.deck ?? []).slice(0, 18));
-
-    this.drawResultFigure(run);
-    this.add
-      .text(768, 216, this.victory ? '灰白圣火已经沉寂。' : '余火没能抵达王城。', titleStyle(29))
-      .setOrigin(0.5);
-    this.add
-      .text(768, 258, this.ending.body, {
-        ...textStyle(17, THEME.css.muted, { align: 'center' }),
-        wordWrap: { width: 690 }
-      })
-      .setOrigin(0.5);
-
-    new UIFrame(this, 720, 414, 330, 250, { fill: 0x21140f, alpha: 0.92, stroke: THEME.colors.darkGold });
-    this.add.text(720, 318, '旅途统计', titleStyle(25)).setOrigin(0.5);
-    this.add
-      .text(580, 360, `使用角色：${run.characterName ?? '未知'}\n到达进度：${formatRunProgress(run)}\n击败敌人：${run.kills ?? 0}\n遗物 / 誓约：${run.relics?.length ?? 0} / ${run.vows?.length ?? 0}\n最终金币：${run.gold ?? 0}\n用时：${elapsed} 秒`, {
-        ...textStyle(20, THEME.css.body, { lineSpacing: 9 }),
-        wordWrap: { width: 300 }
-      })
-      .setOrigin(0, 0);
-
-    new UIFrame(this, 1040, 548, 280, 220, { fill: 0x21140f, alpha: 0.92, stroke: THEME.colors.darkGold });
-    this.add.text(1040, 468, '最终卡组', titleStyle(25)).setOrigin(0.5);
-    this.add
-      .text(920, 508, deckNames || '无', {
-        ...textStyle(17, THEME.css.muted, { lineSpacing: 6 }),
-        wordWrap: { width: 240 }
-      })
-      .setOrigin(0, 0);
-
-    new UIButton(this, 660, 735, 190, 54, '再来一局', () => {
-      SaveManager.clearRun();
-      this.registry.remove('run');
-      this.scene.start(SCENES.CharacterSelect);
-    }, { fontSize: 23, fill: 0x4a3421 });
-    new UIButton(this, 884, 735, 190, 54, '返回主菜单', () => {
-      SaveManager.clearRun();
-      this.registry.remove('run');
-      this.scene.start(SCENES.MainMenu);
-    }, { fontSize: 23, fill: 0x302822 });
+    this.time.delayedCall(1200, strike);
   }
 
   drawResultFigure(run) {
+    const targets = [];
+    const ground = this.add.graphics().setDepth(4);
+    ground.fillStyle(0x060507, 0.78);
+    ground.fillEllipse(326, 692, 516, 82);
+    ground.fillStyle(this.victory ? 0x9f5d27 : 0x5f2027, 0.32);
+    ground.fillEllipse(326, 680, 386, 38);
+    targets.push(ground);
+
     if (this.victory) {
-      drawHeroArt(this, run.characterId ?? 'exiled-knight', 420, 476, 0.88, { idle: false, battle: true, generatedHeight: 320 });
-      new UIIcon(this, 420, 652, 'flame', { size: 72 });
-      return;
+      const halo = this.add.graphics().setDepth(3);
+      halo.lineStyle(4, 0xb88935, 0.58);
+      halo.strokeCircle(304, 354, 148);
+      halo.lineStyle(2, 0xe6bd6a, 0.34);
+      halo.strokeCircle(304, 354, 166);
+      for (let index = 0; index < 8; index += 1) {
+        const angle = (Math.PI * 2 * index) / 8;
+        halo.lineBetween(
+          304 + Math.cos(angle) * 178,
+          354 + Math.sin(angle) * 178,
+          304 + Math.cos(angle) * 208,
+          354 + Math.sin(angle) * 208
+        );
+      }
+      const hero = drawHeroArt(this, run.characterId ?? 'exiled-knight', 324, 650, 1.08, {
+        idle: false,
+        battle: true,
+        generatedHeight: 438
+      }).setDepth(7);
+      const flame = this.add.graphics().setDepth(8);
+      flame.fillStyle(0x9f4b24, 0.96);
+      flame.fillTriangle(116, 658, 142, 584, 166, 658);
+      flame.fillStyle(0xe0a64d, 1);
+      flame.fillTriangle(126, 658, 144, 606, 158, 658);
+      flame.fillStyle(0xffdda0, 1);
+      flame.fillRect(138, 638, 10, 20);
+      flame.fillStyle(0x24100c, 1);
+      flame.fillRect(112, 658, 58, 8);
+      const caption = this.add.text(82, 718, '余火仍在行者身后燃烧', textStyle(18, '#dfc98e', { strokeThickness: 4 })).setDepth(8);
+      targets.push(halo, hero, flame, caption);
+      return targets;
     }
+
     const tombstone = PIXEL_DECORATIONS.defeatTombstone;
     if (this.textures.exists(tombstone.key)) {
-      this.add
-        .image(420, 506, tombstone.key)
-        .setDisplaySize(340, 340)
-        .setDepth(6)
-        .setName('defeat-tombstone-art');
-      return;
+      const displayHeight = tombstone.displayHeight ?? 560;
+      const displayWidth = Math.round(displayHeight * ((tombstone.sourceWidth ?? 400) / (tombstone.sourceHeight ?? 640)));
+      const image = this.add.image(324, 688, tombstone.key).setOrigin(0.5, 1).setDepth(7);
+      image.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+      image.setDisplaySize(displayWidth, displayHeight).setName('defeat-tombstone-art');
+      this.tombstoneArt = image;
+      targets.push(image);
+    } else {
+      const fallback = this.add.graphics().setDepth(7);
+      fallback.fillStyle(PIXEL_PALETTE.iron, 1);
+      fallback.fillRect(228, 270, 192, 390);
+      fallback.fillStyle(PIXEL_PALETTE.ironLight, 1);
+      fallback.fillRect(244, 286, 160, 18);
+      fallback.fillStyle(PIXEL_PALETTE.black, 0.72);
+      fallback.fillRect(260, 324, 128, 300);
+      fallback.fillStyle(PIXEL_PALETTE.blood, 0.9);
+      fallback.fillRect(196, 632, 52, 34);
+      targets.push(fallback);
     }
-    const g = this.add.graphics().setDepth(6);
-    g.fillStyle(PIXEL_PALETTE.void, 0.72);
-    g.fillRect(288, 632, 264, 20);
-    g.fillStyle(0x24272d, 1);
-    g.fillRect(356, 406, 128, 208);
-    g.fillRect(372, 382, 96, 28);
-    g.fillRect(388, 366, 64, 20);
-    g.fillStyle(0x56606a, 1);
-    g.fillRect(364, 414, 112, 12);
-    g.fillRect(364, 430, 8, 168);
-    g.fillStyle(0x11131a, 0.72);
-    g.fillRect(380, 446, 80, 136);
-    g.fillStyle(PIXEL_PALETTE.goldDark, 0.7);
-    g.fillRect(412, 466, 16, 84);
-    g.fillRect(388, 494, 64, 16);
-    g.fillStyle(PIXEL_PALETTE.blood, 0.86);
-    g.fillRect(324, 594, 28, 20);
-    g.fillRect(488, 584, 36, 24);
-    g.fillStyle(PIXEL_PALETTE.bone, 0.72);
-    g.fillRect(332, 574, 4, 24);
-    g.fillRect(504, 566, 4, 24);
+    const caption = this.add.text(82, 718, '烛火已灭，灰烬记得来路', textStyle(18, '#c4b7ae', { strokeThickness: 4 })).setDepth(8);
+    targets.push(caption);
+    return targets;
   }
 
-  formatDeckNames(deck) {
-    const lines = [];
-    let line = '';
-    for (const card of deck) {
-      const name = `${getCard(card.cardId).name}${card.upgraded ? '+' : ''}`;
-      const next = line ? `${line}、${name}` : name;
-      if (next.length > 18 && line) {
-        lines.push(line);
-        line = name;
-      } else {
-        line = next;
+  drawNarrativePanel() {
+    const accent = this.victory ? '#d2a656' : '#a34b52';
+    const eyebrow = this.add
+      .text(700, 48, this.victory ? '圣途终章 / VICTORY' : '旅途止步 / DEFEAT', textStyle(16, accent, { strokeThickness: 3 }))
+      .setDepth(8);
+    const title = this.add
+      .text(700, 78, this.ending.title, textStyle(50, THEME.css.paleGold, { strokeThickness: 7 }))
+      .setDepth(8);
+    const subtitle = this.add
+      .text(704, 142, this.ending.subtitle, textStyle(19, THEME.css.body, { strokeThickness: 4 }))
+      .setDepth(8);
+    const body = this.add
+      .text(704, 178, this.ending.body, {
+        ...textStyle(17, THEME.css.muted, { strokeThickness: 4 }),
+        wordWrap: { width: 720, useAdvancedWrap: true },
+        maxLines: 2
+      })
+      .setDepth(8);
+    const rule = this.add.graphics().setDepth(7);
+    rule.fillStyle(this.victory ? THEME.colors.candle : THEME.colors.blood, 0.8);
+    rule.fillRect(700, 224, 756, 3);
+    rule.fillStyle(THEME.colors.iron, 0.42);
+    rule.fillRect(700, 231, 756, 1);
+    return [eyebrow, title, subtitle, body, rule];
+  }
+
+  drawStatistics() {
+    const background = this.drawSectionGround(700, 275, 360, 380, this.victory ? 0x2a1b13 : 0x21161b);
+    const heading = this.add.text(720, 296, '旅途统计', textStyle(25, THEME.css.paleGold, { strokeThickness: 5 })).setDepth(8);
+    const rule = this.add.graphics().setDepth(8);
+    rule.fillStyle(this.victory ? THEME.colors.candle : THEME.colors.blood, 0.62);
+    rule.fillRect(720, 333, 310, 2);
+    const rows = [
+      ['行者', this.run.characterName ?? '未知行者'],
+      ['抵达', this.summary.progress],
+      ['击败', `${this.summary.kills} 名敌人`],
+      ['遗物 / 誓约', `${this.summary.relics} / ${this.summary.vows}`],
+      ['最终金币', `${this.summary.gold}`],
+      ['旅途用时', formatElapsed(this.summary.elapsed)]
+    ];
+    const targets = [background, heading, rule];
+    rows.forEach(([label, value], index) => {
+      const y = 354 + index * 47;
+      const labelText = this.add.text(720, y, label, textStyle(15, '#9e9188', { strokeThickness: 3 })).setDepth(8);
+      const valueText = this.add
+        .text(1034, y - 2, compactName(value, 15), textStyle(18, THEME.css.body, { strokeThickness: 4, align: 'right' }))
+        .setOrigin(1, 0)
+        .setDepth(8);
+      targets.push(labelText, valueText);
+    });
+    return targets;
+  }
+
+  drawDeckSummary() {
+    const background = this.drawSectionGround(1100, 275, 360, 380, this.victory ? 0x241812 : 0x1c151a);
+    const heading = this.add.text(1120, 296, '最终牌组', textStyle(25, THEME.css.paleGold, { strokeThickness: 5 })).setDepth(8);
+    const count = Array.isArray(this.run.deck) ? this.run.deck.length : 0;
+    const total = this.add.text(1438, 302, `${count} 张`, textStyle(15, '#a89a8e', { strokeThickness: 3, align: 'right' })).setOrigin(1, 0).setDepth(8);
+    const rule = this.add.graphics().setDepth(8);
+    rule.fillStyle(this.victory ? THEME.colors.candle : THEME.colors.blood, 0.62);
+    rule.fillRect(1120, 333, 310, 2);
+    const targets = [background, heading, total, rule];
+    if (!this.summary.deckGroups.length) {
+      const empty = this.add.text(1120, 364, '牌组记录缺失', textStyle(17, THEME.css.muted, { strokeThickness: 3 })).setDepth(8);
+      targets.push(empty);
+      return targets;
+    }
+    this.summary.deckGroups.forEach((group, index) => {
+      const y = 354 + index * 29;
+      const label = group.overflow
+        ? `另有 ${group.count} 张卡牌`
+        : `${compactName(group.name)}${group.upgraded ? ' +' : ''}`;
+      const name = this.add
+        .text(1120, y, label, textStyle(16, group.overflow ? '#a99a91' : THEME.css.body, { strokeThickness: 3 }))
+        .setDepth(8);
+      targets.push(name);
+      if (!group.overflow) {
+        const quantity = this.add
+          .text(1434, y, `×${group.count}`, textStyle(16, group.upgraded ? '#e1b45d' : '#9f9389', { strokeThickness: 3, align: 'right' }))
+          .setOrigin(1, 0)
+          .setDepth(8);
+        targets.push(quantity);
       }
-    }
-    if (line) lines.push(line);
-    return lines.join('\n');
+    });
+    return targets;
   }
 
+  drawSectionGround(x, y, width, height, fill) {
+    const g = this.add.graphics().setDepth(6);
+    g.fillStyle(fill, 0.66);
+    g.fillRect(x, y, width, height);
+    g.fillStyle(0x050506, 0.42);
+    g.fillRect(x, y + height - 12, width, 12);
+    g.fillStyle(THEME.colors.iron, 0.3);
+    g.fillRect(x, y, 2, height);
+    return g;
+  }
+
+  drawActions() {
+    const rule = this.add.graphics().setDepth(8);
+    rule.fillStyle(THEME.colors.iron, 0.38);
+    rule.fillRect(700, 708, 756, 2);
+    this.add.text(700, 728, this.victory ? '圣途已完成' : '灰烬仍可重燃', textStyle(15, '#8f8178', { strokeThickness: 3 })).setDepth(8);
+    new UIButton(this, 1040, 776, 236, 56, '再次启程', () => {
+      SaveManager.clearRun();
+      this.registry.remove('run');
+      this.scene.start(SCENES.CharacterSelect);
+    }, { fontSize: 22, fill: this.victory ? 0x56361f : 0x4b252a });
+    new UIButton(this, 1328, 776, 236, 56, '返回主菜单', () => {
+      SaveManager.clearRun();
+      this.registry.remove('run');
+      this.scene.start(SCENES.MainMenu);
+    }, { fontSize: 22, fill: 0x30282a });
+  }
+
+  playEntrance({ figureTargets, narrativeTargets, statsTargets, deckTargets }) {
+    if (!this.motionEnabled) return;
+    this.revealTargets(figureTargets, -18, 0);
+    this.revealTargets(narrativeTargets, 20, 45);
+    this.revealTargets(statsTargets, 16, 100);
+    this.revealTargets(deckTargets, 16, 145);
+  }
+
+  revealTargets(targets, offsetX, delay) {
+    for (const target of targets) {
+      target.x += offsetX;
+      target.setAlpha(0);
+      this.tweens.add({
+        targets: target,
+        x: target.x - offsetX,
+        alpha: 1,
+        duration: 320,
+        delay,
+        ease: 'Cubic.Out'
+      });
+    }
+  }
+
+  recordStats() {
+    const result = recordResultStats(SaveManager.readSettings(), this.run, this.victory);
+    if (result.recorded) SaveManager.saveSettings(result.settings);
+  }
 }

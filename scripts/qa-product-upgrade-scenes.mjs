@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { BUILD_VERSION } from '../src/game/constants.js';
 
@@ -83,6 +84,168 @@ async function screenshot(page, name) {
   const file = path.join(outDir, name);
   await page.screenshot({ path: file });
   report.screenshots.push(rel(file));
+  return file;
+}
+
+const RESULT_REGION_NAMES = ['result-figure', 'result-narrative', 'result-stats', 'result-deck', 'result-actions'];
+
+function overlaps(a, b, gap = 0) {
+  return !(
+    a.right + gap <= b.left ||
+    b.right + gap <= a.left ||
+    a.bottom + gap <= b.top ||
+    b.bottom + gap <= a.top
+  );
+}
+
+async function resultLayoutSnapshot(page) {
+  return page.evaluate((regionNames) => {
+    const scene = window.__ASHEN_GAME__?.scene?.keys?.ResultScene;
+    const regions = Object.fromEntries(regionNames.map((name) => {
+      const region = scene?.children?.getByName(name);
+      if (!region) return [name, null];
+      const bounds = region.getBounds();
+      return [name, {
+        left: bounds.left,
+        top: bounds.top,
+        right: bounds.right,
+        bottom: bounds.bottom,
+        width: bounds.width,
+        height: bounds.height
+      }];
+    }));
+    const tombstone = scene?.children?.getByName('defeat-tombstone-art');
+    return {
+      regions,
+      tombstone: tombstone ? {
+        sourceWidth: tombstone.width,
+        sourceHeight: tombstone.height,
+        displayWidth: tombstone.displayWidth,
+        displayHeight: tombstone.displayHeight
+      } : null
+    };
+  }, RESULT_REGION_NAMES);
+}
+
+function assertResultLayout(snapshot, label, victory) {
+  for (const name of RESULT_REGION_NAMES) {
+    const region = snapshot.regions[name];
+    assert(region, `${label}: missing named result region ${name}`);
+    assert(region.width > 0 && region.height > 0, `${label}: ${name} must have stable dimensions`);
+    assert(region.left >= 0 && region.top >= 0 && region.right <= 1536 && region.bottom <= 864, `${label}: ${name} escapes the game canvas`);
+  }
+
+  const figure = snapshot.regions['result-figure'];
+  const narrative = snapshot.regions['result-narrative'];
+  const stats = snapshot.regions['result-stats'];
+  const deck = snapshot.regions['result-deck'];
+  const actions = snapshot.regions['result-actions'];
+  assert(!overlaps(figure, narrative), `${label}: figure overlaps narrative`);
+  assert(!overlaps(figure, stats), `${label}: figure overlaps statistics`);
+  assert(!overlaps(figure, deck), `${label}: figure overlaps deck`);
+  assert(!overlaps(narrative, stats), `${label}: narrative overlaps statistics`);
+  assert(!overlaps(narrative, deck), `${label}: narrative overlaps deck`);
+  assert(!overlaps(stats, deck), `${label}: statistics overlaps deck`);
+  assert(!overlaps(actions, stats), `${label}: actions overlaps statistics`);
+  assert(!overlaps(actions, deck), `${label}: actions overlaps deck`);
+
+  if (!victory) {
+    assert(snapshot.tombstone, `${label}: defeat tombstone is not rendered`);
+    const sourceRatio = snapshot.tombstone.sourceWidth / snapshot.tombstone.sourceHeight;
+    const displayRatio = snapshot.tombstone.displayWidth / snapshot.tombstone.displayHeight;
+    assert(Math.abs(sourceRatio - displayRatio) < 0.002, `${label}: defeat tombstone aspect ratio is distorted`);
+  }
+}
+
+function inspectDefeatPalette(file) {
+  const program = String.raw`
+import json
+import sys
+from PIL import Image
+
+image = Image.open(sys.argv[1]).convert("RGB")
+pixels = list(image.getdata())
+green = sum(1 for red, value, blue in pixels if value >= 48 and value > red * 1.18 and value > blue * 1.08)
+print(json.dumps({"pixels": len(pixels), "greenDominant": green, "ratio": green / max(1, len(pixels))}))
+`;
+  const candidates = [
+    { command: process.env.PYTHON ?? 'python', args: [] },
+    { command: 'py', args: ['-3'] }
+  ];
+  const failures = [];
+  for (const candidate of candidates) {
+    const result = spawnSync(candidate.command, [...candidate.args, '-c', program, file], {
+      encoding: 'utf8',
+      windowsHide: true
+    });
+    if (!result.error && result.status === 0) return JSON.parse(result.stdout.trim());
+    failures.push(result.error?.message ?? result.stderr.trim() ?? `exit ${result.status}`);
+  }
+  throw new Error(`unable to inspect defeat palette: ${failures.join('; ')}`);
+}
+
+async function startResult(page, victory, animation) {
+  await page.evaluate(() => window.__ASHEN_QA__.startRun('exiled-knight', { seed: 20260710, skipVow: true }));
+  await waitScene(page, 'MapScene');
+  await page.evaluate(({ isVictory, motionEnabled }) => {
+    const settingsKey = 'ashen-pilgrimage-settings-v1';
+    const settings = JSON.parse(window.localStorage.getItem(settingsKey) ?? '{}');
+    window.localStorage.setItem(settingsKey, JSON.stringify({ ...settings, sound: false, animation: motionEnabled }));
+    const run = window.__ASHEN_GAME__.registry.get('run');
+    run.id = `qa-result-${isVictory ? 'victory' : 'defeat'}-${motionEnabled ? 'motion' : 'still'}`;
+    run.characterName = '流亡骑士';
+    run.act = 3;
+    run.floor = 12;
+    run.highestFloor = 312;
+    run.kills = 41;
+    run.gold = 187;
+    run.startTime = Date.now() - 734_000;
+    run.endTime = Date.now();
+    run.relics = ['iron-rosary', 'pilgrim-bell', 'wax-seal'];
+    run.vows = ['vow-embers', 'vow-iron'];
+    const cardIds = [
+      'knight-cleave', 'knight-cleave', 'knight-cleave', 'knight-block', 'knight-rend',
+      'common-bandage', 'common-crossbow', 'common-old-shield', 'common-torch-swing',
+      'common-ash-dodge', 'common-field-ration', 'common-smoke-bomb', 'common-grave-salt'
+    ];
+    run.deck = cardIds.map((cardId, index) => ({
+      uid: `qa-result-card-${index}`,
+      cardId,
+      upgraded: index === 2 || index === 8
+    }));
+    window.__ASHEN_QA__.startScene('ResultScene', { victory: isVictory, run });
+  }, { isVictory: victory, motionEnabled: animation });
+  await waitScene(page, 'ResultScene');
+  await clickGame(page, 676, 682, 80);
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(animation ? 850 : 120);
+}
+
+async function captureResultViewport(browser, victory, width, height, animation = true) {
+  const { context, page } = await setupPage(browser, { width, height });
+  const label = `${victory ? 'victory' : 'defeat'} ${width}x${height}`;
+  try {
+    await startResult(page, victory, animation);
+    const snapshot = await resultLayoutSnapshot(page);
+    assertResultLayout(snapshot, label, victory);
+    const file = await screenshot(page, `result_${victory ? 'victory' : 'defeat'}_${width}x${height}.png`);
+    if (!victory) {
+      const palette = inspectDefeatPalette(file);
+      report[`defeatPalette${width}x${height}`] = palette;
+      assert(palette.ratio <= 0.0005, `${label}: rendered palette contains ${palette.greenDominant} green-dominant pixels`);
+    }
+    if (!animation) {
+      const motionState = await page.evaluate(() => {
+        const scene = window.__ASHEN_GAME__?.scene?.keys?.ResultScene;
+        return { enabled: scene?.motionEnabled, tweenCount: scene?.tweens?.getTweens()?.length ?? -1 };
+      });
+      assert(motionState.enabled === false, `${label}: result scene ignored the disabled animation setting`);
+      assert(motionState.tweenCount === 0, `${label}: result scene owns active tweens while animation is disabled`);
+    }
+    return snapshot;
+  } finally {
+    await context.close();
+  }
 }
 
 async function setupPage(browser, viewport = { width: 1536, height: 864 }) {
@@ -195,12 +358,24 @@ try {
     await captureBattleViewport(browser, 1536, 864);
     await captureBattleViewport(browser, 1366, 768);
     await captureBattleViewport(browser, 1280, 720);
+    const resultSnapshots = [
+      await captureResultViewport(browser, true, 1536, 864),
+      await captureResultViewport(browser, false, 1536, 864),
+      await captureResultViewport(browser, true, 1280, 720),
+      await captureResultViewport(browser, false, 1280, 720, false)
+    ];
+    const [reference, ...comparisons] = resultSnapshots;
+    for (const snapshot of comparisons) {
+      assert(snapshot.regions['result-actions'].left === reference.regions['result-actions'].left, 'result actions shift horizontally between outcomes or viewports');
+      assert(snapshot.regions['result-actions'].top === reference.regions['result-actions'].top, 'result actions shift vertically between outcomes or viewports');
+      assert(snapshot.regions['result-stats'].top === reference.regions['result-stats'].top, 'result statistics shift with outcome, viewport, or deck length');
+    }
   } finally {
     await browser.close();
   }
 
   assert(report.errors.length === 0, report.errors.join('\n'));
-  assert(report.screenshots.length >= 14, 'expected at least 14 screenshots');
+  assert(report.screenshots.length >= 18, 'expected at least 18 screenshots');
   fs.writeFileSync(path.join(root, 'qa', 'product-upgrade-scenes-report.json'), JSON.stringify(report, null, 2), 'utf8');
   console.log(JSON.stringify({ ok: true, screenshots: report.screenshots.length }, null, 2));
 } catch (error) {

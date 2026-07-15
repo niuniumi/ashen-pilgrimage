@@ -5,6 +5,8 @@ dist/
 .codex_audio_tmp/
 qa/audio-source/
 qa/source-art/*
+!qa/source-art/runtime-masters/
+!qa/source-art/runtime-masters/**
 !qa/source-art/curated-actors/
 !qa/source-art/curated-actors/**
 !qa/source-art/generated-enemies-v3/

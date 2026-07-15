@@ -120,7 +120,7 @@ async function createScenarioPage(browser, targetUrl, persistedRun = null) {
 async function verifyMissingAssetRecovery(browser, targetUrl) {
   const { context, page } = await createScenarioPageWithRoute(browser, targetUrl, null, async (candidate) => {
     let failMenuAsset = true;
-    await candidate.route('**/assets/pixel/backgrounds/menu.png', (route) => {
+    await candidate.route('**/assets/pixel/backgrounds/menu.webp', (route) => {
       if (failMenuAsset) route.abort('failed');
       else route.continue();
     });
@@ -211,7 +211,7 @@ async function verifyPrologueRecoveryPointerBlock(browser, targetUrl) {
   const run = createScenarioRun();
   const settings = { ...QA_SETTINGS, storySeen: false };
   const { context, page } = await createScenarioPageWithRoute(browser, targetUrl, run, async (candidate) => {
-    await candidate.route('**/assets/pixel/backgrounds/folio.png', (route) => route.abort('failed'));
+    await candidate.route('**/assets/pixel/backgrounds/folio.webp', (route) => route.abort('failed'));
     return () => {};
   }, { settings });
 
@@ -269,7 +269,7 @@ async function verifyPrologueRecoveryPointerBlock(browser, targetUrl) {
 async function verifyRecoveryShutdownAndReturn(browser, targetUrl) {
   const run = createScenarioRun();
   const { context, page } = await createScenarioPageWithRoute(browser, targetUrl, run, async (candidate) => {
-    await candidate.route('**/assets/pixel/backgrounds/folio.png', (route) => route.abort('failed'));
+    await candidate.route('**/assets/pixel/backgrounds/folio.webp', (route) => route.abort('failed'));
     return () => {};
   });
 
@@ -469,7 +469,7 @@ async function openBattle(browser, targetUrl, initialRun, { failAsset = false } 
   }
   return createScenarioPageWithRoute(browser, targetUrl, initialRun, async (page) => {
     let blocked = true;
-    await page.route('**/assets/pixel/backgrounds/battle-act-1.png', (route) => {
+    await page.route('**/assets/pixel/backgrounds/battle-act-1.webp', (route) => {
       if (blocked) route.abort('failed');
       else route.continue();
     });

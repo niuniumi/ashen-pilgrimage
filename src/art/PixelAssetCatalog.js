@@ -1,10 +1,10 @@
 export const PIXEL_ASSETS = {
-  menu: { key: 'pixel-bg-menu', url: 'assets/pixel/backgrounds/menu.png' },
-  map: { key: 'pixel-bg-map', url: 'assets/pixel/backgrounds/map.png' },
-  folio: { key: 'pixel-bg-folio', url: 'assets/pixel/backgrounds/folio.png' },
-  battle1: { key: 'pixel-bg-battle-1', url: 'assets/pixel/backgrounds/battle-act-1.png' },
-  battle2: { key: 'pixel-bg-battle-2', url: 'assets/pixel/backgrounds/battle-act-2.png' },
-  battle3: { key: 'pixel-bg-battle-3', url: 'assets/pixel/backgrounds/battle-act-3.png' }
+  menu: { key: 'pixel-bg-menu', url: 'assets/pixel/backgrounds/menu.webp' },
+  map: { key: 'pixel-bg-map', url: 'assets/pixel/backgrounds/map.webp' },
+  folio: { key: 'pixel-bg-folio', url: 'assets/pixel/backgrounds/folio.webp' },
+  battle1: { key: 'pixel-bg-battle-1', url: 'assets/pixel/backgrounds/battle-act-1.webp' },
+  battle2: { key: 'pixel-bg-battle-2', url: 'assets/pixel/backgrounds/battle-act-2.webp' },
+  battle3: { key: 'pixel-bg-battle-3', url: 'assets/pixel/backgrounds/battle-act-3.webp' }
 };
 
 const directActorNames = [
@@ -79,14 +79,14 @@ export const PIXEL_ATLASES = {};
 export const PIXEL_DECORATIONS = {
   defeatTombstone: {
     key: 'pixel-ui-defeat-tombstone',
-    url: 'assets/pixel/ui/defeat-tombstone.png'
+    url: 'assets/pixel/ui/defeat-tombstone.webp'
   }
 };
 
 const directActors = Object.fromEntries(
   directActorNames.map((name) => [name, {
     key: `pixel-actor-${name}`,
-    url: `assets/pixel/actors/sprites/${versionedActorFiles[name] ?? name}.png`,
+    url: `assets/pixel/actors/sprites/${versionedActorFiles[name] ?? name}.webp`,
     facing: playableActorNames.has(name) ? 'right' : 'left',
     ...(name === 'crow-messenger' ? { displayScale: 0.5, offsetY: -48 } : {}),
     ...(name === 'plague-rat-swarm' ? { displayScale: 0.46, offsetY: -30 } : {}),

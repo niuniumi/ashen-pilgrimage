@@ -27,7 +27,7 @@ test('all production music routes have ogg and mp3 fallbacks', async () => {
 });
 
 test('pixel production backgrounds and Chinese font are bundled locally', async () => {
-  const backgrounds = ['menu.png', 'map.png', 'folio.png', 'battle-act-1.png', 'battle-act-2.png', 'battle-act-3.png'];
+  const backgrounds = ['menu.webp', 'map.webp', 'folio.webp', 'battle-act-1.webp', 'battle-act-2.webp', 'battle-act-3.webp'];
   for (const background of backgrounds) {
     const info = await stat(path.join(root, 'pixel', 'backgrounds', background));
     assert.ok(info.size > 500_000, `${background} should contain production pixel art`);
@@ -54,20 +54,20 @@ test('the actor catalog contains exactly the playable heroes and production enem
   assert.deepEqual(new Set(Object.keys(PIXEL_ACTORS)), expected);
 });
 
-test('every curated enemy PNG is normalized to face the player on the left', () => {
+test('every curated enemy runtime image is normalized to face the player on the left', () => {
   for (const enemy of enemies) {
     const resolved = resolvePixelActorAsset(enemy.id);
     assert.equal(resolved.asset.facing, 'left', `${enemy.id} source orientation should be left`);
   }
 });
 
-test('every production enemy uses its own semantic PNG instead of a shared procedural atlas frame', () => {
+test('every production enemy uses its own semantic WebP instead of a shared procedural atlas frame', () => {
   const urls = new Set();
   for (const enemy of enemies) {
     const resolved = resolvePixelActorAsset(enemy.id);
     assert.ok(resolved, `${enemy.id} should resolve to a dedicated actor`);
     assert.equal(resolved.asset.frameIndex, undefined, `${enemy.id} should not use a procedural atlas frame`);
-    assert.match(resolved.asset.url, /\/sprites\/[a-z0-9-]+\.png$/);
+    assert.match(resolved.asset.url, /\/sprites\/[a-z0-9-]+\.webp$/);
     assert.equal(urls.has(resolved.asset.url), false, `${enemy.id} reuses ${resolved.asset.url}`);
     urls.add(resolved.asset.url);
   }
@@ -77,20 +77,20 @@ test('every production enemy uses its own semantic PNG instead of a shared proce
 test('playable heroes use one cohesive v3 source set and face battle enemies on the right', async () => {
   for (const heroId of ['exiled-knight', 'candle-nun', 'ashblood-alchemist']) {
     const actor = PIXEL_ACTORS[heroId];
-    assert.equal(actor.url, `assets/pixel/actors/sprites/${heroId}-v3.png`);
+    assert.equal(actor.url, `assets/pixel/actors/sprites/${heroId}-v3.webp`);
     assert.equal(actor.facing, 'right');
-    const info = await stat(path.join(root, 'pixel', 'actors', 'sprites', `${heroId}-v3.png`));
+    const info = await stat(path.join(root, 'pixel', 'actors', 'sprites', `${heroId}-v3.webp`));
     assert.ok(info.size > 25_000, `${heroId} should contain a detailed production sprite`);
   }
 });
 
 test('plague rat swarm is a compact left-facing production enemy', async () => {
   const actor = PIXEL_ACTORS['plague-rat-swarm'];
-  assert.equal(actor.url, 'assets/pixel/actors/sprites/plague-rat-swarm-v2.png');
+  assert.equal(actor.url, 'assets/pixel/actors/sprites/plague-rat-swarm-v2.webp');
   assert.equal(actor.facing, 'left');
   assert.ok(actor.displayScale <= 0.6, 'rat swarm should remain smaller than humanoid enemies');
   assert.ok(actor.offsetY < 0, 'rat swarm should sit above its name and health bar');
-  const info = await stat(path.join(root, 'pixel', 'actors', 'sprites', 'plague-rat-swarm-v2.png'));
+  const info = await stat(path.join(root, 'pixel', 'actors', 'sprites', 'plague-rat-swarm-v2.webp'));
   assert.ok(info.size > 25_000, 'rat swarm should contain detailed production artwork');
 });
 
@@ -124,21 +124,21 @@ test('generated v3 enemies use the explicit left-facing art set', async () => {
 
   for (const enemyId of v3Enemies) {
     const actor = PIXEL_ACTORS[enemyId];
-    assert.equal(actor.url, `assets/pixel/actors/sprites/${enemyId}-v3.png`);
+    assert.equal(actor.url, `assets/pixel/actors/sprites/${enemyId}-v3.webp`);
     assert.equal(actor.facing, 'left');
-    const info = await stat(path.join(root, 'pixel', 'actors', 'sprites', `${enemyId}-v3.png`));
+    const info = await stat(path.join(root, 'pixel', 'actors', 'sprites', `${enemyId}-v3.webp`));
     assert.ok(info.size > 50_000, `${enemyId} v3 sprite should contain production detail`);
   }
 });
 
 test('candle nun hero and ash veiled prioress resolve to visibly independent source files', () => {
-  assert.equal(PIXEL_ACTORS['candle-nun'].url, 'assets/pixel/actors/sprites/candle-nun-v3.png');
-  assert.equal(PIXEL_ACTORS['ash-veiled-prioress'].url, 'assets/pixel/actors/sprites/ash-veiled-prioress-v3.png');
+  assert.equal(PIXEL_ACTORS['candle-nun'].url, 'assets/pixel/actors/sprites/candle-nun-v3.webp');
+  assert.equal(PIXEL_ACTORS['ash-veiled-prioress'].url, 'assets/pixel/actors/sprites/ash-veiled-prioress-v3.webp');
   assert.notEqual(PIXEL_ACTORS['candle-nun'].url, PIXEL_ACTORS['ash-veiled-prioress'].url);
 });
 
 test('defeat result uses a bundled transparent tombstone asset', async () => {
-  assert.equal(PIXEL_DECORATIONS.defeatTombstone.url, 'assets/pixel/ui/defeat-tombstone.png');
-  const info = await stat(path.join(root, 'pixel', 'ui', 'defeat-tombstone.png'));
+  assert.equal(PIXEL_DECORATIONS.defeatTombstone.url, 'assets/pixel/ui/defeat-tombstone.webp');
+  const info = await stat(path.join(root, 'pixel', 'ui', 'defeat-tombstone.webp'));
   assert.ok(info.size > 20_000, 'defeat tombstone should contain production artwork');
 });

@@ -128,6 +128,17 @@ test('boot bundle excludes maps, battles, actors, and non-menu music', () => {
   assert.equal(audioKeys.includes('sfx-ui-hover-1'), true);
 });
 
+test('guide and settings direct entries preload the folio they render plus menu music', () => {
+  for (const sceneKey of [SCENES.Guide, SCENES.Settings]) {
+    const assets = resolveAssetBundles(getSceneBundleNames(sceneKey));
+    const imageKeys = new Set(assets.images.map((asset) => asset.key));
+    const audioKeys = new Set(assets.audio.map((asset) => asset.key));
+
+    assert.equal(imageKeys.has('pixel-bg-folio'), true, `${sceneKey} missing folio`);
+    assert.equal(audioKeys.has('bgm-menu'), true, `${sceneKey} missing menu BGM`);
+  }
+});
+
 test('act two battle bundle contains its background, selected hero, act enemies, music, and combat SFX', () => {
   const assets = resolveAssetBundles(getSceneBundleNames(SCENES.Battle, {
     act: 2,

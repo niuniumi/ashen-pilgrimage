@@ -51,7 +51,7 @@ export default class BossIntroScene extends Phaser.Scene {
 
   drawBackdrop() {
     const bossId = this.chapter?.bossId ?? 'headless-grave-knight';
-    if (addHandPaintedBackground(this, HANDPAINTED_KEYS.battleBg, { depth: 0 })) {
+    if (addHandPaintedBackground(this, HANDPAINTED_KEYS.battleBg, { depth: 0, act: this.chapter?.number ?? 1 })) {
       const boss = drawEnemyArt(this, bossId, 768, 442, 1.35, { idle: true, type: 'boss', phase: 1, depth: 3 });
       boss.setAlpha(0.88);
       addAmbientAsh(this, { count: 46, depth: 8 });

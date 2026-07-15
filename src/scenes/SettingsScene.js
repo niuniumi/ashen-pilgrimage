@@ -28,7 +28,7 @@ export default class SettingsScene extends Phaser.Scene {
 
   render() {
     this.children.removeAll(true);
-    drawGameBackdrop(this, 'menu');
+    drawGameBackdrop(this, 'parchment');
     this.add.text(768, 58, '设置', { ...titleStyle(44), color: '#f4e7c5', stroke: '#08090d', strokeThickness: 6 }).setOrigin(0.5);
     this.add.text(768, 104, '声音、体验与旅途记录', textStyle(18, '#b99862', { align: 'center' })).setOrigin(0.5);
     drawDivider(this, 768, 132, 520, { color: 0xb88935, alpha: 0.58 });

@@ -26,7 +26,7 @@ import { drawEnemyArt, drawHeroArt } from '../ui/UICharacterArt.js';
 import { UIHealthBar } from '../ui/UIHealthBar.js';
 import { UIPanel } from '../ui/UIPanel.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
-import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
+import { addToast, areSceneAssetsReady, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addUiAsset, addVfxAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 import { BattleInputController } from '../input/BattleInputController.js';
 
@@ -94,6 +94,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   create() {
+    if (!areSceneAssetsReady(this)) return;
     attachSceneServices(this);
     this.run = getActiveRun(this);
     if (!this.run) return;

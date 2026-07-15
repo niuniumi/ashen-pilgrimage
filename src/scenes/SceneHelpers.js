@@ -10,7 +10,14 @@ import { getSceneBundleNames } from '../game/AssetBundleCatalog.js';
 import { installSceneLoadingView, queueAssetBundles } from '../game/SceneAssetLoader.js';
 import { FONT } from '../design/textStyles.js';
 
+const ASSET_LOAD_FAILED = '__sceneAssetLoadFailed';
+
+export function areSceneAssetsReady(scene) {
+  return scene?.[ASSET_LOAD_FAILED] !== true;
+}
+
 export function preloadSceneAssets(scene, sceneKey, options = {}) {
+  scene[ASSET_LOAD_FAILED] = false;
   const { title, run: providedRun, restartData = {}, ...context } = options;
   const run = providedRun ?? scene.registry.get('run') ?? SaveManager.loadRun();
   const bundleNames = getSceneBundleNames(sceneKey, {
@@ -24,13 +31,22 @@ export function preloadSceneAssets(scene, sceneKey, options = {}) {
   const view = installSceneLoadingView(scene, { title });
   const failedKeys = new Set();
   const recoveryObjects = [];
+  let keyboardSuspended = false;
+  let previousKeyboardEnabled = true;
+
+  const restoreInput = () => {
+    if (!keyboardSuspended) return;
+    if (scene.input?.keyboard) scene.input.keyboard.enabled = previousKeyboardEnabled;
+    keyboardSuspended = false;
+  };
 
   const cleanup = () => {
     scene.load.off('loaderror', onLoadError);
     scene.load.off('complete', onComplete);
     scene.events.off('create', showRecovery);
     scene.events.off('shutdown', cleanup);
-    recoveryObjects.splice(0).forEach((object) => object.destroy());
+    restoreInput();
+    recoveryObjects.splice(0).forEach((object) => object.destroy?.());
   };
   const leaveLoadingView = (action) => {
     view.destroy();
@@ -40,6 +56,11 @@ export function preloadSceneAssets(scene, sceneKey, options = {}) {
   const showRecovery = () => {
     if (recoveryObjects.length > 0) return;
     const depth = 21000;
+    if (scene.input?.keyboard) {
+      previousKeyboardEnabled = scene.input.keyboard.enabled;
+      scene.input.keyboard.enabled = false;
+      keyboardSuspended = true;
+    }
     const veil = scene.add.graphics().setDepth(depth);
     veil.fillStyle(0x08090d, 0.97);
     veil.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -53,18 +74,26 @@ export function preloadSceneAssets(scene, sceneKey, options = {}) {
       })
       .setOrigin(0.5)
       .setDepth(depth + 1);
+    const blocker = scene.add
+      .zone(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT)
+      .setInteractive()
+      .setDepth(depth + 3);
+    blocker.setName('scene-loading-recovery-blocker');
     const retry = new UIButton(scene, GAME_WIDTH / 2 - 126, GAME_HEIGHT / 2 + 62, 220, 52, '重试加载', () => {
       leaveLoadingView(() => scene.scene.restart(restartData));
-    }, { fontSize: 20, hitDepth: depth + 3 }).setDepth(depth + 2);
+    }, { fontSize: 20, hitDepth: depth + 5 }).setDepth(depth + 4);
     const safeReturn = new UIButton(scene, GAME_WIDTH / 2 + 126, GAME_HEIGHT / 2 + 62, 220, 52, '安全返回', () => {
       leaveLoadingView(() => {
         if (sceneKey === SCENES.MainMenu) return;
         scene.scene.start(SCENES.MainMenu);
       });
-    }, { fontSize: 20, hitDepth: depth + 3 }).setDepth(depth + 2);
-    recoveryObjects.push(veil, message, retry, safeReturn);
+    }, { fontSize: 20, hitDepth: depth + 5 }).setDepth(depth + 4);
+    recoveryObjects.push(veil, message, blocker, retry, safeReturn);
   };
-  const onLoadError = (file) => failedKeys.add(file?.key ?? 'unknown');
+  const onLoadError = (file) => {
+    scene[ASSET_LOAD_FAILED] = true;
+    failedKeys.add(file?.key ?? 'unknown');
+  };
   const onComplete = () => {
     if (failedKeys.size === 0) {
       cleanup();

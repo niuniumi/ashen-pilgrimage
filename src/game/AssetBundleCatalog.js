@@ -146,9 +146,10 @@ export function getSceneBundleNames(sceneKey, context = {}) {
     case SCENES.Preload:
       return ['boot'];
     case SCENES.MainMenu:
+      return ['menu'];
     case SCENES.Guide:
     case SCENES.Settings:
-      return ['menu'];
+      return ['menu', 'folio'];
     case SCENES.CharacterSelect:
       return ['character-select'];
     case SCENES.Map:

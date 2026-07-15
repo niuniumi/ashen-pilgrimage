@@ -17,6 +17,7 @@ const outDir = path.join(root, 'qa', 'screenshots', 'product_upgrade');
 fs.mkdirSync(outDir, { recursive: true });
 
 const URL = process.env.QA_URL ?? process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'http://127.0.0.1:4176';
+const TASK5_ONLY = process.argv.includes('--task5-only');
 const report = {
   version: BUILD_VERSION,
   url: URL,
@@ -79,12 +80,317 @@ async function clickGame(page, x, y, delay = 300) {
   await page.waitForTimeout(delay);
 }
 
-async function screenshot(page, name) {
-  await page.waitForTimeout(260);
+async function screenshot(page, name, delay = 260) {
+  if (delay > 0) await page.waitForTimeout(delay);
   const file = path.join(outDir, name);
   await page.screenshot({ path: file });
   report.screenshots.push(rel(file));
   return file;
+}
+
+function contained(bounds) {
+  return bounds.left >= 0 && bounds.top >= 0 && bounds.right <= 1536 && bounds.bottom <= 864;
+}
+
+async function choiceSceneSnapshot(page, sceneKey) {
+  return page.evaluate((key) => {
+    const scene = window.__ASHEN_GAME__?.scene?.keys?.[key];
+    const boundsOf = (view) => {
+      const bounds = view?.getBounds?.();
+      if (!bounds) return null;
+      return {
+        left: bounds.left,
+        top: bounds.top,
+        right: bounds.right,
+        bottom: bounds.bottom,
+        width: bounds.width,
+        height: bounds.height
+      };
+    };
+    return {
+      controller: scene?.choiceController?.state ?? null,
+      choices: (scene?.choiceViews ?? []).map(({ id, view }) => ({
+        id,
+        type: view?.type,
+        name: view?.name,
+        selected: view?.selected,
+        confirmed: view?.confirmed,
+        disabled: view?.disabled,
+        textAlpha: view?.nameText?.alpha ?? view?.text?.alpha ?? null,
+        x: view?.x,
+        y: view?.y,
+        baseY: view?.baseY,
+        bounds: boundsOf(view),
+        attached: Boolean(view && scene?.children?.exists(view))
+      })),
+      confirm: scene?.confirmButton ? {
+        type: scene.confirmButton.type,
+        name: scene.confirmButton.name,
+        disabled: scene.confirmButton.disabled,
+        x: scene.confirmButton.x,
+        y: scene.confirmButton.y,
+        bounds: boundsOf(scene.confirmButton),
+        attached: scene.children.exists(scene.confirmButton)
+      } : null,
+      skip: scene?.skipButton ? {
+        type: scene.skipButton.type,
+        name: scene.skipButton.name,
+        disabled: scene.skipButton.disabled,
+        x: scene.skipButton.x,
+        y: scene.skipButton.y,
+        bounds: boundsOf(scene.skipButton),
+        attached: scene.children.exists(scene.skipButton)
+      } : null,
+      tweenCount: scene?.tweens?.getTweens()?.length ?? -1
+    };
+  }, sceneKey);
+}
+
+async function runSnapshot(page) {
+  return page.evaluate(() => {
+    const run = window.__ASHEN_GAME__?.registry?.get('run');
+    return JSON.stringify({
+      hp: run?.hp,
+      maxHp: run?.maxHp,
+      gold: run?.gold,
+      deck: run?.deck,
+      relics: run?.relics,
+      currentEvent: run?.currentEvent,
+      pendingReward: run?.pendingReward,
+      pendingScene: run?.pendingScene,
+      pendingBattleType: run?.pendingBattleType,
+      map: run?.map
+    });
+  });
+}
+
+function assertChoiceLayout(snapshot, label, sceneKey) {
+  assert(snapshot.controller, `${label}: ${sceneKey} has no SceneChoiceController state`);
+  assert(snapshot.choices.length >= 2, `${label}: ${sceneKey} has fewer than two real choices`);
+  assert(snapshot.confirm, `${label}: ${sceneKey} has no fixed confirmation command`);
+  assert(snapshot.confirm.type === 'Container' && snapshot.confirm.attached, `${label}: confirmation is not a rendered component`);
+  assert(contained(snapshot.confirm.bounds), `${label}: confirmation bounds escape the game canvas`);
+  for (const choice of snapshot.choices) {
+    assert(choice.type === 'Container' && choice.attached, `${label}: ${choice.id} is not a rendered component`);
+    assert(choice.bounds?.width > 0 && choice.bounds?.height > 0, `${label}: ${choice.id} has no rendered bounds`);
+    assert(contained(choice.bounds), `${label}: ${choice.id} escapes the game canvas`);
+    assert(!overlaps(choice.bounds, snapshot.confirm.bounds, 8), `${label}: ${choice.id} overlaps confirmation`);
+  }
+  for (let index = 0; index < snapshot.choices.length; index += 1) {
+    for (let other = index + 1; other < snapshot.choices.length; other += 1) {
+      assert(!overlaps(snapshot.choices[index].bounds, snapshot.choices[other].bounds, 8), `${label}: repeated choices overlap`);
+    }
+  }
+  if (snapshot.skip) {
+    assert(snapshot.skip.type === 'Container' && snapshot.skip.attached, `${label}: reward skip is not rendered`);
+    assert(contained(snapshot.skip.bounds), `${label}: reward skip escapes the canvas`);
+    assert(!overlaps(snapshot.skip.bounds, snapshot.confirm.bounds, 8), `${label}: reward skip overlaps confirmation`);
+  }
+}
+
+async function installSaveWriteCounter(page) {
+  await page.evaluate(() => {
+    window.__TASK5_SAVE_WRITES__ = 0;
+    if (window.__TASK5_SAVE_COUNTER_INSTALLED__) return;
+    window.__TASK5_SAVE_COUNTER_INSTALLED__ = true;
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function task5CountedSetItem(key, value) {
+      if (key === 'ashen-pilgrimage-save-v1') window.__TASK5_SAVE_WRITES__ += 1;
+      return original.call(this, key, value);
+    };
+  });
+}
+
+async function startChoiceScene(page, sceneKey, nodeType, animation) {
+  await page.evaluate(() => window.__ASHEN_QA__.startRun('exiled-knight', { seed: 20260716, skipVow: true }));
+  await waitScene(page, 'MapScene');
+  await page.evaluate((motionEnabled) => {
+    const key = 'ashen-pilgrimage-settings-v1';
+    const settings = JSON.parse(localStorage.getItem(key) ?? '{}');
+    localStorage.setItem(key, JSON.stringify({ ...settings, sound: false, music: false, animation: motionEnabled }));
+  }, animation);
+  await forceScene(page, sceneKey, nodeType);
+  await installSaveWriteCounter(page);
+}
+
+async function selectFirstChoice(page, sceneKey) {
+  const target = await page.evaluate((key) => {
+    const scene = window.__ASHEN_GAME__?.scene?.keys?.[key];
+    const choice = scene?.choiceViews?.find(({ view }) => !view.disabled);
+    return choice ? { x: choice.view.x, y: choice.view.y } : null;
+  }, sceneKey);
+  assert(target, `${sceneKey}: no enabled rendered choice`);
+  await clickGame(page, target.x, target.y, 250);
+  const neutral = await point(page, 120, 120);
+  await page.mouse.move(neutral.x, neutral.y);
+  await page.waitForTimeout(25);
+}
+
+async function captureChoiceFlow(browser, { sceneKey, nodeType, slug }, width, height, animation = true) {
+  const { context, page } = await setupPage(browser, { width, height });
+  const label = `${slug} ${width}x${height} ${animation ? 'motion' : 'still'}`;
+  try {
+    await startChoiceScene(page, sceneKey, nodeType, animation);
+    const before = await runSnapshot(page);
+    const initial = await choiceSceneSnapshot(page, sceneKey);
+    assertChoiceLayout(initial, label, sceneKey);
+    const confirmPosition = { x: initial.confirm.x, y: initial.confirm.y };
+
+    await selectFirstChoice(page, sceneKey);
+    const selected = await choiceSceneSnapshot(page, sceneKey);
+    assertChoiceLayout(selected, label, sceneKey);
+    assert(selected.controller.selectedId === selected.choices.find((choice) => choice.selected)?.id, `${label}: controller and rendered selection disagree`);
+    assert(selected.choices.filter((choice) => choice.selected).length === 1, `${label}: expected one actual selected component`);
+    assert(selected.confirm.disabled === false, `${label}: confirmation did not become enabled`);
+    assert(selected.confirm.x === confirmPosition.x && selected.confirm.y === confirmPosition.y, `${label}: confirmation moved after selection`);
+    assert(await runSnapshot(page) === before, `${label}: pointer selection mutated the run`);
+    if (sceneKey === 'RewardScene') {
+      const choice = selected.choices.find((item) => item.selected);
+      assert(Math.abs(choice.y - (choice.baseY - 12)) < 0.25, `${label}: selected reward did not finish exactly 12 px above its base`);
+      assert(Math.abs(choice.bounds.width - 148) < 0.25, `${label}: selected reward bounds do not match its rendered 132 px card plus 8 px focus frame`);
+    }
+    if (!animation) assert(selected.tweenCount === 0, `${label}: disabled animation owns ${selected.tweenCount} tweens`);
+    await screenshot(page, `${slug}_selected_${width}x${height}${animation ? '' : '_still'}.png`, 0);
+
+    await page.evaluate(() => { window.__TASK5_SAVE_WRITES__ = 0; });
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(35);
+    const locked = await choiceSceneSnapshot(page, sceneKey);
+    assert(locked.controller?.locked === true, `${label}: confirmation did not synchronously lock`);
+    const confirmedChoice = locked.choices.find((choice) => choice.id === locked.controller?.confirmedId);
+    assert(confirmedChoice?.confirmed === true, `${label}: confirmed selection is not rendered as confirmed`);
+    assert(confirmedChoice?.textAlpha === 1, `${label}: confirmed selection remains visually muted after locking`);
+    assert(locked.choices.every((choice) => choice.disabled), `${label}: a locked choice remains enabled`);
+    assert(locked.confirm?.x === confirmPosition.x && locked.confirm?.y === confirmPosition.y, `${label}: confirmation moved while locked`);
+    const writes = await page.evaluate(() => window.__TASK5_SAVE_WRITES__);
+    assert(writes === 1, `${label}: duplicate confirmation produced ${writes} save settlements`);
+    await screenshot(page, `${slug}_confirmed_${width}x${height}${animation ? '' : '_still'}.png`, 0);
+
+    if (sceneKey === 'EventScene') await page.waitForTimeout(animation ? 230 : 0);
+    report[`task5${slug}${width}x${height}${animation ? 'Motion' : 'Still'}`] = { selected, locked, writes };
+  } finally {
+    await context.close();
+  }
+}
+
+async function verifyRewardSkipExactlyOnce(browser) {
+  const { context, page } = await setupPage(browser);
+  try {
+    await startChoiceScene(page, 'RewardScene', 'battle', true);
+    await page.evaluate(() => { window.__TASK5_SAVE_WRITES__ = 0; });
+    const state = await page.evaluate(() => {
+      const scene = window.__ASHEN_GAME__.scene.keys.RewardScene;
+      scene.skipReward();
+      scene.skipReward();
+      return {
+        writes: window.__TASK5_SAVE_WRITES__,
+        locked: scene.choiceController.state.locked,
+        skipConfirmed: scene.skipButton.confirmed
+      };
+    });
+    assert(state.writes === 1, `reward skip produced ${state.writes} save settlements`);
+    assert(state.locked && state.skipConfirmed, 'reward skip did not share the locked confirmed state');
+    await screenshot(page, 'reward_skip_confirmed_1536x864.png', 0);
+  } finally {
+    await context.close();
+  }
+}
+
+async function captureChoiceShutdown(browser, sceneKey, nodeType) {
+  const { context, page } = await setupPage(browser);
+  try {
+    await startChoiceScene(page, sceneKey, nodeType, true);
+    await page.evaluate((key) => {
+      const scene = window.__ASHEN_GAME__.scene.keys[key];
+      window.__TASK5_CONTROLLER_REF__ = scene.choiceController;
+    }, sceneKey);
+    await page.evaluate(() => window.__ASHEN_QA__.startScene('MapScene'));
+    await waitScene(page, 'MapScene');
+    const cleanup = await page.evaluate((key) => {
+      const scene = window.__ASHEN_GAME__.scene.keys[key];
+      return {
+        destroyed: window.__TASK5_CONTROLLER_REF__?.destroyed,
+        sceneControllerCleared: scene.choiceController === null,
+        keyHandlerCleared: scene.choiceKeyHandler === null,
+        timerCount: scene.time?.getAllEvents?.().length ?? 0
+      };
+    }, sceneKey);
+    assert(cleanup.destroyed === true, `${sceneKey}: controller survived shutdown`);
+    assert(cleanup.sceneControllerCleared && cleanup.keyHandlerCleared, `${sceneKey}: shutdown left choice listeners attached`);
+    assert(cleanup.timerCount === 0, `${sceneKey}: shutdown left ${cleanup.timerCount} timers`);
+  } finally {
+    await context.close();
+  }
+}
+
+async function captureMapUnlock(browser, width, height, animation) {
+  const { context, page } = await setupPage(browser, { width, height });
+  const label = `map ${width}x${height} ${animation ? 'motion' : 'still'}`;
+  try {
+    await page.evaluate(() => window.__ASHEN_QA__.startRun('exiled-knight', { seed: 20260716, skipVow: true }));
+    await waitScene(page, 'MapScene');
+    const topology = await page.evaluate((motionEnabled) => {
+      const settingsKey = 'ashen-pilgrimage-settings-v1';
+      const settings = JSON.parse(localStorage.getItem(settingsKey) ?? '{}');
+      localStorage.setItem(settingsKey, JSON.stringify({ ...settings, sound: false, music: false, animation: motionEnabled }));
+      const run = window.__ASHEN_GAME__.registry.get('run');
+      const source = run.map.nodes.find((node) => run.map.available.includes(node.id));
+      run.map.completed = [source.id];
+      run.map.path = [source.id];
+      run.map.available = [...source.links];
+      run.map.activeNode = null;
+      localStorage.setItem('ashen-pilgrimage-save-v1', JSON.stringify(run));
+      const value = JSON.stringify(run.map);
+      window.__ASHEN_QA__.startScene('MapScene');
+      return value;
+    }, animation);
+    await waitScene(page, 'MapScene');
+    await page.waitForTimeout(animation ? 270 : 20);
+    const state = await page.evaluate(() => {
+      const scene = window.__ASHEN_GAME__.scene.keys.MapScene;
+      const effect = scene.children.getByName('map-unlock-path');
+      const bounds = effect?.getBounds?.();
+      return {
+        map: JSON.stringify(window.__ASHEN_GAME__.registry.get('run').map),
+        effect: effect ? {
+          type: effect.type,
+          childCount: effect.list?.length ?? 0,
+          depth: effect.depth,
+          alpha: effect.alpha,
+          bounds: bounds ? { left: bounds.left, top: bounds.top, right: bounds.right, bottom: bounds.bottom, width: bounds.width, height: bounds.height } : null
+        } : null,
+        minNodeDepth: Math.min(...scene.nodeViews.map((node) => node.depth ?? Infinity)),
+        tweenCount: scene.tweens.getTweens().length
+      };
+    });
+    assert(state.map === topology, `${label}: map unlock rendering mutated topology or statuses`);
+    assert(state.effect?.type === 'Container' && state.effect.childCount > 0, `${label}: unlock effect is not rendered path content`);
+    assert(state.effect.bounds?.width > 0 && state.effect.bounds?.height > 0, `${label}: unlock effect lacks real rendered bounds`);
+    assert(state.effect.depth < state.minNodeDepth, `${label}: unlock path can obstruct node labels`);
+    assert(Math.abs(state.effect.alpha - 1) < 0.01, `${label}: unlock path did not reach its final highlighted state`);
+    if (!animation) assert(state.tweenCount === 0, `${label}: disabled map animation owns ${state.tweenCount} tweens`);
+    await screenshot(page, `map_unlock_${width}x${height}${animation ? '' : '_still'}.png`, 0);
+    report[`task5Map${width}x${height}${animation ? 'Motion' : 'Still'}`] = state;
+  } finally {
+    await context.close();
+  }
+}
+
+async function captureTask5Scenes(browser) {
+  const scenes = [
+    { sceneKey: 'RewardScene', nodeType: 'battle', slug: 'reward' },
+    { sceneKey: 'EventScene', nodeType: 'event', slug: 'event' },
+    { sceneKey: 'RestScene', nodeType: 'rest', slug: 'rest' }
+  ];
+  for (const viewport of [{ width: 1536, height: 864 }, { width: 1280, height: 720 }]) {
+    for (const scene of scenes) await captureChoiceFlow(browser, scene, viewport.width, viewport.height, true);
+    await captureMapUnlock(browser, viewport.width, viewport.height, true);
+  }
+  for (const scene of scenes) await captureChoiceFlow(browser, scene, 1280, 720, false);
+  await captureMapUnlock(browser, 1280, 720, false);
+  await verifyRewardSkipExactlyOnce(browser);
+  for (const scene of scenes) await captureChoiceShutdown(browser, scene.sceneKey, scene.nodeType);
 }
 
 const RESULT_REGION_NAMES = ['result-figure', 'result-narrative', 'result-stats', 'result-deck', 'result-actions'];
@@ -400,28 +706,31 @@ async function captureBattleViewport(browser, width, height) {
 try {
   const browser = await chromium.launch({ headless: true });
   try {
-    await captureCoreScenes(browser);
-    await captureBattleViewport(browser, 1536, 864);
-    await captureBattleViewport(browser, 1366, 768);
-    await captureBattleViewport(browser, 1280, 720);
-    const resultSnapshots = [
-      await captureResultViewport(browser, true, 1536, 864),
-      await captureResultViewport(browser, false, 1536, 864),
-      await captureResultViewport(browser, true, 1280, 720),
-      await captureResultViewport(browser, false, 1280, 720, false)
-    ];
-    const [reference, ...comparisons] = resultSnapshots;
-    for (const snapshot of comparisons) {
-      assert(snapshot.regions['result-actions'].left === reference.regions['result-actions'].left, 'result actions shift horizontally between outcomes or viewports');
-      assert(snapshot.regions['result-actions'].top === reference.regions['result-actions'].top, 'result actions shift vertically between outcomes or viewports');
-      assert(snapshot.regions['result-stats'].top === reference.regions['result-stats'].top, 'result statistics shift with outcome, viewport, or deck length');
+    await captureTask5Scenes(browser);
+    if (!TASK5_ONLY) {
+      await captureCoreScenes(browser);
+      await captureBattleViewport(browser, 1536, 864);
+      await captureBattleViewport(browser, 1366, 768);
+      await captureBattleViewport(browser, 1280, 720);
+      const resultSnapshots = [
+        await captureResultViewport(browser, true, 1536, 864),
+        await captureResultViewport(browser, false, 1536, 864),
+        await captureResultViewport(browser, true, 1280, 720),
+        await captureResultViewport(browser, false, 1280, 720, false)
+      ];
+      const [reference, ...comparisons] = resultSnapshots;
+      for (const snapshot of comparisons) {
+        assert(snapshot.regions['result-actions'].left === reference.regions['result-actions'].left, 'result actions shift horizontally between outcomes or viewports');
+        assert(snapshot.regions['result-actions'].top === reference.regions['result-actions'].top, 'result actions shift vertically between outcomes or viewports');
+        assert(snapshot.regions['result-stats'].top === reference.regions['result-stats'].top, 'result statistics shift with outcome, viewport, or deck length');
+      }
     }
   } finally {
     await browser.close();
   }
 
   assert(report.errors.length === 0, report.errors.join('\n'));
-  assert(report.screenshots.length >= 18, 'expected at least 18 screenshots');
+  assert(report.screenshots.length >= (TASK5_ONLY ? 20 : 38), 'expected Task 5 and release screenshots');
   fs.writeFileSync(path.join(root, 'qa', 'product-upgrade-scenes-report.json'), JSON.stringify(report, null, 2), 'utf8');
   console.log(JSON.stringify({ ok: true, screenshots: report.screenshots.length }, null, 2));
 } catch (error) {

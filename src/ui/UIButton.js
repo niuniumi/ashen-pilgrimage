@@ -12,6 +12,8 @@ export class UIButton extends Phaser.GameObjects.Container {
     this.label = label;
     this.onClick = onClick;
     this.disabled = Boolean(options.disabled);
+    this.selected = Boolean(options.selected);
+    this.confirmed = Boolean(options.confirmed);
     this.pressed = false;
     this.style = options;
     this.asset = null;
@@ -46,6 +48,18 @@ export class UIButton extends Phaser.GameObjects.Container {
 
   setDisabled(disabled) {
     this.disabled = disabled;
+    this.draw();
+    return this;
+  }
+
+  setSelected(selected) {
+    this.selected = Boolean(selected);
+    this.draw();
+    return this;
+  }
+
+  setConfirmed(confirmed) {
+    this.confirmed = Boolean(confirmed);
     this.draw();
     return this;
   }
@@ -100,29 +114,36 @@ export class UIButton extends Phaser.GameObjects.Container {
     const top = snapPixel(-h / 2);
     const pw = snapPixel(w);
     const ph = snapPixel(h);
-    const fill = this.disabled ? PIXEL_PALETTE.coal : this.style.fill ?? PIXEL_PALETTE.iron;
-    const line = this.disabled ? PIXEL_PALETTE.iron : hover ? PIXEL_PALETTE.candle : PIXEL_PALETTE.goldDark;
+    const muted = this.disabled && !this.confirmed;
+    const fill = muted ? PIXEL_PALETTE.coal : this.style.fill ?? PIXEL_PALETTE.iron;
+    const line = this.confirmed
+      ? PIXEL_PALETTE.gold
+      : muted
+        ? PIXEL_PALETTE.iron
+        : this.selected || hover
+          ? PIXEL_PALETTE.candle
+          : PIXEL_PALETTE.goldDark;
     this.bg.fillStyle(PIXEL_PALETTE.void, 0.8);
     this.bg.fillRect(left + 4, top + 8, pw, ph);
-    this.bg.fillStyle(line, this.disabled ? 0.52 : 1);
+    this.bg.fillStyle(line, muted ? 0.52 : 1);
     this.bg.fillRect(left, top, pw, ph);
     this.bg.fillStyle(PIXEL_PALETTE.black, 1);
     this.bg.fillRect(left + 4, top + 4, pw - 8, ph - 8);
-    this.bg.fillStyle(fill, this.disabled ? 0.62 : 1);
+    this.bg.fillStyle(this.confirmed ? PIXEL_PALETTE.goldDark : fill, muted ? 0.62 : 1);
     this.bg.fillRect(left + 8, top + 8, pw - 16, ph - 16);
     this.bg.fillStyle(hover && !this.disabled ? PIXEL_PALETTE.gold : PIXEL_PALETTE.ironLight, hover ? 0.38 : 0.2);
     this.bg.fillRect(left + 8, top + 8, pw - 16, 4);
     this.bg.fillStyle(PIXEL_PALETTE.void, 0.3);
     this.bg.fillRect(left + 8, top + ph - 12, pw - 16, 4);
-    if (hover && !this.disabled) {
-      this.bg.fillStyle(PIXEL_PALETTE.candle, 0.24);
+    if ((hover || this.selected || this.confirmed) && !this.disabled) {
+      this.bg.fillStyle(this.confirmed ? PIXEL_PALETTE.gold : PIXEL_PALETTE.candle, this.confirmed ? 0.38 : 0.24);
       this.bg.fillRect(left - 4, top - 4, pw + 8, 4);
       this.bg.fillRect(left - 4, top + ph, pw + 8, 4);
       this.bg.fillRect(left - 4, top, 4, ph);
       this.bg.fillRect(left + pw, top, 4, ph);
     }
-    this.text.setAlpha(this.disabled ? 0.42 : 1);
-    this.text.setColor(this.disabled ? '#9a8a70' : '#f6edd0');
+    this.text.setAlpha(muted ? 0.42 : 1);
+    this.text.setColor(muted ? '#9a8a70' : '#f6edd0');
   }
 
   syncHitZone() {
@@ -143,5 +164,25 @@ export class UIButton extends Phaser.GameObjects.Container {
     this.hitZone.setAngle(Phaser.Math.RadToDeg(Math.atan2(matrix.b, matrix.a)));
     this.hitZone.setDepth(this.style.hitDepth ?? 10000);
     this.hitZone.setActive(this.active);
+  }
+
+  getBounds(output = new Phaser.Geom.Rectangle()) {
+    const matrix = this.getWorldTransformMatrix();
+    const inset = this.selected || this.confirmed ? 4 : 0;
+    const left = -this.widthValue / 2 - inset;
+    const top = -this.heightValue / 2 - inset;
+    const right = this.widthValue / 2 + 4;
+    const bottom = this.heightValue / 2 + 8;
+    const points = [
+      [left, top], [right, top], [right, bottom], [left, bottom]
+    ].map(([x, y]) => ({
+      x: matrix.a * x + matrix.c * y + matrix.tx,
+      y: matrix.b * x + matrix.d * y + matrix.ty
+    }));
+    const minX = Math.min(...points.map((point) => point.x));
+    const maxX = Math.max(...points.map((point) => point.x));
+    const minY = Math.min(...points.map((point) => point.y));
+    const maxY = Math.max(...points.map((point) => point.y));
+    return output.setTo(minX, minY, maxX - minX, maxY - minY);
   }
 }

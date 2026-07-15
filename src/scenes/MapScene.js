@@ -35,6 +35,7 @@ export default class MapScene extends Phaser.Scene {
     this.run = getActiveRun(this);
     if (!this.run) return;
     this.chapter = getActDefinition(this.run.act ?? this.run.map?.act ?? 1);
+    this.motionEnabled = SaveManager.readSettings().animation !== false;
     this.audio?.startAmbience?.(`map-act-${this.chapter.number}`);
 
     this.tooltip = new UITooltip(this);
@@ -261,7 +262,7 @@ export default class MapScene extends Phaser.Scene {
     this.mapMaxRow = Math.max(1, ...this.run.map.nodes.map((item) => item.row ?? 0));
     this.compactMap = this.mapMaxRow >= 11;
     const routeLayer = this.add.graphics().setDepth(10);
-    routeLayer.setAlpha(0.46);
+    routeLayer.setAlpha(1);
     for (const node of this.run.map.nodes) {
       for (const link of node.links) {
         const target = MapSystem.getNode(this.run, link);
@@ -269,8 +270,46 @@ export default class MapScene extends Phaser.Scene {
         this.drawRoute(routeLayer, this.nodePosition(node), this.nodePosition(target), node, target);
       }
     }
-    this.tweens.add({ targets: routeLayer, alpha: 1, duration: 620, ease: 'Sine.Out' });
+    this.drawUnlockedPathFeedback();
     this.run.map.nodes.forEach((node) => this.createNode(node));
+  }
+
+  drawUnlockedPathFeedback() {
+    const completed = new Set(this.run.map.completed ?? []);
+    const available = new Set(this.run.map.available ?? []);
+    const edges = [];
+    for (const node of this.run.map.nodes) {
+      if (!completed.has(node.id)) continue;
+      for (const targetId of node.links ?? []) {
+        if (!available.has(targetId)) continue;
+        const target = MapSystem.getNode(this.run, targetId);
+        if (target) edges.push([node, target]);
+      }
+    }
+    if (edges.length === 0) return null;
+
+    const path = this.add.container(0, 0).setDepth(15).setName('map-unlock-path');
+    for (const [source, target] of edges) {
+      const points = this.routePoints(this.nodePosition(source), this.nodePosition(target));
+      for (let index = 0; index < points.length - 1; index += 1) {
+        const from = points[index];
+        const to = points[index + 1];
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const x = (from.x + to.x) / 2;
+        const y = (from.y + to.y) / 2;
+        const shadow = this.add.line(x, y, -dx / 2, -dy / 2, dx / 2, dy / 2, 0x2b170d, 0.72).setLineWidth(7);
+        const ember = this.add.line(x, y, -dx / 2, -dy / 2, dx / 2, dy / 2, THEME.colors.candle, 0.98).setLineWidth(3);
+        shadow.setName('map-unlock-segment-shadow');
+        ember.setName('map-unlock-segment');
+        path.add([shadow, ember]);
+      }
+    }
+
+    if (!this.motionEnabled) return path;
+    path.setAlpha(0);
+    this.tweens.add({ targets: path, alpha: 1, duration: 220, ease: 'Sine.Out' });
+    return path;
   }
 
   nodePosition(node) {
@@ -317,7 +356,7 @@ export default class MapScene extends Phaser.Scene {
     const compact = this.compactMap;
     const container = this.add.container(pos.x, pos.y);
     container.setAlpha(1);
-    container.setScale(0.86);
+    container.setScale(selectable ? 1.08 : 1);
     container.setDepth(20);
     if (!hasTexture(this, HANDPAINTED_KEYS.ui)) {
       const seal = this.add.graphics();
@@ -334,9 +373,6 @@ export default class MapScene extends Phaser.Scene {
       bg: node.type === 'boss' ? 0x4a1c25 : node.type === 'elite' ? 0x5b2925 : 0x231612
     });
     container.add(icon);
-    if (selectable) {
-      container.setData('selectablePulse', true);
-    }
     const label = this.add
       .text(0, compact ? 28 : 36, MapSystem.getNodeLabel(node.type), textStyle(compact ? 10 : 12, completed ? '#6f5b42' : '#2b170d', { align: 'center', strokeThickness: 0 }))
       .setOrigin(0.5);
@@ -350,19 +386,7 @@ export default class MapScene extends Phaser.Scene {
     });
     hit.on('pointerout', () => this.tooltip.hide());
     hit.on('pointerup', () => this.selectNode(node));
-    this.nodeViews.push({ id: node.id, type: node.type, x: pos.x, y: pos.y, selectable, completed });
-    this.tweens.add({
-      targets: container,
-      scale: selectable ? 1.08 : 1,
-      delay: (node.row ?? 0) * 56,
-      duration: 280,
-      ease: 'Back.Out',
-      onComplete: () => {
-        if (container.getData('selectablePulse')) {
-          this.tweens.add({ targets: container, scale: 1.13, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.InOut' });
-        }
-      }
-    });
+    this.nodeViews.push({ id: node.id, type: node.type, x: pos.x, y: pos.y, depth: container.depth, selectable, completed });
   }
 
   drawControls() {

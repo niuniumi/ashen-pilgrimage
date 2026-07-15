@@ -67,7 +67,21 @@ async function readMapState(page) {
       availableRows: run.map.available.map((id) => run.map.nodes.find((node) => node.id === id)?.row),
       nodeViews: scene.nodeViews,
       nodeAlphas: nodeContainers.map((node) => node.alpha),
-      routeAlpha: scene.children.list.find((child) => child.type === 'Graphics' && child.depth === 10)?.alpha ?? null
+      routeAlpha: scene.children.list.find((child) => child.type === 'Graphics' && child.depth === 10)?.alpha ?? null,
+      unlockPath: (() => {
+        const effect = scene.children.getByName('map-unlock-path');
+        const bounds = effect?.getBounds?.();
+        return effect ? {
+          type: effect.type,
+          childCount: effect.list?.length ?? 0,
+          depth: effect.depth,
+          alpha: effect.alpha,
+          bounds: bounds ? { width: bounds.width, height: bounds.height } : null
+        } : null;
+      })(),
+      minNodeDepth: Math.min(...scene.nodeViews.map((node) => node.depth ?? Infinity)),
+      tweenCount: scene.tweens.getTweens().length,
+      mapJson: JSON.stringify(run.map)
     };
   });
 }
@@ -86,6 +100,11 @@ function verify(state, phase) {
   assert(state.nodeAlphas.length === state.nodeViews.length, `${phase}: node containers are missing (${state.nodeAlphas.length}/${state.nodeViews.length})`);
   assert(state.nodeAlphas.every((alpha) => alpha === 1), `${phase}: a map node started transparent`);
   assert(state.routeAlpha >= 0.46, `${phase}: route layer started invisible`);
+  assert(state.unlockPath?.type === 'Container' && state.unlockPath.childCount > 0, `${phase}: newly unlocked route is not rendered content`);
+  assert(state.unlockPath.bounds?.width > 0 && state.unlockPath.bounds?.height > 0, `${phase}: unlock route has no real rendered bounds`);
+  assert(state.unlockPath.depth < state.minNodeDepth, `${phase}: unlock route can obstruct map nodes or labels`);
+  assert(state.unlockPath.alpha === 1, `${phase}: disabled animation did not apply the final route highlight`);
+  assert(state.tweenCount === 0, `${phase}: disabled animation left ${state.tweenCount} map tweens`);
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -119,6 +138,8 @@ try {
   const initial = await readMapState(page);
   verify(initial, 'initial migration');
   await page.waitForTimeout(1000);
+  const afterEffect = await readMapState(page);
+  assert(afterEffect.mapJson === initial.mapJson, 'unlock feedback mutated migrated map topology or statuses');
   await page.screenshot({ path: path.join(outputDir, 'legacy-map-restored.png') });
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });

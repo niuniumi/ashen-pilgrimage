@@ -17,13 +17,15 @@ export class UICard extends Phaser.GameObjects.Container {
     super(scene, x, y);
     this.card = card;
     this.options = options;
-    this.w = options.width ?? 132;
-    this.h = options.height ?? 184;
+    this.cardWidth = options.width ?? 132;
+    this.cardHeight = options.height ?? 184;
     this.selected = false;
+    this.confirmed = false;
     this.disabled = Boolean(options.disabled);
     this.baseX = options.baseX ?? x;
     this.baseY = options.baseY ?? y;
     this.baseScale = options.scale ?? 1;
+    this.selectionRaise = options.selectionRaise ?? 0;
 
     this.frameImage = null;
     this.artImage = null;
@@ -35,7 +37,7 @@ export class UICard extends Phaser.GameObjects.Container {
         fontSize: 17,
         color: '#fff2cf',
         align: 'center',
-        wordWrap: { width: this.w - 52 }
+        wordWrap: { width: this.cardWidth - 52 }
       })
       .setOrigin(0.5);
     this.costText = scene.add
@@ -53,7 +55,7 @@ export class UICard extends Phaser.GameObjects.Container {
         color: '#2b1a12',
         align: 'center',
         lineSpacing: 2,
-        wordWrap: { width: this.w - 28 }
+        wordWrap: { width: this.cardWidth - 28 }
       })
       .setOrigin(0.5);
     this.typeText = scene.add
@@ -66,14 +68,14 @@ export class UICard extends Phaser.GameObjects.Container {
       .setOrigin(0.5);
 
     this.add([this.frameImage, this.bg, this.artImage, this.nameText, this.costText, this.descText, this.typeText].filter(Boolean));
-    this.setSize(this.w, this.h);
+    this.setSize(this.cardWidth, this.cardHeight);
     this.setScale(this.baseScale);
     this.setRotation(options.rotation ?? 0);
     scene.add.existing(this);
 
     if (options.interactive !== false) {
       this.tooltip = new UITooltip(scene);
-      this.hitZone = scene.add.zone(x, y, this.w, this.h).setOrigin(0.5);
+      this.hitZone = scene.add.zone(x, y, this.cardWidth, this.cardHeight).setOrigin(0.5);
       this.hitZone.setInteractive({ useHandCursor: true });
       this.hitZone.on('pointerover', (pointer) => this.handleOver(pointer));
       this.hitZone.on('pointerout', () => this.handleOut());
@@ -93,8 +95,32 @@ export class UICard extends Phaser.GameObjects.Container {
     this.renderCard();
   }
 
-  setSelected(value) {
-    this.selected = value;
+  setSelected(value, animate = true) {
+    const selected = Boolean(value);
+    const changed = this.selected !== selected;
+    this.selected = selected;
+    this.renderCard();
+    if (!changed) return this;
+    const targetY = this.baseY - (selected ? this.selectionRaise : 0);
+    this.scene.tweens.killTweensOf(this);
+    if (!animate || this.selectionRaise === 0) {
+      this.setPosition(this.baseX, targetY);
+      this.setScale(this.baseScale);
+      return this;
+    }
+    this.scene.tweens.add({
+      targets: this,
+      x: this.baseX,
+      y: targetY,
+      scale: this.baseScale,
+      duration: 220,
+      ease: 'Sine.Out'
+    });
+    return this;
+  }
+
+  setConfirmed(value) {
+    this.confirmed = Boolean(value);
     this.renderCard();
     return this;
   }
@@ -112,6 +138,7 @@ export class UICard extends Phaser.GameObjects.Container {
     this.tooltip?.show((pointer?.worldX ?? this.x) + 24, (pointer?.worldY ?? this.y) - 118, fullText);
     if (this.disabled) return;
     this.scene.audio?.play('cardHover');
+    if (this.selected && this.selectionRaise > 0) return;
     this.scene.tweens.killTweensOf(this);
     this.scene.tweens.add({
       targets: this,
@@ -136,22 +163,27 @@ export class UICard extends Phaser.GameObjects.Container {
         duration: 120,
         ease: 'Sine.Out'
       });
+    } else if (this.selectionRaise > 0) {
+      this.scene.tweens.killTweensOf(this);
+      this.setPosition(this.baseX, this.baseY - this.selectionRaise);
+      this.setScale(this.baseScale);
     }
   }
 
   renderCard() {
     const fill = CARD_COLORS[this.card.type] ?? COLORS.parchmentDark;
     const typeBorder = cardTypeBorder(this.card);
-    const border = this.selected ? PIXEL_PALETTE.candle : typeBorder;
-    const alpha = this.disabled ? 0.46 : 1;
-    const left = snapPixel(-this.w / 2);
-    const top = snapPixel(-this.h / 2);
-    const w = snapPixel(this.w);
-    const h = snapPixel(this.h);
+    const border = this.confirmed ? PIXEL_PALETTE.gold : this.selected ? PIXEL_PALETTE.candle : typeBorder;
+    const muted = this.disabled && !this.confirmed;
+    const alpha = muted ? 0.46 : 1;
+    const left = snapPixel(-this.cardWidth / 2);
+    const top = snapPixel(-this.cardHeight / 2);
+    const w = snapPixel(this.cardWidth);
+    const h = snapPixel(this.cardHeight);
 
     this.bg.clear();
-    if (this.selected) {
-      this.bg.fillStyle(PIXEL_PALETTE.candle, 0.22);
+    if (this.selected || this.confirmed) {
+      this.bg.fillStyle(this.confirmed ? PIXEL_PALETTE.gold : PIXEL_PALETTE.candle, this.confirmed ? 0.32 : 0.22);
       this.bg.fillRect(left - 8, top - 8, w + 16, h + 16);
     }
     this.bg.fillStyle(border, alpha);
@@ -172,7 +204,7 @@ export class UICard extends Phaser.GameObjects.Container {
     this.bg.fillStyle(PIXEL_PALETTE.void, alpha);
     this.bg.fillRect(left + 8, top + 8, 24, 24);
 
-    if (this.disabled) {
+    if (muted) {
       this.bg.fillStyle(PIXEL_PALETTE.void, 0.44);
       this.bg.fillRect(left + 4, top + 4, w - 8, h - 8);
     }
@@ -181,14 +213,14 @@ export class UICard extends Phaser.GameObjects.Container {
       .setText(`${this.card.name}${this.card.upgraded ? '+' : ''}`)
       .setFontSize(this.card.name.length > 5 ? 15 : 17)
       .setColor('#f4e7c5')
-      .setAlpha(this.disabled ? 0.55 : 1);
-    this.costText.setText(this.card.cost === null ? '-' : `${this.card.cost}`).setColor('#ffd36a').setAlpha(this.disabled ? 0.55 : 1);
+      .setAlpha(muted ? 0.55 : 1);
+    this.costText.setText(this.card.cost === null ? '-' : `${this.card.cost}`).setColor('#ffd36a').setAlpha(muted ? 0.55 : 1);
     this.descText
       .setText(this.wrapDescription(this.card.activeText ?? this.card.text))
       .setFontSize(this.descriptionFontSize(this.card.activeText ?? this.card.text))
       .setColor('#d6c7a5')
-      .setAlpha(this.disabled ? 0.55 : 1);
-    this.typeText.setText(`${this.card.type} · ${this.card.rarity}`).setColor(toCssColor(cardRarityColor(this.card))).setAlpha(this.disabled ? 0.55 : 1);
+      .setAlpha(muted ? 0.55 : 1);
+    this.typeText.setText(`${this.card.type} · ${this.card.rarity}`).setColor(toCssColor(cardRarityColor(this.card))).setAlpha(muted ? 0.55 : 1);
   }
 
   wrapDescription(text) {
@@ -227,8 +259,8 @@ export class UICard extends Phaser.GameObjects.Container {
     const matrix = this.getWorldTransformMatrix();
     const sx = Math.hypot(matrix.a, matrix.b) || 1;
     const sy = Math.hypot(matrix.c, matrix.d) || 1;
-    const width = this.w * sx;
-    const height = this.h * sy;
+    const width = this.cardWidth * sx;
+    const height = this.cardHeight * sy;
     this.hitZone.setPosition(matrix.tx, matrix.ty);
     this.hitZone.setSize(width, height);
     if (this.hitZone.input?.hitArea?.setTo) {
@@ -240,5 +272,25 @@ export class UICard extends Phaser.GameObjects.Container {
     this.hitZone.setAngle(Phaser.Math.RadToDeg(Math.atan2(matrix.b, matrix.a)));
     this.hitZone.setDepth(10000);
     this.hitZone.setActive(this.active);
+  }
+
+  getBounds(output = new Phaser.Geom.Rectangle()) {
+    const matrix = this.getWorldTransformMatrix();
+    const inset = this.selected || this.confirmed ? 8 : 0;
+    const left = -this.cardWidth / 2 - inset;
+    const top = -this.cardHeight / 2 - inset;
+    const right = this.cardWidth / 2 + inset;
+    const bottom = this.cardHeight / 2 + inset;
+    const points = [
+      [left, top], [right, top], [right, bottom], [left, bottom]
+    ].map(([x, y]) => ({
+      x: matrix.a * x + matrix.c * y + matrix.tx,
+      y: matrix.b * x + matrix.d * y + matrix.ty
+    }));
+    const minX = Math.min(...points.map((point) => point.x));
+    const maxX = Math.max(...points.map((point) => point.x));
+    const minY = Math.min(...points.map((point) => point.y));
+    const maxY = Math.max(...points.map((point) => point.y));
+    return output.setTo(minX, minY, maxX - minX, maxY - minY);
   }
 }

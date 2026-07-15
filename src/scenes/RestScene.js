@@ -6,9 +6,11 @@ import { RelicSystem } from '../systems/RelicSystem.js';
 import { VowSystem } from '../systems/VowSystem.js';
 import { MapSystem } from '../systems/MapSystem.js';
 import { clamp } from '../game/random.js';
+import { SaveManager } from '../game/SaveManager.js';
 import { SCENE_TITLES, THEME, textStyle, titleStyle } from '../game/Theme.js';
 import { addAmbientAsh } from '../effects/AmbientParticles.js';
 import { UIButton } from '../ui/UIButton.js';
+import { SceneChoiceController } from '../ui/SceneChoiceController.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { UIIcon } from '../ui/UIIcon.js';
 import { drawCandle, drawDivider, drawVignette } from '../ui/UIOrnament.js';
@@ -31,10 +33,40 @@ export default class RestScene extends Phaser.Scene {
     this.run = getActiveRun(this);
     if (!this.run) return;
     this.resolved = false;
+    this.motionEnabled = SaveManager.readSettings().animation !== false;
+    this.setupChoices();
     this.drawBackdrop();
     this.drawHeader();
     this.renderRest();
     installPauseMenu(this, { allowMap: false });
+    if (!this.motionEnabled) this.tweens.killAll();
+  }
+
+  setupChoices() {
+    const ids = ['rest', 'upgrade'];
+    const enabledIds = this.run.deck.some((card) => !card.upgraded) ? ids : ['rest'];
+    this.choiceViews = [];
+    this.choiceController = new SceneChoiceController(ids, { enabledIds });
+    this.choiceUnsubscribe = this.choiceController.subscribe((state) => this.updateChoiceState(state));
+    this.choiceKeyHandler = (event) => {
+      if (this.uiPaused) return;
+      const code = event.code || event.key;
+      const handled = code === 'Enter' || code === 'NumpadEnter' || code === 'Space' || code === ' '
+        ? this.confirmChoice()
+        : this.choiceController?.handleKey(code);
+      if (handled) event.preventDefault?.();
+    };
+    this.input.keyboard?.on('keydown', this.choiceKeyHandler);
+    this.events.once('shutdown', this.cleanupChoices, this);
+  }
+
+  cleanupChoices() {
+    this.input.keyboard?.off('keydown', this.choiceKeyHandler);
+    this.choiceUnsubscribe?.();
+    this.choiceController?.destroy();
+    this.choiceController = null;
+    this.choiceKeyHandler = null;
+    this.choiceUnsubscribe = null;
   }
 
   drawBackdrop() {
@@ -75,7 +107,6 @@ export default class RestScene extends Phaser.Scene {
   }
 
   renderRest() {
-    new UIFrame(this, 768, 444, 930, 500, { fill: THEME.colors.panel, alpha: 0.86, stroke: THEME.colors.darkGold });
     this.add.text(768, 220, `当前生命：${this.run.hp}/${this.run.maxHp}`, titleStyle(30)).setOrigin(0.5);
     const full = this.run.hp >= this.run.maxHp;
     this.add
@@ -84,12 +115,21 @@ export default class RestScene extends Phaser.Scene {
         wordWrap: { width: 720 }
       })
       .setOrigin(0.5);
-    this.drawChoiceCard(548, 470, '休息', '回复生命', 'rest', `回复 ${this.restAmount()} 点生命。`, () => this.rest());
-    this.drawChoiceCard(988, 470, '强化', '升级一张牌', 'relic', '随机强化一张尚未升级的牌。', () => this.upgrade());
-    new UIButton(this, 768, 724, 190, 52, '离开', () => this.leave(), { fontSize: 23, fill: 0x302822 });
+    this.drawChoiceCard(548, 470, '休息', '回复生命', 'rest', `回复 ${this.restAmount()} 点生命。`, 'rest');
+    this.drawChoiceCard(988, 470, '强化', '升级一张牌', 'relic', '随机强化一张尚未升级的牌。', 'upgrade');
+    this.confirmButton = new UIButton(this, 652, 724, 190, 52, '确认选择', () => this.confirmChoice(), {
+      fontSize: 22,
+      fill: 0x4a3421,
+      disabled: true
+    }).setName('choice-confirm');
+    this.leaveButton = new UIButton(this, 884, 724, 190, 52, '离开营火', () => this.leaveRest(), {
+      fontSize: 22,
+      fill: 0x302822
+    }).setName('rest-leave');
+    this.updateChoiceState(this.choiceController.state);
   }
 
-  drawChoiceCard(x, y, title, command, icon, body, action) {
+  drawChoiceCard(x, y, title, command, icon, body, id) {
     new UIFrame(this, x, y, 330, 250, { fill: 0x21140f, alpha: 0.94, stroke: THEME.colors.darkGold });
     new UIIcon(this, x, y - 72, icon, { size: 54 });
     this.add.text(x, y - 22, title, titleStyle(28)).setOrigin(0.5);
@@ -99,7 +139,63 @@ export default class RestScene extends Phaser.Scene {
         wordWrap: { width: 260 }
       })
       .setOrigin(0.5);
-    new UIButton(this, x, y + 88, 190, 44, command, action, { fontSize: 20, fill: 0x4a3421 });
+    const view = new UIButton(this, x, y + 88, 190, 44, command, () => this.selectChoice(id), {
+      fontSize: 20,
+      fill: 0x4a3421,
+      disabled: !this.choiceController.enabledIds.includes(id)
+    });
+    view.setName(`rest-choice-${id}`);
+    this.choiceViews.push({ id, view });
+  }
+
+  selectChoice(id) {
+    if (this.uiPaused || this.resolved) return false;
+    return this.choiceController?.select(id) ?? false;
+  }
+
+  updateChoiceState(state) {
+    for (const { id, view } of this.choiceViews ?? []) {
+      const selected = state.selectedId === id;
+      view.setSelected(selected);
+      view.setConfirmed(state.locked && selected);
+      view.setDisabled(!state.enabledIds.includes(id) || state.locked);
+    }
+    this.confirmButton?.setDisabled(state.locked || state.selectedId === null);
+    this.leaveButton?.setDisabled(state.locked);
+  }
+
+  confirmChoice() {
+    if (this.uiPaused || this.resolved) return false;
+    const id = this.choiceController?.confirm();
+    if (id === null || id === undefined) return false;
+    this.playRestFeedback(id);
+    if (id === 'rest') this.rest();
+    else this.upgrade();
+    return true;
+  }
+
+  leaveRest() {
+    if (this.uiPaused || this.resolved || !this.choiceController?.lock()) return false;
+    this.resolved = true;
+    this.leaveButton?.setConfirmed(true);
+    this.leave();
+    return true;
+  }
+
+  playRestFeedback(id) {
+    const selected = this.choiceViews.find((item) => item.id === id)?.view;
+    const feedback = this.add.container(selected?.x ?? 768, (selected?.y ?? 558) - 74).setDepth(32).setName('rest-confirm-feedback');
+    if (id === 'rest') {
+      feedback.add(this.add.circle(0, 0, 54, 0xf3c568, 0.3));
+      feedback.add(this.add.circle(0, 0, 30, 0xffefb2, 0.4));
+    } else {
+      for (const [x, y, angle] of [[-34, 12, -30], [0, -14, 0], [34, 8, 32]]) {
+        feedback.add(this.add.rectangle(x, y, 8, 34, 0xf09a3f, 0.74).setAngle(angle));
+      }
+    }
+    if (!this.motionEnabled) return;
+    feedback.setAlpha(0).setScale(0.78);
+    this.tweens.add({ targets: feedback, alpha: 1, scale: 1, duration: 220, ease: 'Sine.Out' });
   }
 
   rest() {

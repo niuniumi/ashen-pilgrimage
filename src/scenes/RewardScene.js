@@ -9,6 +9,7 @@ import { SCENE_TITLES, THEME, textStyle, titleStyle } from '../game/Theme.js';
 import { addAmbientAsh } from '../effects/AmbientParticles.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UICard } from '../ui/UICard.js';
+import { SceneChoiceController } from '../ui/SceneChoiceController.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { UIIcon } from '../ui/UIIcon.js';
 import { drawDivider, drawVignette } from '../ui/UIOrnament.js';
@@ -31,11 +32,39 @@ export default class RewardScene extends Phaser.Scene {
     this.run = getActiveRun(this);
     if (!this.run) return;
     this.claiming = false;
+    this.motionEnabled = SaveManager.readSettings().animation !== false;
     if (!this.run.pendingReward) this.run.pendingReward = RewardSystem.createReward(this.run, this.run.lastBattleType ?? 'battle');
+    this.setupChoices(this.run.pendingReward.cards.map((card) => card.id));
     this.drawBackdrop();
     this.drawHeader();
     this.renderReward();
     installPauseMenu(this, { allowMap: false });
+    if (!this.motionEnabled) this.tweens.killAll();
+  }
+
+  setupChoices(ids) {
+    this.choiceViews = [];
+    this.choiceController = new SceneChoiceController(ids);
+    this.choiceUnsubscribe = this.choiceController.subscribe((state) => this.updateChoiceState(state));
+    this.choiceKeyHandler = (event) => {
+      if (this.uiPaused) return;
+      const code = event.code || event.key;
+      const handled = code === 'Enter' || code === 'NumpadEnter' || code === 'Space' || code === ' '
+        ? this.confirmChoice()
+        : this.choiceController?.handleKey(code);
+      if (handled) event.preventDefault?.();
+    };
+    this.input.keyboard?.on('keydown', this.choiceKeyHandler);
+    this.events.once('shutdown', this.cleanupChoices, this);
+  }
+
+  cleanupChoices() {
+    this.input.keyboard?.off('keydown', this.choiceKeyHandler);
+    this.choiceUnsubscribe?.();
+    this.choiceController?.destroy();
+    this.choiceController = null;
+    this.choiceKeyHandler = null;
+    this.choiceUnsubscribe = null;
   }
 
   drawBackdrop() {
@@ -76,7 +105,6 @@ export default class RewardScene extends Phaser.Scene {
 
   renderReward() {
     const reward = this.run.pendingReward;
-    new UIFrame(this, 768, 448, 1040, 560, { fill: THEME.colors.panel, alpha: 0.91, stroke: THEME.colors.darkGold });
     new UIFrame(this, 425, 255, 250, 120, { fill: 0x21140f, alpha: 0.92, stroke: THEME.colors.darkGold });
     new UIIcon(this, 335, 255, 'coin', { size: 50 });
     this.add.text(452, 240, '金币奖励', textStyle(18, THEME.css.muted)).setOrigin(0.5);
@@ -92,24 +120,80 @@ export default class RewardScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    this.add.text(768, 348, '选择一张卡加入牌组', titleStyle(27)).setOrigin(0.5);
+    this.add.text(768, 348, '选择一张卡，再确认收入牌组', titleStyle(27)).setOrigin(0.5);
     drawDivider(this, 768, 380, 420);
     const cardSpacing = reward.cards.length <= 3 ? 220 : 202;
     const startX = 768 - ((reward.cards.length - 1) * cardSpacing) / 2;
     reward.cards.forEach((card, index) => {
       const x = startX + index * cardSpacing;
-      new UICard(this, x, 502, { ...card, activeText: card.text, upgraded: false }, {
+      const view = new UICard(this, x, 502, { ...card, activeText: card.text, upgraded: false }, {
         baseY: 502,
-        onClick: () => this.claim(card.id)
+        selectionRaise: 12,
+        onClick: () => this.selectChoice(card.id)
       });
+      view.setName(`reward-choice-${card.id}`);
+      this.choiceViews.push({ id: card.id, view });
     });
-    new UIButton(this, 768, 734, 220, 56, '跳过奖励', () => {
-      addToast(this, '牌组不是越厚越好，跳过也是一种策略。');
-      this.claim(null);
-    }, { fontSize: 23, fill: 0x302822 });
+    this.confirmButton = new UIButton(this, 646, 734, 220, 56, '确认选择', () => this.confirmChoice(), {
+      fontSize: 23,
+      fill: 0x4a3421,
+      disabled: true
+    }).setName('choice-confirm');
+    this.skipButton = new UIButton(this, 890, 734, 220, 56, '跳过奖励', () => this.skipReward(), {
+      fontSize: 23,
+      fill: 0x302822
+    }).setName('reward-skip');
+    this.updateChoiceState(this.choiceController.state);
   }
 
-  claim(cardId) {
+  selectChoice(id) {
+    if (this.uiPaused) return false;
+    return this.choiceController?.select(id) ?? false;
+  }
+
+  updateChoiceState(state) {
+    for (const { id, view } of this.choiceViews ?? []) {
+      const selected = state.selectedId === id;
+      view.setSelected(selected, this.motionEnabled);
+      view.setConfirmed(state.locked && selected);
+      view.setDisabled(state.locked);
+    }
+    this.confirmButton?.setDisabled(state.locked || state.selectedId === null);
+    this.skipButton?.setDisabled(state.locked);
+  }
+
+  confirmChoice() {
+    if (this.uiPaused) return false;
+    const cardId = this.choiceController?.confirm();
+    if (cardId === null || cardId === undefined) return false;
+    this.playRewardFeedback(cardId);
+    this.settleReward(cardId);
+    return true;
+  }
+
+  skipReward() {
+    if (this.uiPaused || !this.choiceController?.lock()) return false;
+    this.skipButton?.setConfirmed(true);
+    addToast(this, '牌组不是越厚越好，跳过也是一种策略。');
+    this.settleReward(null);
+    return true;
+  }
+
+  playRewardFeedback(cardId) {
+    const view = this.choiceViews.find((item) => item.id === cardId)?.view;
+    if (!view || !this.motionEnabled) return;
+    this.tweens.killTweensOf(view);
+    this.tweens.add({
+      targets: view,
+      scale: view.baseScale * 1.04,
+      duration: 110,
+      yoyo: true,
+      ease: 'Sine.InOut',
+      onComplete: () => view.setScale(view.baseScale)
+    });
+  }
+
+  settleReward(cardId) {
     if (this.claiming || this.run.rewardClaimed) {
       addToast(this, '奖励已经领取。', 'error');
       return;

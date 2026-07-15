@@ -364,9 +364,9 @@ function createSceneEntryChecks() {
     { label: 'rest', sceneKey: 'RestScene', persistedRun: act1, bgmKey: 'bgm-map-act-1', textureKeys: ['pixel-bg-folio'] },
     { label: 'chest', sceneKey: 'ChestScene', persistedRun: act1, bgmKey: 'bgm-map-act-1', textureKeys: ['pixel-bg-folio'] },
     { label: 'codex', sceneKey: 'CodexScene', persistedRun: act1, bgmKey: 'bgm-map-act-2', textureKeys: ['pixel-bg-folio', 'pixel-actor-hollow-crown-regent'] },
-    { label: 'result explicit run precedence', sceneKey: 'ResultScene', persistedRun: act1, registryRun: act1, data: { victory: true, run: explicitResultRun }, bgmKey: 'bgm-map-act-2', textureKeys: ['pixel-bg-folio', 'pixel-actor-ashblood-alchemist'], expectedCharacterId: 'ashblood-alchemist' },
-    { label: 'result persisted run fallback', sceneKey: 'ResultScene', persistedRun: persistedResultRun, registryRun: null, data: { victory: true, run: null }, bgmKey: 'bgm-map-act-2', textureKeys: ['pixel-bg-folio', 'pixel-actor-exiled-knight'], expectedCharacterId: 'exiled-knight' },
-    { label: 'result defeat', sceneKey: 'ResultScene', persistedRun: act3, data: { victory: false }, bgmKey: 'bgm-map-act-3', textureKeys: ['pixel-bg-folio', 'pixel-ui-defeat-tombstone'] }
+    { label: 'result explicit run precedence', sceneKey: 'ResultScene', persistedRun: act1, registryRun: act1, data: { victory: true, run: explicitResultRun }, bgmKey: 'bgm-map-act-2', textureKeys: ['pixel-actor-ashblood-alchemist'], forbiddenTextureKeys: ['pixel-bg-folio'], forbiddenResourceFragments: ['assets/pixel/backgrounds/folio.webp'], expectedCharacterId: 'ashblood-alchemist' },
+    { label: 'result persisted run fallback', sceneKey: 'ResultScene', persistedRun: persistedResultRun, registryRun: null, data: { victory: true, run: null }, bgmKey: 'bgm-map-act-2', textureKeys: ['pixel-actor-exiled-knight'], forbiddenTextureKeys: ['pixel-bg-folio'], forbiddenResourceFragments: ['assets/pixel/backgrounds/folio.webp'], expectedCharacterId: 'exiled-knight' },
+    { label: 'result defeat', sceneKey: 'ResultScene', persistedRun: act3, data: { victory: false }, bgmKey: 'bgm-map-act-3', textureKeys: ['pixel-ui-defeat-tombstone'], forbiddenTextureKeys: ['pixel-bg-folio'], forbiddenResourceFragments: ['assets/pixel/backgrounds/folio.webp'] }
   ];
 }
 
@@ -396,7 +396,7 @@ async function verifySceneEntryScenario(browser, targetUrl, scenario) {
       { timeout: 120_000 }
     );
     await page.waitForTimeout(100);
-    const state = await page.evaluate(({ bgmKey, sceneKey, textureKeys }) => {
+    const state = await page.evaluate(({ bgmKey, forbiddenTextureKeys, sceneKey, textureKeys }) => {
       const scene = window.__ASHEN_GAME__.scene.keys[sceneKey];
       const background = scene.children.list.find((child) => child.name?.startsWith('pixel-background-'));
       return {
@@ -405,17 +405,30 @@ async function verifySceneEntryScenario(browser, targetUrl, scenario) {
         backgroundKey: background?.texture?.key ?? null,
         characterId: scene.run?.characterId ?? null,
         texturesCached: Object.fromEntries(textureKeys.map((key) => [key, scene.textures.exists(key)])),
+        forbiddenTexturesCached: Object.fromEntries((forbiddenTextureKeys ?? []).map((key) => [key, scene.textures.exists(key)])),
+        resourceNames: performance.getEntriesByType('resource').map((entry) => entry.name),
         listeners: {
           complete: scene.load.listenerCount('complete'),
           loaderror: scene.load.listenerCount('loaderror'),
           progress: scene.load.listenerCount('progress')
         }
       };
-    }, { bgmKey: scenario.bgmKey, sceneKey: scenario.sceneKey, textureKeys: scenario.textureKeys });
+    }, {
+      bgmKey: scenario.bgmKey,
+      forbiddenTextureKeys: scenario.forbiddenTextureKeys,
+      sceneKey: scenario.sceneKey,
+      textureKeys: scenario.textureKeys
+    });
 
     assert.equal(state.bgmCached, true, `${scenario.label} missing ${scenario.bgmKey}`);
     for (const textureKey of scenario.textureKeys) {
       assert.equal(state.texturesCached[textureKey], true, `${scenario.label} missing ${textureKey}`);
+    }
+    for (const textureKey of scenario.forbiddenTextureKeys ?? []) {
+      assert.equal(state.forbiddenTexturesCached[textureKey], false, `${scenario.label} unexpectedly cached ${textureKey}`);
+    }
+    for (const fragment of scenario.forbiddenResourceFragments ?? []) {
+      assert.equal(state.resourceNames.some((name) => name.includes(fragment)), false, `${scenario.label} unexpectedly requested ${fragment}`);
     }
     if (scenario.backgroundKey) assert.equal(state.backgroundKey, scenario.backgroundKey, `${scenario.label} rendered ${state.backgroundKey}`);
     if (scenario.expectedBattleType) assert.equal(state.battleType, scenario.expectedBattleType, `${scenario.label} battle precedence`);

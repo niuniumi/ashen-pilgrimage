@@ -105,16 +105,31 @@ async function resultLayoutSnapshot(page) {
       const region = scene?.children?.getByName(name);
       if (!region) return [name, null];
       const bounds = region.getBounds();
+      const childBounds = (region.list ?? [])
+        .filter((child) => child.visible !== false && typeof child.getBounds === 'function')
+        .map((child) => child.getBounds())
+        .filter((value) => Number.isFinite(value?.left) && value.width > 0 && value.height > 0);
+      const contentBounds = childBounds.length ? {
+        left: Math.min(...childBounds.map((value) => value.left)),
+        top: Math.min(...childBounds.map((value) => value.top)),
+        right: Math.max(...childBounds.map((value) => value.right)),
+        bottom: Math.max(...childBounds.map((value) => value.bottom))
+      } : null;
       return [name, {
+        type: region.type,
+        childCount: region.list?.length ?? 0,
+        childNames: (region.list ?? []).map((child) => child.name).filter(Boolean),
         left: bounds.left,
         top: bounds.top,
         right: bounds.right,
         bottom: bounds.bottom,
         width: bounds.width,
-        height: bounds.height
+        height: bounds.height,
+        contentBounds
       }];
     }));
-    const tombstone = scene?.children?.getByName('defeat-tombstone-art');
+    const figure = scene?.children?.getByName('result-figure');
+    const tombstone = figure?.getByName?.('defeat-tombstone-art') ?? scene?.children?.getByName('defeat-tombstone-art');
     return {
       regions,
       tombstone: tombstone ? {
@@ -131,8 +146,14 @@ function assertResultLayout(snapshot, label, victory) {
   for (const name of RESULT_REGION_NAMES) {
     const region = snapshot.regions[name];
     assert(region, `${label}: missing named result region ${name}`);
+    assert(region.type === 'Container', `${label}: ${name} is a detached ${region.type} instead of a rendered Container`);
+    assert(region.childCount > 0, `${label}: ${name} has no rendered children`);
+    assert(region.contentBounds, `${label}: ${name} has no measurable rendered content`);
     assert(region.width > 0 && region.height > 0, `${label}: ${name} must have stable dimensions`);
     assert(region.left >= 0 && region.top >= 0 && region.right <= 1536 && region.bottom <= 864, `${label}: ${name} escapes the game canvas`);
+    for (const edge of ['left', 'top', 'right', 'bottom']) {
+      assert(Math.abs(region[edge] - region.contentBounds[edge]) < 0.5, `${label}: ${name} ${edge} is not derived from rendered child bounds`);
+    }
   }
 
   const figure = snapshot.regions['result-figure'];
@@ -148,6 +169,9 @@ function assertResultLayout(snapshot, label, victory) {
   assert(!overlaps(stats, deck), `${label}: statistics overlaps deck`);
   assert(!overlaps(actions, stats), `${label}: actions overlaps statistics`);
   assert(!overlaps(actions, deck), `${label}: actions overlaps deck`);
+  for (const childName of ['result-actions-rule', 'result-action-restart', 'result-action-menu']) {
+    assert(actions.childNames.includes(childName), `${label}: actions region omits rendered child ${childName}`);
+  }
 
   if (!victory) {
     assert(snapshot.tombstone, `${label}: defeat tombstone is not rendered`);
@@ -161,12 +185,29 @@ function inspectDefeatPalette(file) {
   const program = String.raw`
 import json
 import sys
-from PIL import Image
+from PIL import Image, ImageStat
 
 image = Image.open(sys.argv[1]).convert("RGB")
 pixels = list(image.getdata())
 green = sum(1 for red, value, blue in pixels if value >= 48 and value > red * 1.18 and value > blue * 1.08)
-print(json.dumps({"pixels": len(pixels), "greenDominant": green, "ratio": green / max(1, len(pixels))}))
+luma = image.convert("L")
+luma_pixels = list(luma.getdata())
+stats = ImageStat.Stat(luma)
+mean = stats.mean[0]
+stddev = stats.stddev[0]
+near_mean = sum(1 for value in luma_pixels if abs(value - mean) <= 4)
+dark = sum(1 for value in luma_pixels if value <= 48)
+bright = sum(1 for value in luma_pixels if value >= 220)
+print(json.dumps({
+  "pixels": len(pixels),
+  "greenDominant": green,
+  "ratio": green / max(1, len(pixels)),
+  "lumaMean": mean,
+  "lumaStdDev": stddev,
+  "nearMeanRatio": near_mean / max(1, len(luma_pixels)),
+  "darkRatio": dark / max(1, len(luma_pixels)),
+  "brightRatio": bright / max(1, len(luma_pixels))
+}))
 `;
   const candidates = [
     { command: process.env.PYTHON ?? 'python', args: [] },
@@ -229,10 +270,15 @@ async function captureResultViewport(browser, victory, width, height, animation 
     const snapshot = await resultLayoutSnapshot(page);
     assertResultLayout(snapshot, label, victory);
     const file = await screenshot(page, `result_${victory ? 'victory' : 'defeat'}_${width}x${height}.png`);
+    const stability = inspectDefeatPalette(file);
+    report[`resultStability${victory ? 'Victory' : 'Defeat'}${width}x${height}`] = stability;
+    assert(stability.lumaStdDev >= 18, `${label}: screenshot is near-uniform or washed out (stddev ${stability.lumaStdDev})`);
+    assert(stability.nearMeanRatio <= 0.85, `${label}: screenshot is dominated by a flat wash (${stability.nearMeanRatio})`);
+    assert(stability.darkRatio >= 0.2, `${label}: screenshot lost its dark result composition (${stability.darkRatio})`);
+    assert(stability.brightRatio <= 0.3, `${label}: screenshot is overexposed (${stability.brightRatio})`);
     if (!victory) {
-      const palette = inspectDefeatPalette(file);
-      report[`defeatPalette${width}x${height}`] = palette;
-      assert(palette.ratio <= 0.0005, `${label}: rendered palette contains ${palette.greenDominant} green-dominant pixels`);
+      report[`defeatPalette${width}x${height}`] = stability;
+      assert(stability.ratio <= 0.0005, `${label}: rendered palette contains ${stability.greenDominant} green-dominant pixels`);
     }
     if (!animation) {
       const motionState = await page.evaluate(() => {

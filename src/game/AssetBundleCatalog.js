@@ -159,7 +159,7 @@ export function getSceneBundleNames(sceneKey, context = {}) {
     case SCENES.BossIntro:
       return [`boss-act-${act}`, 'story-sfx'];
     case SCENES.Result:
-      return context.victory === false ? ['folio', 'result-defeat'] : ['folio', 'result-victory', heroBundle];
+      return context.victory === false ? ['result-defeat'] : ['result-victory', heroBundle];
     case SCENES.Rest:
       return ['folio', 'rest-audio'];
     case SCENES.Shop:

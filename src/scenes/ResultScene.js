@@ -11,13 +11,20 @@ import { attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
 import { PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 import { PIXEL_DECORATIONS } from '../art/PixelAssetCatalog.js';
 
-const RESULT_REGIONS = {
-  figure: { name: 'result-figure', x: 330, y: 430, width: 560, height: 660 },
-  narrative: { name: 'result-narrative', x: 1080, y: 137, width: 790, height: 180 },
-  stats: { name: 'result-stats', x: 880, y: 465, width: 360, height: 380 },
-  deck: { name: 'result-deck', x: 1280, y: 465, width: 360, height: 380 },
-  actions: { name: 'result-actions', x: 1080, y: 772, width: 760, height: 100 }
-};
+class ResultButton extends UIButton {
+  getBounds(output = new Phaser.Geom.Rectangle()) {
+    const matrix = this.getWorldTransformMatrix();
+    const halfWidth = this.widthValue / 2;
+    const halfHeight = this.heightValue / 2;
+    const corners = [
+      matrix.transformPoint(-halfWidth, -halfHeight),
+      matrix.transformPoint(halfWidth, -halfHeight),
+      matrix.transformPoint(halfWidth, halfHeight),
+      matrix.transformPoint(-halfWidth, halfHeight)
+    ];
+    return Phaser.Geom.Rectangle.FromPoints(corners, output);
+  }
+}
 
 function formatElapsed(seconds) {
   const value = Math.max(0, Number(seconds) || 0);
@@ -59,21 +66,23 @@ export default class ResultScene extends Phaser.Scene {
     this.audio?.startAmbience?.(this.victory ? 'story' : 'defeat');
 
     this.drawBackdrop();
-    this.createQARegions();
     this.recordStats();
-    const figureTargets = this.drawResultFigure(this.run);
-    const narrativeTargets = this.drawNarrativePanel();
-    const statsTargets = this.drawStatistics();
-    const deckTargets = this.drawDeckSummary();
+    const figureRegion = this.drawResultFigure(this.run);
+    const narrativeRegion = this.drawNarrativePanel();
+    const statsRegion = this.drawStatistics();
+    const deckRegion = this.drawDeckSummary();
     this.drawActions();
-    this.playEntrance({ figureTargets, narrativeTargets, statsTargets, deckTargets });
+    this.playEntrance({
+      figureTargets: figureRegion.list,
+      narrativeTargets: narrativeRegion.list,
+      statsTargets: statsRegion.list,
+      deckTargets: deckRegion.list
+    });
     this.audio?.play(this.victory ? 'victory' : 'defeat');
   }
 
-  createQARegions() {
-    for (const region of Object.values(RESULT_REGIONS)) {
-      this.add.zone(region.x, region.y, region.width, region.height).setName(region.name);
-    }
+  createResultRegion(name, targets, depth) {
+    return this.add.container(0, 0, targets).setName(name).setDepth(depth);
   }
 
   drawBackdrop() {
@@ -155,6 +164,10 @@ export default class ResultScene extends Phaser.Scene {
     });
     const strike = () => {
       if (!this.scene.isActive()) return;
+      const localLight = this.add
+        .triangle(484, 144, 0, -116, -92, 132, 104, 132, 0xc8ccd8, 0.14)
+        .setDepth(11)
+        .setName('defeat-lightning-local');
       const lightning = this.add.graphics().setDepth(12);
       lightning.lineStyle(4, 0xc8ccd8, 0.72);
       lightning.beginPath();
@@ -163,13 +176,15 @@ export default class ResultScene extends Phaser.Scene {
       lightning.lineTo(512, 142);
       lightning.lineTo(448, 242);
       lightning.strokePath();
-      this.cameras.main.flash(90, 178, 182, 198, false);
       this.tweens.add({
-        targets: lightning,
+        targets: [localLight, lightning],
         alpha: 0,
         duration: 180,
         ease: 'Sine.Out',
-        onComplete: () => lightning.destroy()
+        onComplete: () => {
+          localLight.destroy();
+          lightning.destroy();
+        }
       });
       this.time.delayedCall(3600 + Phaser.Math.Between(0, 2200), strike);
     };
@@ -178,22 +193,19 @@ export default class ResultScene extends Phaser.Scene {
 
   drawResultFigure(run) {
     const targets = [];
-    const ground = this.add.graphics().setDepth(4);
-    ground.fillStyle(0x060507, 0.78);
-    ground.fillEllipse(326, 692, 516, 82);
-    ground.fillStyle(this.victory ? 0x9f5d27 : 0x5f2027, 0.32);
-    ground.fillEllipse(326, 680, 386, 38);
-    targets.push(ground);
+    const ground = this.add.ellipse(326, 692, 516, 82, 0x060507, 0.78);
+    const groundGlow = this.add.ellipse(326, 680, 386, 38, this.victory ? 0x9f5d27 : 0x5f2027, 0.32);
+    targets.push(ground, groundGlow);
 
     if (this.victory) {
-      const halo = this.add.graphics().setDepth(3);
-      halo.lineStyle(4, 0xb88935, 0.58);
-      halo.strokeCircle(304, 354, 148);
-      halo.lineStyle(2, 0xe6bd6a, 0.34);
-      halo.strokeCircle(304, 354, 166);
+      const haloOuter = this.add.circle(304, 354, 208, 0x000000, 0).setStrokeStyle(2, 0xe6bd6a, 0.12);
+      const haloMid = this.add.circle(304, 354, 166, 0x000000, 0).setStrokeStyle(2, 0xe6bd6a, 0.34);
+      const haloInner = this.add.circle(304, 354, 148, 0x000000, 0).setStrokeStyle(4, 0xb88935, 0.58);
+      const haloRays = this.add.graphics();
+      haloRays.lineStyle(2, 0xe6bd6a, 0.34);
       for (let index = 0; index < 8; index += 1) {
         const angle = (Math.PI * 2 * index) / 8;
-        halo.lineBetween(
+        haloRays.lineBetween(
           304 + Math.cos(angle) * 178,
           354 + Math.sin(angle) * 178,
           304 + Math.cos(angle) * 208,
@@ -215,8 +227,8 @@ export default class ResultScene extends Phaser.Scene {
       flame.fillStyle(0x24100c, 1);
       flame.fillRect(112, 658, 58, 8);
       const caption = this.add.text(82, 718, '余火仍在行者身后燃烧', textStyle(18, '#dfc98e', { strokeThickness: 4 })).setDepth(8);
-      targets.push(halo, hero, flame, caption);
-      return targets;
+      targets.push(haloOuter, haloMid, haloInner, haloRays, hero, flame, caption);
+      return this.createResultRegion('result-figure', targets, 5);
     }
 
     const tombstone = PIXEL_DECORATIONS.defeatTombstone;
@@ -242,7 +254,7 @@ export default class ResultScene extends Phaser.Scene {
     }
     const caption = this.add.text(82, 718, '烛火已灭，灰烬记得来路', textStyle(18, '#c4b7ae', { strokeThickness: 4 })).setDepth(8);
     targets.push(caption);
-    return targets;
+    return this.createResultRegion('result-figure', targets, 5);
   }
 
   drawNarrativePanel() {
@@ -263,20 +275,15 @@ export default class ResultScene extends Phaser.Scene {
         maxLines: 2
       })
       .setDepth(8);
-    const rule = this.add.graphics().setDepth(7);
-    rule.fillStyle(this.victory ? THEME.colors.candle : THEME.colors.blood, 0.8);
-    rule.fillRect(700, 224, 756, 3);
-    rule.fillStyle(THEME.colors.iron, 0.42);
-    rule.fillRect(700, 231, 756, 1);
-    return [eyebrow, title, subtitle, body, rule];
+    const outcomeRule = this.add.rectangle(1078, 225.5, 756, 3, this.victory ? THEME.colors.candle : THEME.colors.blood, 0.8);
+    const ironRule = this.add.rectangle(1078, 231.5, 756, 1, THEME.colors.iron, 0.42);
+    return this.createResultRegion('result-narrative', [eyebrow, title, subtitle, body, outcomeRule, ironRule], 7);
   }
 
   drawStatistics() {
     const background = this.drawSectionGround(700, 275, 360, 380, this.victory ? 0x2a1b13 : 0x21161b);
     const heading = this.add.text(720, 296, '旅途统计', textStyle(25, THEME.css.paleGold, { strokeThickness: 5 })).setDepth(8);
-    const rule = this.add.graphics().setDepth(8);
-    rule.fillStyle(this.victory ? THEME.colors.candle : THEME.colors.blood, 0.62);
-    rule.fillRect(720, 333, 310, 2);
+    const rule = this.add.rectangle(875, 334, 310, 2, this.victory ? THEME.colors.candle : THEME.colors.blood, 0.62);
     const rows = [
       ['行者', this.run.characterName ?? '未知行者'],
       ['抵达', this.summary.progress],
@@ -285,7 +292,7 @@ export default class ResultScene extends Phaser.Scene {
       ['最终金币', `${this.summary.gold}`],
       ['旅途用时', formatElapsed(this.summary.elapsed)]
     ];
-    const targets = [background, heading, rule];
+    const targets = [...background, heading, rule];
     rows.forEach(([label, value], index) => {
       const y = 354 + index * 47;
       const labelText = this.add.text(720, y, label, textStyle(15, '#9e9188', { strokeThickness: 3 })).setDepth(8);
@@ -295,7 +302,7 @@ export default class ResultScene extends Phaser.Scene {
         .setDepth(8);
       targets.push(labelText, valueText);
     });
-    return targets;
+    return this.createResultRegion('result-stats', targets, 6);
   }
 
   drawDeckSummary() {
@@ -303,14 +310,12 @@ export default class ResultScene extends Phaser.Scene {
     const heading = this.add.text(1120, 296, '最终牌组', textStyle(25, THEME.css.paleGold, { strokeThickness: 5 })).setDepth(8);
     const count = Array.isArray(this.run.deck) ? this.run.deck.length : 0;
     const total = this.add.text(1438, 302, `${count} 张`, textStyle(15, '#a89a8e', { strokeThickness: 3, align: 'right' })).setOrigin(1, 0).setDepth(8);
-    const rule = this.add.graphics().setDepth(8);
-    rule.fillStyle(this.victory ? THEME.colors.candle : THEME.colors.blood, 0.62);
-    rule.fillRect(1120, 333, 310, 2);
-    const targets = [background, heading, total, rule];
+    const rule = this.add.rectangle(1275, 334, 310, 2, this.victory ? THEME.colors.candle : THEME.colors.blood, 0.62);
+    const targets = [...background, heading, total, rule];
     if (!this.summary.deckGroups.length) {
       const empty = this.add.text(1120, 364, '牌组记录缺失', textStyle(17, THEME.css.muted, { strokeThickness: 3 })).setDepth(8);
       targets.push(empty);
-      return targets;
+      return this.createResultRegion('result-deck', targets, 6);
     }
     this.summary.deckGroups.forEach((group, index) => {
       const y = 354 + index * 29;
@@ -329,35 +334,31 @@ export default class ResultScene extends Phaser.Scene {
         targets.push(quantity);
       }
     });
-    return targets;
+    return this.createResultRegion('result-deck', targets, 6);
   }
 
   drawSectionGround(x, y, width, height, fill) {
-    const g = this.add.graphics().setDepth(6);
-    g.fillStyle(fill, 0.66);
-    g.fillRect(x, y, width, height);
-    g.fillStyle(0x050506, 0.42);
-    g.fillRect(x, y + height - 12, width, 12);
-    g.fillStyle(THEME.colors.iron, 0.3);
-    g.fillRect(x, y, 2, height);
-    return g;
+    return [
+      this.add.rectangle(x + width / 2, y + height / 2, width, height, fill, 0.66),
+      this.add.rectangle(x + width / 2, y + height - 6, width, 12, 0x050506, 0.42),
+      this.add.rectangle(x + 1, y + height / 2, 2, height, THEME.colors.iron, 0.3)
+    ];
   }
 
   drawActions() {
-    const rule = this.add.graphics().setDepth(8);
-    rule.fillStyle(THEME.colors.iron, 0.38);
-    rule.fillRect(700, 708, 756, 2);
-    this.add.text(700, 728, this.victory ? '圣途已完成' : '灰烬仍可重燃', textStyle(15, '#8f8178', { strokeThickness: 3 })).setDepth(8);
-    new UIButton(this, 1040, 776, 236, 56, '再次启程', () => {
+    const rule = this.add.rectangle(1078, 709, 756, 2, THEME.colors.iron, 0.38).setName('result-actions-rule');
+    const caption = this.add.text(700, 728, this.victory ? '圣途已完成' : '灰烬仍可重燃', textStyle(15, '#8f8178', { strokeThickness: 3 })).setDepth(8);
+    const restart = new ResultButton(this, 1040, 776, 236, 56, '再次启程', () => {
       SaveManager.clearRun();
       this.registry.remove('run');
       this.scene.start(SCENES.CharacterSelect);
-    }, { fontSize: 22, fill: this.victory ? 0x56361f : 0x4b252a });
-    new UIButton(this, 1328, 776, 236, 56, '返回主菜单', () => {
+    }, { fontSize: 22, fill: this.victory ? 0x56361f : 0x4b252a }).setName('result-action-restart');
+    const menu = new ResultButton(this, 1328, 776, 236, 56, '返回主菜单', () => {
       SaveManager.clearRun();
       this.registry.remove('run');
       this.scene.start(SCENES.MainMenu);
-    }, { fontSize: 22, fill: 0x30282a });
+    }, { fontSize: 22, fill: 0x30282a }).setName('result-action-menu');
+    return this.createResultRegion('result-actions', [rule, caption, restart, menu], 8);
   }
 
   playEntrance({ figureTargets, narrativeTargets, statsTargets, deckTargets }) {

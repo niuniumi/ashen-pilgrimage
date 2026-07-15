@@ -139,6 +139,28 @@ test('guide and settings direct entries preload the folio they render plus menu 
   }
 });
 
+test('result direct-entry bundles omit the unused folio while preserving outcome art and audio', () => {
+  const victoryNames = getSceneBundleNames(SCENES.Result, {
+    victory: true,
+    characterId: 'candle-nun'
+  });
+  const defeatNames = getSceneBundleNames(SCENES.Result, {
+    victory: false,
+    characterId: 'candle-nun'
+  });
+  const victory = resolveAssetBundles(victoryNames);
+  const defeat = resolveAssetBundles(defeatNames);
+
+  assert.equal(victoryNames.includes('folio'), false);
+  assert.equal(defeatNames.includes('folio'), false);
+  assert.deepEqual(victory.images.map((asset) => asset.key), ['pixel-actor-candle-nun']);
+  assert.deepEqual(defeat.images.map((asset) => asset.key), ['pixel-ui-defeat-tombstone']);
+  assert.equal(victory.audio.some((asset) => asset.key === 'bgm-map-act-2'), true);
+  assert.equal(victory.audio.some((asset) => asset.key === 'sfx-success-1'), true);
+  assert.equal(defeat.audio.some((asset) => asset.key === 'bgm-map-act-3'), true);
+  assert.equal(defeat.audio.some((asset) => asset.key === 'sfx-fail-1'), true);
+});
+
 test('act two battle bundle contains its background, selected hero, act enemies, music, and combat SFX', () => {
   const assets = resolveAssetBundles(getSceneBundleNames(SCENES.Battle, {
     act: 2,

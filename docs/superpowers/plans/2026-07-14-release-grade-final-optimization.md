@@ -224,7 +224,8 @@ git commit -m "perf: ship lossless webp pixel assets"
 - Create: `tests/result-summary.test.mjs`
 - Modify: `src/scenes/ResultScene.js`
 - Modify: `src/art/PixelAssetCatalog.js`
-- Replace: `public/assets/pixel/ui/defeat-tombstone.png`
+- Replace: `qa/source-art/runtime-masters/assets/pixel/ui/defeat-tombstone.png`
+- Regenerate: `public/assets/pixel/ui/defeat-tombstone.webp`
 - Modify: `scripts/qa-product-upgrade-scenes.mjs`
 
 **Interfaces:**
@@ -251,6 +252,8 @@ Expected: FAIL because `ResultSummary.js` does not exist.
 
 Use the image generation tool with this production brief: transparent background, 16/32-bit pixel art, front-left three-quarter stone, broken pilgrim cross, extinguished candle wax, ash and two dark-red cloth fragments, no grass, no green, no text, no frame, no realistic photo texture. Normalize to the existing runtime bounding box and preserve transparency.
 
+Write the normalized PNG only to `qa/source-art/runtime-masters/assets/pixel/ui/defeat-tombstone.png`, then immediately run `pnpm assets:runtime`. Never recreate a corresponding PNG under `public`.
+
 - [ ] **Step 4: Implement asymmetric victory/defeat compositions**
 
 Split the old monolithic result render into `drawResultFigure`, `drawNarrativePanel`, `drawStatistics`, `drawDeckSummary`, and `drawActions`. Victory uses hero/flame focus; defeat uses tombstone/storm focus. Buttons must remain at fixed positions and statistics must not shift with deck length.
@@ -264,7 +267,7 @@ Expected: PASS; victory and defeat screenshots contain all five named regions wi
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/game/ResultSummary.js tests/result-summary.test.mjs src/scenes/ResultScene.js src/art/PixelAssetCatalog.js public/assets/pixel/ui/defeat-tombstone.png scripts/qa-product-upgrade-scenes.mjs
+git add src/game/ResultSummary.js tests/result-summary.test.mjs src/scenes/ResultScene.js src/art/PixelAssetCatalog.js qa/source-art/runtime-masters/assets/pixel/ui/defeat-tombstone.png public/assets/pixel/ui/defeat-tombstone.webp scripts/qa-product-upgrade-scenes.mjs
 git commit -m "feat: rebuild pixel result presentation"
 ```
 

@@ -1,4 +1,6 @@
+import json
 from pathlib import Path
+import sys
 
 from PIL import Image
 
@@ -11,7 +13,47 @@ PLAYABLES = SOURCE_ROOT / 'generated-playable-lineup-v3-alpha.png'
 RATS = SOURCE_ROOT / 'generated-plague-rats-v2-alpha.png'
 ATLAS = ROOT / 'public' / 'assets' / 'pixel' / 'actors' / 'gothic-enemies-atlas-v2.png'
 LEGACY_NUN = ROOT / 'public' / 'assets' / 'pixel' / 'actors' / 'sprites' / 'candle-nun.png'
-OUTPUT = ROOT / 'public' / 'assets' / 'pixel' / 'actors' / 'sprites'
+LEGACY_OUTPUT = ROOT / 'public' / 'assets' / 'pixel' / 'actors' / 'sprites'
+RUNTIME_OUTPUT = ROOT / 'qa' / 'source-art' / 'runtime-masters' / 'assets' / 'pixel' / 'actors' / 'sprites'
+
+CONTACT_CROPS = {
+    'candle-nun-v2': (459, 289, 554, 438),
+    'rotting-villager': (18, 43, 90, 151),
+    'armor-broken-militia': (142, 24, 210, 166),
+    'fallen-paladin': (364, 18, 430, 168),
+    'wax-novice': (205, 18, 273, 168),
+    'cinder-acolyte': (635, 15, 701, 178),
+    'bell-tower-sentry': (450, 18, 522, 178),
+    'choir-exorcist': (704, 24, 771, 170),
+    'hollow-spearman': (522, 32, 583, 170),
+    'ashen-banneret': (756, 28, 818, 170),
+    'gate-iron-vicar': (584, 28, 647, 170),
+    'royal-pyre-knight': (16, 540, 108, 731),
+    'clockwork-confessor': (307, 18, 374, 170)
+}
+
+PLAYABLE_CROPS = {
+    'exiled-knight': (8, 42, 720, 842),
+    'candle-nun': (688, 42, 1142, 842),
+    'ashblood-alchemist': (1174, 42, 1748, 842)
+}
+
+
+def output_contract():
+    runtime_names = [
+        *(f'{name}-v3.png' for name in PLAYABLE_CROPS),
+        'plague-rat-swarm-v2.png',
+        'crownless-hound.png'
+    ]
+    legacy_names = [
+        *(f'{name}.png' for name in CONTACT_CROPS),
+        'crow-messenger.png',
+        'ash-veiled-prioress.png'
+    ]
+    return {
+        'runtimeMasters': [(RUNTIME_OUTPUT / name).relative_to(ROOT).as_posix() for name in runtime_names],
+        'legacyPublic': [(LEGACY_OUTPUT / name).relative_to(ROOT).as_posix() for name in legacy_names]
+    }
 
 
 def remove_green(image):
@@ -74,7 +116,7 @@ def keep_largest_component(image):
 def save_contact_crop(name, box, padding=8):
     source = Image.open(CONTACT)
     image = trim_and_pad(keep_largest_component(remove_green(source.crop(box))), padding)
-    image.save(OUTPUT / f'{name}.png', optimize=True)
+    image.save(LEGACY_OUTPUT / f'{name}.png', optimize=True)
 
 
 def save_atlas_frame(name, frame_index):
@@ -84,20 +126,20 @@ def save_atlas_frame(name, frame_index):
     column = frame_index % 4
     row = frame_index // 4
     frame = source.crop((column * frame_width, row * frame_height, (column + 1) * frame_width, (row + 1) * frame_height))
-    trim_and_pad(frame, 8).save(OUTPUT / f'{name}.png', optimize=True)
+    trim_and_pad(frame, 8).save(RUNTIME_OUTPUT / f'{name}.png', optimize=True)
 
 
 def save_existing_sprite(source_path, name, crop_left=0):
     image = Image.open(source_path).convert('RGBA')
     if crop_left:
         image = image.crop((crop_left, 0, image.width, image.height))
-    trim_and_pad(image, 8).save(OUTPUT / f'{name}.png', optimize=True)
+    trim_and_pad(image, 8).save(LEGACY_OUTPUT / f'{name}.png', optimize=True)
 
 
 def save_crow():
     source = Image.open(CROW).convert('RGBA')
     frame = source.crop((0, 0, 48, 48))
-    trim_and_pad(frame, 4).save(OUTPUT / 'crow-messenger.png', optimize=True)
+    trim_and_pad(frame, 4).save(LEGACY_OUTPUT / 'crow-messenger.png', optimize=True)
 
 
 def save_playable(name, box):
@@ -107,7 +149,7 @@ def save_playable(name, box):
     if sprite.height > 660:
         width = round(sprite.width * 660 / sprite.height)
         sprite = sprite.resize((width, 660), Image.Resampling.NEAREST)
-    sprite.save(OUTPUT / f'{name}-v3.png', optimize=True)
+    sprite.save(RUNTIME_OUTPUT / f'{name}-v3.png', optimize=True)
 
 
 def save_rat_swarm():
@@ -116,39 +158,20 @@ def save_rat_swarm():
     if sprite.width > 900:
         height = round(sprite.height * 900 / sprite.width)
         sprite = sprite.resize((900, height), Image.Resampling.NEAREST)
-    sprite.save(OUTPUT / 'plague-rat-swarm-v2.png', optimize=True)
+    sprite.save(RUNTIME_OUTPUT / 'plague-rat-swarm-v2.png', optimize=True)
 
 
 def main():
     missing = [path for path in (CONTACT, CROW, PLAYABLES, RATS, ATLAS, LEGACY_NUN) if not path.exists()]
     if missing:
         raise FileNotFoundError(f'Missing source assets: {missing}')
-    OUTPUT.mkdir(parents=True, exist_ok=True)
+    LEGACY_OUTPUT.mkdir(parents=True, exist_ok=True)
+    RUNTIME_OUTPUT.mkdir(parents=True, exist_ok=True)
 
-    crops = {
-        'candle-nun-v2': (459, 289, 554, 438),
-        'rotting-villager': (18, 43, 90, 151),
-        'armor-broken-militia': (142, 24, 210, 166),
-        'fallen-paladin': (364, 18, 430, 168),
-        'wax-novice': (205, 18, 273, 168),
-        'cinder-acolyte': (635, 15, 701, 178),
-        'bell-tower-sentry': (450, 18, 522, 178),
-        'choir-exorcist': (704, 24, 771, 170),
-        'hollow-spearman': (522, 32, 583, 170),
-        'ashen-banneret': (756, 28, 818, 170),
-        'gate-iron-vicar': (584, 28, 647, 170),
-        'royal-pyre-knight': (16, 540, 108, 731),
-        'clockwork-confessor': (307, 18, 374, 170)
-    }
-    for name, box in crops.items():
+    for name, box in CONTACT_CROPS.items():
         save_contact_crop(name, box)
 
-    playable_crops = {
-        'exiled-knight': (8, 42, 720, 842),
-        'candle-nun': (688, 42, 1142, 842),
-        'ashblood-alchemist': (1174, 42, 1748, 842)
-    }
-    for name, box in playable_crops.items():
+    for name, box in PLAYABLE_CROPS.items():
         save_playable(name, box)
 
     save_crow()
@@ -158,4 +181,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if '--list-outputs' in sys.argv:
+        print(json.dumps(output_contract(), separators=(',', ':')))
+    else:
+        main()

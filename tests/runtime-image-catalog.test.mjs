@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { access } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
@@ -22,4 +23,19 @@ test('runtime pixel catalog uses WebP while PNG masters remain outside public', 
       `${asset.key} must not ship its referenced PNG master`
     );
   }
+});
+
+test('committed runtime images pass read-only lossless pixel verification', () => {
+  const result = spawnSync(process.execPath, ['scripts/build-runtime-images.mjs', '--verify'], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    env: { ...process.env, PYTHONUTF8: '1' },
+    windowsHide: true
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const summary = JSON.parse(result.stdout.trim());
+  assert.equal(summary.mode, 'verify');
+  assert.equal(summary.count, PIXEL_TEXTURE_ASSETS.length);
+  assert.equal(summary.verified, PIXEL_TEXTURE_ASSETS.length);
+  assert.equal(summary.changed, 0);
 });

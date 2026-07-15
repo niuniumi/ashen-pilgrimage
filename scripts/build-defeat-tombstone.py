@@ -1,11 +1,20 @@
+import json
 from pathlib import Path
+import sys
 
 from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'qa' / 'source-art' / 'defeat-tombstone-source.png'
-OUTPUT = ROOT / 'public' / 'assets' / 'pixel' / 'ui' / 'defeat-tombstone.png'
+OUTPUT = ROOT / 'qa' / 'source-art' / 'runtime-masters' / 'assets' / 'pixel' / 'ui' / 'defeat-tombstone.png'
+
+
+def output_contract():
+    return {
+        'runtimeMasters': [OUTPUT.relative_to(ROOT).as_posix()],
+        'legacyPublic': []
+    }
 
 
 def remove_green_screen(image):
@@ -39,4 +48,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if '--list-outputs' in sys.argv:
+        print(json.dumps(output_contract(), separators=(',', ':')))
+    else:
+        main()

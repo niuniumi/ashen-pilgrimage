@@ -6,7 +6,12 @@ rebuilt with:
 
 ```bash
 python scripts/build-left-facing-enemy-v3.py
+pnpm assets:runtime
 ```
+
+The Python step writes PNG masters under `qa/source-art/runtime-masters/`.
+The runtime step refreshes the committed lossless WebP files; it must be run
+before building or publishing.
 
 The source sheets use one shared art brief: dark medieval gothic pixel art,
 consistent candlelight, explicit three-quarter screen-left battle poses, and

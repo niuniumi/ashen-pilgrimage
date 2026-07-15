@@ -1,7 +1,12 @@
 # Curated actor source assets
 
-These files are retained so the production actor PNGs can be rebuilt with
-`scripts/build-curated-actor-assets.py`.
+These files are retained so the actor masters and runtime WebP files can be
+rebuilt with:
+
+```bash
+python scripts/build-curated-actor-assets.py
+pnpm assets:runtime
+```
 
 | File | Source | License |
 | --- | --- | --- |
@@ -14,7 +19,8 @@ These files are retained so the production actor PNGs can be rebuilt with
 | `forest-animals-cc0.png` | Retired v2.1 rat source, retained only for provenance | CC0 |
 
 The build script crops existing raster artwork, removes keyed backgrounds and
-transparent fragments, and writes semantic standalone PNGs. The v3 playable
+transparent fragments, and writes current PNG masters outside `public` while
+preserving intentionally legacy sprites in their existing public paths. The v3 playable
 characters all face screen-right. The generated rat swarm faces screen-left.
 Runtime geometry is only an unavailable-asset fallback and is not used by the
 production roster.

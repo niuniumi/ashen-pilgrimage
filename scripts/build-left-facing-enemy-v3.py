@@ -1,11 +1,13 @@
+import json
 from pathlib import Path
+import sys
 
 from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'qa' / 'source-art' / 'generated-enemies-v3'
-OUTPUT = ROOT / 'public' / 'assets' / 'pixel' / 'actors' / 'sprites'
+OUTPUT = ROOT / 'qa' / 'source-art' / 'runtime-masters' / 'assets' / 'pixel' / 'actors' / 'sprites'
 
 BATCHES = {
     'batch-01-alpha.png': {
@@ -47,6 +49,15 @@ BATCHES = {
         'royal-pyre-knight': (730, 35, 1765, 820),
     },
 }
+
+
+def output_contract():
+    runtime_masters = [
+        (OUTPUT / f'{name}-v3.png').relative_to(ROOT).as_posix()
+        for sprites in BATCHES.values()
+        for name in sprites
+    ]
+    return {'runtimeMasters': runtime_masters, 'legacyPublic': []}
 
 
 def keep_largest_component(image):
@@ -114,4 +125,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if '--list-outputs' in sys.argv:
+        print(json.dumps(output_contract(), separators=(',', ':')))
+    else:
+        main()

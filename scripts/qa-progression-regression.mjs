@@ -126,7 +126,24 @@ try {
   assert(resumedReward.activeNode === initial.selectable[0].id, 'reward resume lost its active battle node');
   assert(Boolean(resumedReward.pendingReward), 'reward resume lost the pending reward');
 
-  await clickGame(page, 768, 734, 900);
+  const rewardSelection = await page.evaluate(() => {
+    const scene = window.__ASHEN_GAME__.scene.keys.RewardScene;
+    const run = window.__ASHEN_GAME__.registry.get('run');
+    const cardId = run.pendingReward.cards[0].id;
+    const selected = scene.selectChoice(cardId);
+    return { selected, activeNode: run.map.activeNode, pendingReward: Boolean(run.pendingReward) };
+  });
+  assert(rewardSelection.selected, 'reward card could not be selected');
+  assert(rewardSelection.activeNode === initial.selectable[0].id, 'selecting a reward settled the node before confirmation');
+  assert(rewardSelection.pendingReward, 'selecting a reward consumed it before confirmation');
+  await snapshot(page, 'reward-selected');
+
+  const rewardConfirmation = await page.evaluate(() => {
+    const scene = window.__ASHEN_GAME__.scene.keys.RewardScene;
+    return { first: scene.confirmChoice(), second: scene.confirmChoice() };
+  });
+  assert(rewardConfirmation.first === true, 'reward confirmation did not settle the selected card');
+  assert(rewardConfirmation.second === false, 'reward confirmation was accepted more than once');
   await waitScene(page, 'MapScene');
   const returned = await snapshot(page, 'returned-map');
   assert(returned.activeNode === null, 'reward settlement left the completed node active');

@@ -114,10 +114,12 @@ try {
   const event = await page.evaluate(() => {
     const scene = window.__ASHEN_GAME__.scene.keys.EventScene;
     const run = window.__ASHEN_GAME__.registry.get('run');
-    const option = scene.event.options[0];
-    scene.choose(option);
+    const choiceId = scene.choiceOptions[0].id;
+    scene.selectChoice(choiceId);
+    scene.confirmChoice();
     const first = { gold: run.gold, hp: run.hp, deck: run.deck.length, completed: [...run.map.completed], activeNode: run.map.activeNode };
-    scene.choose(option);
+    scene.selectChoice(choiceId);
+    scene.confirmChoice();
     return { first, second: { gold: run.gold, hp: run.hp, deck: run.deck.length, completed: [...run.map.completed], activeNode: run.map.activeNode } };
   });
   assert(JSON.stringify(event.first) === JSON.stringify(event.second), 'event option applied more than once');

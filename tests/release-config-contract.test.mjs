@@ -120,7 +120,8 @@ test('Pages automatic deployment accepts only same-repository main push CI runs'
 test('Pages rejects stale CI heads before both build and deployment', () => {
   const pages = read('.github/workflows/pages.yml');
 
-  assert.match(pages, /concurrency:[\s\S]*cancel-in-progress:\s*true/);
+  assert.match(pages, /concurrency:\s*\r?\n\s+group:\s*github-pages\s*\r?\n\s+queue:\s*max/);
+  assert.doesNotMatch(pages, /cancel-in-progress:\s*true/);
   assert.equal((pages.match(/name:\s*Reject stale CI head/g) ?? []).length, 2);
   assert.equal((pages.match(/gh api "repos\/\$\{GITHUB_REPOSITORY\}\/commits\/main" --jq '\.sha'/g) ?? []).length, 2);
   assert.equal((pages.match(/test "\$CI_HEAD_SHA" = "\$latest_main_sha"/g) ?? []).length, 2);

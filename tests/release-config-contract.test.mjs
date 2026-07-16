@@ -166,6 +166,21 @@ test('CI and Pages install the pinned runtime-image verifier before tests', () =
   }
 });
 
+test('chapter transition QA waits for rendered story controls before advancing', () => {
+  const qa = read('scripts/qa-chapter-transition.mjs');
+
+  assert.match(qa, /async function waitStoryDialog\(page, sceneKey\)/);
+  assert.match(qa, /Array\.isArray\(child\.lines\)[\s\S]*child\.skipButton/);
+  assert.match(qa, /child\.skipButton[\s\S]*getWorldTransformMatrix[\s\S]*Math\.abs\(hitZone\.x - matrix\.tx\)/);
+  assert.doesNotMatch(qa, /for \(let index = 0; index < 4; index \+= 1\)/);
+  assertOrdered(qa, [
+    "await skipStoryDialog(page, 'BossIntroScene')",
+    "await waitScene(page, 'BattleScene')",
+    "await skipStoryDialog(page, 'ActClearScene')",
+    "await waitScene(page, 'VowScene')"
+  ], 'chapter transition story readiness');
+});
+
 test('README classifies resource-budget as browser QA', () => {
   const readme = read('README.md');
   const nonBrowserStart = readme.indexOf('完整的非浏览器发布门禁：');

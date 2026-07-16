@@ -38,11 +38,28 @@ async function clickGame(page, x, y, delay = 300) {
   await page.waitForTimeout(delay);
 }
 
-async function completeStoryDialog(page) {
-  for (let index = 0; index < 4; index += 1) {
-    await page.waitForTimeout(1_050);
-    await clickGame(page, 1098, 734, 120);
-  }
+async function waitStoryDialog(page, sceneKey) {
+  await page.waitForFunction((key) => {
+    const scene = window.__ASHEN_GAME__?.scene?.keys?.[key];
+    return scene?.scene?.isActive()
+      && scene.children?.list?.some((child) => {
+        if (!Array.isArray(child.lines) || !child.skipButton?.active) return false;
+        const hitZone = child.skipButton.hitZone;
+        const matrix = child.skipButton.getWorldTransformMatrix?.();
+        return Boolean(
+          hitZone?.active
+          && hitZone.input?.enabled
+          && matrix
+          && Math.abs(hitZone.x - matrix.tx) < 0.5
+          && Math.abs(hitZone.y - matrix.ty) < 0.5
+        );
+      });
+  }, sceneKey, { timeout: 60_000 });
+}
+
+async function skipStoryDialog(page, sceneKey) {
+  await waitStoryDialog(page, sceneKey);
+  await clickGame(page, 1238, 558, 700);
 }
 
 async function snapshot(page, phase) {
@@ -115,7 +132,7 @@ try {
   assert(bossView?.selectable, 'chapter one boss node is not selectable');
   await clickGame(page, bossView.x, bossView.y, 500);
   await waitScene(page, 'BossIntroScene');
-  await completeStoryDialog(page);
+  await skipStoryDialog(page, 'BossIntroScene');
   await waitScene(page, 'BattleScene');
 
   await page.evaluate(() => {
@@ -140,7 +157,7 @@ try {
     scene.finishIfNeeded();
   });
   await waitScene(page, 'ActClearScene');
-  await completeStoryDialog(page);
+  await skipStoryDialog(page, 'ActClearScene');
   await waitScene(page, 'VowScene');
   await clickGame(page, 366, 668, 500);
   await waitScene(page, 'MapScene');

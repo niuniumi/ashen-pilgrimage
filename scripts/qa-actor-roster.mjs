@@ -50,6 +50,29 @@ try {
   await page.evaluate(() => window.__ASHEN_QA__.enterNode());
   await waitScene(page, 'BattleScene');
 
+  const rosterAssets = [...new Map(enemies.map((definition) => {
+    const resolved = resolvePixelActorAsset(definition.id);
+    return [resolved.asset.key, { key: resolved.asset.key, url: resolved.asset.url }];
+  })).values()];
+  const preload = await page.evaluate(async (assets) => {
+    const scene = window.__ASHEN_GAME__.scene.keys.BattleScene;
+    const pending = assets.filter((asset) => !scene.textures.exists(asset.key));
+    if (pending.length === 0) return { queued: 0, failures: [] };
+    const failures = [];
+    await new Promise((resolve) => {
+      const onError = (file) => failures.push(file?.key ?? 'unknown');
+      scene.load.on('loaderror', onError);
+      scene.load.once('complete', () => {
+        scene.load.off('loaderror', onError);
+        resolve();
+      });
+      for (const asset of pending) scene.load.image(asset.key, asset.url);
+      scene.load.start();
+    });
+    return { queued: pending.length, failures };
+  }, rosterAssets);
+  assert(preload.failures.length === 0, `roster preload failed: ${preload.failures.join(', ')}`);
+
   for (const [index, definition] of enemies.entries()) {
     const resolved = resolvePixelActorAsset(definition.id);
     const expectedFlipX = resolved.asset.facing !== 'left';

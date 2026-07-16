@@ -46,13 +46,20 @@ async function inspectScene(page, sceneKey) {
     const overflow = textObjects
       .map((item) => ({ text: String(item.text).slice(0, 40), bounds: item.getBounds() }))
       .filter(({ bounds }) => bounds.right < -4 || bounds.left > 1540 || bounds.bottom < -4 || bounds.top > 868);
+    const resultFigure = scene.children.getByName('result-figure');
+    const tombstone = scene.tombstoneArt ?? resultFigure?.getByName?.('defeat-tombstone-art');
     return {
       active: scene.scene.isActive(),
       textCount: textObjects.length,
       fonts,
       legacyFonts,
       overflow,
-      defeatTombstone: scene.children.list.some((item) => item?.name === 'defeat-tombstone-art'),
+      defeatTombstone: Boolean(
+        tombstone?.visible
+        && tombstone?.texture?.key === 'pixel-ui-defeat-tombstone'
+        && tombstone.displayWidth > 100
+        && tombstone.displayHeight > 200
+      ),
       pixelBackgrounds: scene.children.list.filter((item) => String(item?.name ?? '').startsWith('pixel-background-')).map((item) => item.name)
     };
   }, sceneKey);

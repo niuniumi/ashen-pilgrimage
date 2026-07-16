@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -15,30 +18,55 @@ jobs:
           version: 11.7.0
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run assets:verify
       - run: pnpm test
+      - run: pnpm run qa:design-tokens
       - run: pnpm run qa:content-schema
       - run: pnpm run qa:asset-manifest
       - run: pnpm run qa:visual-bindings
+      - run: pnpm run qa:battle-mechanics
+      - run: pnpm run qa:simulation
       - run: pnpm build
       - name: Install Chromium for browser regression
         run: pnpm exec playwright install --with-deps chromium
-      - name: Verify legacy map migration in browser
+      - name: Run browser release gate against preview
+        shell: bash
         run: |
+          set -euo pipefail
+          QA_URL='http://127.0.0.1:4173/'
+          export QA_URL
+          preview_pid=''
+          cleanup() {
+            if [[ -n "${preview_pid:-}" ]]; then
+              kill "$preview_pid" 2>/dev/null || true
+              wait "$preview_pid" 2>/dev/null || true
+            fi
+          }
+          trap 'cleanup' EXIT
+
           pnpm exec vite preview --host 127.0.0.1 --port 4173 &
           preview_pid=$!
-          trap 'kill $preview_pid' EXIT
           ready=0
-          for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+          for attempt in {1..60}; do
+            if curl --fail --silent --show-error "$QA_URL" > /dev/null; then
               ready=1
               break
             fi
             sleep 1
           done
           test "$ready" -eq 1
+
           pnpm run qa:map-migration
-          pnpm run qa:progression
-          pnpm run qa:resume-stages
+          pnpm run qa:progression -- --url="$QA_URL"
+          pnpm run qa:chapter-transition -- --url="$QA_URL"
+          pnpm run qa:resume-stages -- --url="$QA_URL"
+          pnpm run qa:role-matrix
+          pnpm run qa:full-flow
+          pnpm run qa:release-flow
+          pnpm run qa:product-upgrade-scenes
+          pnpm run qa:pixel-scenes -- --url="$QA_URL"
+          pnpm run qa:responsive-facing
+          pnpm exec node scripts/qa-resource-budget.mjs --url="$QA_URL"

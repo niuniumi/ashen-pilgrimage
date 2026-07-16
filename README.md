@@ -1,6 +1,6 @@
 # 灰烬圣途 Ashen Pilgrimage
 
-[在线试玩](https://niuniumi.github.io/ashen-pilgrimage/) | 当前版本 `v2.2.0-facing-art`
+[在线试玩](https://niuniumi.github.io/ashen-pilgrimage/) | 当前版本 `v2.3.0`
 
 《灰烬圣途》是一款使用 Phaser 3 制作的单机网页 Roguelike 牌组构筑游戏。玩家从三名行者中选择一人，穿过三章共 36 层路线，构筑牌组、承担誓约、处理角色事件，并挑战拥有独立阶段规则的首领。
 
@@ -33,40 +33,76 @@
 
 ## 本地运行
 
+环境要求：Node.js 24、pnpm 11.7。
+
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 pnpm run dev
 ```
 
-生产构建：
+完整的非浏览器发布门禁：
 
 ```bash
+pnpm run assets:verify
 pnpm test
-pnpm run build
-pnpm run preview
-```
-
-## 质量验证
-
-```bash
-pnpm test
+pnpm run qa:design-tokens
 pnpm run qa:content-schema
-pnpm run qa:battle-mechanics
-pnpm run qa:simulation
 pnpm run qa:asset-manifest
 pnpm run qa:visual-bindings
-pnpm run qa:resume-stages -- --url=http://127.0.0.1:4173
-pnpm run qa:pixel-scenes -- --url=http://127.0.0.1:4173
-pnpm run qa:role-matrix -- --url=http://127.0.0.1:4173
-pnpm run qa:release-flow -- --url=http://127.0.0.1:4173
-pnpm run qa:progression -- --url=http://127.0.0.1:4173
-pnpm run qa:chapter-transition -- --url=http://127.0.0.1:4173
-pnpm run qa:actor-roster -- --url=http://127.0.0.1:4173
-pnpm run qa:responsive-facing -- --url=http://127.0.0.1:4173
-pnpm run qa:pause-menu -- --url=http://127.0.0.1:4173
+pnpm run qa:battle-mechanics
+pnpm run qa:battle-layout
+pnpm run qa:simulation
+pnpm build
+pnpm run qa:resource-budget
 ```
 
-主要报告位于 `qa/`。素材与许可证见 [像素资产清单](docs/PIXEL_ASSET_MANIFEST.md) 和 [音频素材清单](docs/AUDIO_ASSET_MANIFEST.md)，版本变更见 [v2.2 发布说明](docs/RELEASE_NOTES_2.2.md)。
+GitHub Pages base 构建与本地预览：
+
+```bash
+pnpm exec vite build --base=/ashen-pilgrimage/
+pnpm run preview -- --port=4173
+```
+
+## 浏览器 QA
+
+先执行 `pnpm build` 并在一个终端运行 `pnpm run preview -- --port=4173`，再在另一个终端执行：
+
+```bash
+pnpm run qa:map-migration -- --url=http://127.0.0.1:4173/
+pnpm run qa:progression -- --url=http://127.0.0.1:4173/
+pnpm run qa:chapter-transition -- --url=http://127.0.0.1:4173/
+pnpm run qa:resume-stages -- --url=http://127.0.0.1:4173
+pnpm run qa:role-matrix -- --url=http://127.0.0.1:4173
+pnpm run qa:full-flow -- --url=http://127.0.0.1:4173/
+pnpm run qa:release-flow -- --url=http://127.0.0.1:4173
+pnpm run qa:product-upgrade-scenes -- --url=http://127.0.0.1:4173/
+pnpm run qa:pixel-scenes -- --url=http://127.0.0.1:4173
+pnpm run qa:actor-roster -- --url=http://127.0.0.1:4173
+pnpm run qa:pause-menu -- --url=http://127.0.0.1:4173
+pnpm exec node scripts/qa-resource-budget.mjs --url=http://127.0.0.1:4173/
+```
+
+`qa:responsive-facing` 只读取 `QA_URL`。PowerShell 下运行：
+
+```powershell
+$env:QA_URL='http://127.0.0.1:4173/'
+pnpm run qa:responsive-facing
+```
+
+线上 smoke 必须使用 `DEPLOY_URL` 或 `--url=`，不能传位置参数：
+
+```bash
+pnpm run qa:deploy-smoke -- --url=https://niuniumi.github.io/ashen-pilgrimage/
+```
+
+## 资源与发布
+
+- 场景和章节资源按需装载，生产像素资产使用无损 WebP，本地中文字体随站点部署。
+- 首屏资源预算为最多 24 个请求、编码体积不超过 6 MiB，并禁止提前加载章节战斗/地图资源和后期首领资源。
+- Phaser 与启动必需游戏模块保留单体启动 bundle；Vite 继续报告压缩体积，chunk warning 边界限制为 1600 KB。
+- 主要 QA 输出位于 `qa/`，属于验证产物，不应随发布配置提交。
+
+完整门禁、阈值和 CI/Pages 职责见 [生产验证手册](docs/PRODUCTION_VERIFICATION.md)，版本变更见 [v2.3 发布说明](docs/RELEASE_NOTES_2.3.md)。素材与许可证见 [像素资产清单](docs/PIXEL_ASSET_MANIFEST.md) 和 [音频素材清单](docs/AUDIO_ASSET_MANIFEST.md)。
 
 ## 技术栈
 

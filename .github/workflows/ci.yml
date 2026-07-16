@@ -20,6 +20,10 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+      - run: python -m pip install Pillow==12.2.0
       - run: pnpm install --frozen-lockfile
       - run: pnpm run assets:verify
       - run: pnpm test

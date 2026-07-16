@@ -149,6 +149,23 @@ test('CI preview fails closed when the strict-port server exits before readiness
   );
 });
 
+test('CI and Pages install the pinned runtime-image verifier before tests', () => {
+  const ci = read('.github/workflows/ci.yml');
+  const pages = read('.github/workflows/pages.yml');
+
+  for (const [label, workflow, firstGate] of [
+    ['CI', ci, 'pnpm run assets:verify'],
+    ['Pages', pages, 'pnpm test']
+  ]) {
+    assertOrdered(workflow, [
+      'actions/setup-python@v6',
+      'python-version: 3.13',
+      'python -m pip install Pillow==12.2.0',
+      firstGate
+    ], `${label} runtime image verifier`);
+  }
+});
+
 test('README classifies resource-budget as browser QA', () => {
   const readme = read('README.md');
   const nonBrowserStart = readme.indexOf('完整的非浏览器发布门禁：');

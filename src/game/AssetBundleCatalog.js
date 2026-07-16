@@ -1,12 +1,14 @@
 import { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_DECORATIONS, resolvePixelActorAsset } from '../art/PixelAssetCatalog.js';
 import { characters } from '../data/characters.js';
 import { ENCOUNTER_POOLS } from '../data/encounters.js';
+import { enemies } from '../data/enemies.js';
 import { createBgmAsset, createSfxPoolAssets } from './AudioCatalog.js';
 import { SCENES } from './constants.js';
 
 const DEFAULT_ACT = 1;
 const DEFAULT_CHARACTER_ID = characters[0].id;
 const CHARACTER_IDS = new Set(characters.map((character) => character.id));
+const ENEMIES_BY_ID = new Map(enemies.map((enemy) => [enemy.id, enemy]));
 const SHARED_SFX = ['ui-click', 'ui-hover', 'dialog-open', 'dialog-close', 'error'];
 const COMBAT_SFX = ['card-play', 'attack', 'block', 'hit', 'turn', 'heal', 'buff', 'debuff', 'success', 'fail'];
 const STORY_SFX = ['page'];
@@ -97,9 +99,22 @@ function enemyAssetsForAct(act, battleType) {
   const encounterGroups = battleType === 'boss'
     ? pools.boss
     : [...pools.battle, ...pools.elite];
+  const pendingEnemyIds = encounterGroups.flat();
+  const enemyIds = new Set();
+
+  while (pendingEnemyIds.length > 0) {
+    const enemyId = pendingEnemyIds.shift();
+    if (!enemyId || enemyIds.has(enemyId)) continue;
+    enemyIds.add(enemyId);
+
+    const enemy = ENEMIES_BY_ID.get(enemyId);
+    for (const action of enemy?.actions ?? []) {
+      if (action.summon && !enemyIds.has(action.summon)) pendingEnemyIds.push(action.summon);
+    }
+  }
+
   return uniqueByKey(
-    encounterGroups
-      .flat()
+    [...enemyIds]
       .map((enemyId) => resolvePixelActorAsset(enemyId)?.asset)
   );
 }

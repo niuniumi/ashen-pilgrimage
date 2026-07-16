@@ -63,6 +63,7 @@ test('CI runs the complete release gate on Node 24 and tears down preview', () =
     'pnpm run qa:asset-manifest',
     'pnpm run qa:visual-bindings',
     'pnpm run qa:battle-mechanics',
+    'pnpm run qa:battle-layout',
     'pnpm run qa:simulation',
     'pnpm build',
     'pnpm exec playwright install --with-deps chromium',
@@ -82,6 +83,8 @@ test('CI runs the complete release gate on Node 24 and tears down preview', () =
     'pnpm run qa:product-upgrade-scenes',
     'pnpm run qa:pixel-scenes -- --url="$QA_URL"',
     'pnpm run qa:responsive-facing',
+    'pnpm run qa:actor-roster',
+    'pnpm run qa:pause-menu',
     'pnpm exec node scripts/qa-resource-budget.mjs --url="$QA_URL"'
   ], 'CI browser QA');
 });
@@ -91,7 +94,7 @@ test('Pages deploys the successful CI head with repository base and runs online 
 
   assert.doesNotMatch(pages, /^\s{2}push:/m);
   assert.match(pages, /workflow_run:[\s\S]*workflows:\s*\[CI\][\s\S]*types:\s*\[completed\][\s\S]*branches:\s*\[main\]/);
-  assert.match(pages, /^\s{2}workflow_dispatch:/m);
+  assert.doesNotMatch(pages, /^\s{2}workflow_dispatch:/m);
   assert.match(pages, /github\.event\.workflow_run\.conclusion\s*==\s*'success'/);
   assert.ok((pages.match(/github\.event\.workflow_run\.head_sha/g) ?? []).length >= 2, 'both Pages jobs must checkout the CI head SHA');
   assert.match(pages, /pnpm exec vite build --base=\/ashen-pilgrimage\//);
@@ -112,6 +115,15 @@ test('Pages automatic deployment accepts only same-repository main push CI runs'
   assert.match(pages, /github\.event\.workflow_run\.event\s*==\s*'push'/);
   assert.match(pages, /github\.event\.workflow_run\.head_branch\s*==\s*'main'/);
   assert.match(pages, /github\.event\.workflow_run\.head_repository\.full_name\s*==\s*github\.repository/);
+});
+
+test('Pages rejects stale CI heads before both build and deployment', () => {
+  const pages = read('.github/workflows/pages.yml');
+
+  assert.match(pages, /concurrency:[\s\S]*cancel-in-progress:\s*true/);
+  assert.equal((pages.match(/name:\s*Reject stale CI head/g) ?? []).length, 2);
+  assert.equal((pages.match(/gh api "repos\/\$\{GITHUB_REPOSITORY\}\/commits\/main" --jq '\.sha'/g) ?? []).length, 2);
+  assert.equal((pages.match(/test "\$CI_HEAD_SHA" = "\$latest_main_sha"/g) ?? []).length, 2);
 });
 
 test('Pages grants write and OIDC permissions only to the deploy job', () => {

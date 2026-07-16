@@ -28,6 +28,7 @@ jobs:
       - run: pnpm run qa:asset-manifest
       - run: pnpm run qa:visual-bindings
       - run: pnpm run qa:battle-mechanics
+      - run: pnpm run qa:battle-layout
       - run: pnpm run qa:simulation
       - run: pnpm build
       - name: Install Chromium for browser regression
@@ -74,4 +75,6 @@ jobs:
           pnpm run qa:product-upgrade-scenes
           pnpm run qa:pixel-scenes -- --url="$QA_URL"
           pnpm run qa:responsive-facing
+          pnpm run qa:actor-roster
+          pnpm run qa:pause-menu
           pnpm exec node scripts/qa-resource-budget.mjs --url="$QA_URL"

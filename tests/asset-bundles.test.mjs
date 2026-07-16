@@ -217,6 +217,25 @@ test('boss battle selects the act boss and boss soundtrack without cross-act ene
   assert.equal(audioKeys.has('sfx-boss-1'), true);
 });
 
+test('boss bundles include every actor summoned by their phase actions', () => {
+  const cases = [
+    [1, 'pixel-actor-grave-skeleton'],
+    [2, 'pixel-actor-scripture-moth-swarm'],
+    [3, 'pixel-actor-hollow-spearman']
+  ];
+
+  for (const [act, summonKey] of cases) {
+    const assets = resolveAssetBundles(getSceneBundleNames(SCENES.Battle, {
+      act,
+      characterId: 'ashblood-alchemist',
+      battleType: 'boss'
+    }));
+    const imageKeys = new Set(assets.images.map((asset) => asset.key));
+
+    assert.equal(imageKeys.has(summonKey), true, `act ${act} boss bundle is missing ${summonKey}`);
+  }
+});
+
 test('direct-entry scene bundles preserve every runtime SFX pool used by their scene', () => {
   const cases = [
     ['boot shared UI', SCENES.Preload, {}, ['ui-click', 'ui-hover', 'dialog-open', 'dialog-close', 'error']],

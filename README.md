@@ -53,7 +53,6 @@ pnpm run qa:battle-mechanics
 pnpm run qa:battle-layout
 pnpm run qa:simulation
 pnpm build
-pnpm run qa:resource-budget
 ```
 
 GitHub Pages base 构建与本地预览：
@@ -65,7 +64,15 @@ pnpm run preview -- --port=4173
 
 ## 浏览器 QA
 
-先执行 `pnpm build` 并在一个终端运行 `pnpm run preview -- --port=4173`，再在另一个终端执行：
+先安装 Chromium、构建并在一个终端启动同一份 `dist`：
+
+```bash
+pnpm build
+pnpm exec playwright install chromium
+pnpm run preview -- --port=4173
+```
+
+等待 `http://127.0.0.1:4173/` 返回成功状态后，再在另一个终端执行：
 
 ```bash
 pnpm run qa:map-migration -- --url=http://127.0.0.1:4173/

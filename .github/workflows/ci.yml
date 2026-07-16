@@ -47,10 +47,15 @@ jobs:
           }
           trap 'cleanup' EXIT
 
-          pnpm exec vite preview --host 127.0.0.1 --port 4173 &
+          pnpm exec vite preview --host 127.0.0.1 --port 4173 --strictPort &
           preview_pid=$!
           ready=0
           for attempt in {1..60}; do
+            if ! kill -0 "$preview_pid" 2>/dev/null; then
+              echo "Vite preview exited before becoming ready" >&2
+              wait "$preview_pid" || true
+              exit 1
+            fi
             if curl --fail --silent --show-error "$QA_URL" > /dev/null; then
               ready=1
               break

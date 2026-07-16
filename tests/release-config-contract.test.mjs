@@ -105,6 +105,62 @@ test('Pages deploys the successful CI head with repository base and runs online 
   assert.doesNotMatch(pages, /qa:deploy-smoke\s+https?:\/\//);
 });
 
+test('Pages automatic deployment accepts only same-repository main push CI runs', () => {
+  const pages = read('.github/workflows/pages.yml');
+
+  assert.match(pages, /github\.event\.workflow_run\.conclusion\s*==\s*'success'/);
+  assert.match(pages, /github\.event\.workflow_run\.event\s*==\s*'push'/);
+  assert.match(pages, /github\.event\.workflow_run\.head_branch\s*==\s*'main'/);
+  assert.match(pages, /github\.event\.workflow_run\.head_repository\.full_name\s*==\s*github\.repository/);
+});
+
+test('Pages grants write and OIDC permissions only to the deploy job', () => {
+  const pages = read('.github/workflows/pages.yml');
+
+  assert.match(pages, /^permissions:\r?\n  contents: read\r?\n\r?\n/m);
+  assert.equal((pages.match(/^\s+pages: write$/gm) ?? []).length, 1);
+  assert.equal((pages.match(/^\s+id-token: write$/gm) ?? []).length, 1);
+  assert.match(
+    pages,
+    /^  deploy:[\s\S]*?^    permissions:\r?\n      contents: read\r?\n      pages: write\r?\n      id-token: write$/m
+  );
+});
+
+test('CI preview fails closed when the strict-port server exits before readiness', () => {
+  const ci = read('.github/workflows/ci.yml');
+
+  assert.match(ci, /pnpm exec vite preview[^\r\n]*--strictPort\b/);
+  assert.match(
+    ci,
+    /for attempt in \{1\.\.60\}; do[\s\S]*?kill -0 "\$preview_pid"[\s\S]*?curl --fail --silent --show-error[\s\S]*?done/
+  );
+});
+
+test('README classifies resource-budget as browser QA', () => {
+  const readme = read('README.md');
+  const nonBrowserStart = readme.indexOf('完整的非浏览器发布门禁：');
+  const browserStart = readme.indexOf('## 浏览器 QA');
+  const browserEnd = readme.indexOf('## 资源与发布');
+  const nonBrowser = readme.slice(nonBrowserStart, browserStart);
+  const browser = readme.slice(browserStart, browserEnd);
+
+  assert.doesNotMatch(nonBrowser, /resource-budget/);
+  assert.match(browser, /qa-resource-budget\.mjs/);
+});
+
+test('README installs Chromium before starting browser QA preview', () => {
+  const readme = read('README.md');
+  const browserStart = readme.indexOf('## 浏览器 QA');
+  const browserEnd = readme.indexOf('## 资源与发布');
+  const browser = readme.slice(browserStart, browserEnd);
+
+  assertOrdered(browser, [
+    'pnpm exec playwright install chromium',
+    'pnpm run preview -- --port=4173',
+    'pnpm run qa:map-migration'
+  ], 'README browser QA setup');
+});
+
 test('release documentation contains reproducible commands, thresholds, ownership, and pending evidence', () => {
   const readme = read('README.md');
   const verification = read('docs/PRODUCTION_VERIFICATION.md');

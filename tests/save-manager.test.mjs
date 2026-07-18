@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SAVE_KEY } from '../src/game/constants.js';
+import { SAVE_KEY, SETTINGS_KEY } from '../src/game/constants.js';
 import { SaveManager } from '../src/game/SaveManager.js';
 
 function installStorage() {
@@ -59,4 +59,12 @@ test('loadRun migrates valid old saves and persists the repaired v4 value', () =
 test('saveRun rejects a run with an unknown relic id', () => {
   installStorage();
   assert.equal(SaveManager.saveRun({ ...v1Run(), relics: ['unknown-relic'] }), false);
+});
+
+test('readSettings keeps the device motion preference when legacy settings omit animation', () => {
+  const storage = installStorage();
+  window.matchMedia = () => ({ matches: true });
+  storage.set(SETTINGS_KEY, JSON.stringify({ sound: false }));
+
+  assert.equal(SaveManager.readSettings().animation, false);
 });

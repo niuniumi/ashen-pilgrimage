@@ -2,6 +2,8 @@ import { THEME } from '../game/Theme.js';
 import { addUiAsset, addVfxAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 import { FONT } from '../design/textStyles.js';
 import { PIXEL_PALETTE, drawPixelDivider, snapPixel } from '../art/PixelArtSystem.js';
+import { SaveManager } from '../game/SaveManager.js';
+import { isMotionEnabled } from '../game/MotionPolicy.js';
 
 export function drawDivider(scene, x, y, width, options = {}) {
   const g = scene.add.graphics();
@@ -59,6 +61,7 @@ export function drawBackArrowButton(scene, x, y, label, onClick, options = {}) {
   const h = options.height ?? 46;
   const depth = options.depth ?? 20;
   const container = scene.add.container(x, y).setDepth(depth);
+  const motionEnabled = isMotionEnabled(SaveManager.readSettings());
   const arrow = scene.textures.exists(key)
     ? scene.add.image(0, 0, key).setOrigin(0.5).setDisplaySize(w, h).setAlpha(options.alpha ?? 0.96)
     : scene.add
@@ -76,9 +79,15 @@ export function drawBackArrowButton(scene, x, y, label, onClick, options = {}) {
   hit.on('pointerover', () => {
     scene.audio?.play?.('uiHover');
     scene.tweens.killTweensOf(container);
+    const hoverX = x + (direction === 'right' ? 4 : -4);
+    if (!motionEnabled) {
+      container.setPosition(hoverX, y).setScale(1.06);
+      arrow.setAlpha?.(1);
+      return;
+    }
     scene.tweens.add({
       targets: container,
-      x: x + (direction === 'right' ? 4 : -4),
+      x: hoverX,
       scaleX: 1.06,
       scaleY: 1.06,
       duration: 100,
@@ -88,6 +97,11 @@ export function drawBackArrowButton(scene, x, y, label, onClick, options = {}) {
   });
   hit.on('pointerout', () => {
     scene.tweens.killTweensOf(container);
+    if (!motionEnabled) {
+      container.setPosition(x, y).setScale(1);
+      arrow.setAlpha?.(options.alpha ?? 0.96);
+      return;
+    }
     scene.tweens.add({ targets: container, x, scaleX: 1, scaleY: 1, duration: 120, ease: 'Sine.Out' });
     arrow.setAlpha?.(options.alpha ?? 0.96);
   });

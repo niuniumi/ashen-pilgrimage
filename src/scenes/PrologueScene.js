@@ -8,6 +8,8 @@ import { attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { drawPixelPanel, PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 import { FONT } from '../design/textStyles.js';
+import { motionDuration } from '../game/MotionPolicy.js';
+import { cjkWordWrap } from '../ui/CjkTextLayout.js';
 
 const PROLOGUE_PAGES = [
   {
@@ -43,6 +45,7 @@ export default class PrologueScene extends Phaser.Scene {
 
   create() {
     attachSceneServices(this);
+    this.settings = SaveManager.readSettings();
     this.audio?.startAmbience?.('story');
     this.pageIndex = 0;
     this.pageImage = null;
@@ -50,7 +53,8 @@ export default class PrologueScene extends Phaser.Scene {
     this.drawBackdrop();
     this.createPage();
     this.createControls();
-    this.cameras.main.fadeIn(360, 0, 0, 0);
+    const fadeDuration = motionDuration(this.settings, 360);
+    if (fadeDuration) this.cameras.main.fadeIn(fadeDuration, 0, 0, 0);
   }
 
   drawBackdrop() {
@@ -74,16 +78,30 @@ export default class PrologueScene extends Phaser.Scene {
     divider.fillRect(-260, -92, 520, 4);
     divider.fillStyle(PIXEL_PALETTE.gold, 1);
     divider.fillRect(-8, -98, 16, 16);
-    const body = this.add.text(0, 54, page.body, { fontFamily: FONT, fontSize: 24, color: '#d6c7a5', align: 'center', lineSpacing: 14, wordWrap: { width: 730 } }).setOrigin(0.5);
+    const body = this.add.text(0, 54, page.body, {
+      fontFamily: FONT,
+      fontSize: 24,
+      color: '#d6c7a5',
+      align: 'center',
+      lineSpacing: 14,
+      wordWrap: cjkWordWrap(730)
+    }).setOrigin(0.5);
     const index = this.add.text(0, 254, `${this.pageIndex + 1} / ${PROLOGUE_PAGES.length}`, { fontFamily: FONT, fontSize: 15, color: '#85745c' }).setOrigin(0.5);
     image.add([panel, mark, title, divider, body, index]);
     this.pageImage = image;
-    this.tweens.add({
-      targets: this.pageImage,
-      alpha: 1,
-      duration: 460,
-      ease: 'Sine.Out'
-    });
+    this.pageBody = body;
+    this.pageIndexText = index;
+    const entranceDuration = motionDuration(this.settings, 460);
+    if (entranceDuration) {
+      this.tweens.add({
+        targets: this.pageImage,
+        alpha: 1,
+        duration: entranceDuration,
+        ease: 'Sine.Out'
+      });
+    } else {
+      this.pageImage.setAlpha(1);
+    }
   }
 
   fitPageImage(image) {
@@ -131,18 +149,26 @@ export default class PrologueScene extends Phaser.Scene {
     this.isTurning = true;
     this.audio?.play?.('pageTurn');
     const current = this.pageImage;
+    const exitDuration = motionDuration(this.settings, 260);
+    const completeTurn = () => {
+      current?.destroy();
+      this.pageIndex = nextIndex;
+      this.createPage();
+      this.updateControls();
+      const settleDuration = motionDuration(this.settings, 460);
+      if (settleDuration) this.time.delayedCall(settleDuration, () => { this.isTurning = false; });
+      else this.isTurning = false;
+    };
+    if (!exitDuration) {
+      completeTurn();
+      return;
+    }
     this.tweens.add({
       targets: current,
       alpha: 0,
-      duration: 260,
+      duration: exitDuration,
       ease: 'Sine.In',
-      onComplete: () => {
-        current?.destroy();
-        this.pageIndex = nextIndex;
-        this.createPage();
-        this.updateControls();
-        this.time.delayedCall(460, () => { this.isTurning = false; });
-      }
+      onComplete: completeTurn
     });
   }
 

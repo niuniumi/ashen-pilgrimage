@@ -4,6 +4,9 @@ import { THEME, textStyle, titleStyle } from '../game/Theme.js';
 import { UIButton } from './UIButton.js';
 import { UIFrame } from './UIFrame.js';
 import { drawDivider } from './UIOrnament.js';
+import { SaveManager } from '../game/SaveManager.js';
+import { isMotionEnabled } from '../game/MotionPolicy.js';
+import { cjkWordWrap } from './CjkTextLayout.js';
 
 export class StoryDialog extends Phaser.GameObjects.Container {
   constructor(scene, title, lines, options = {}) {
@@ -13,6 +16,7 @@ export class StoryDialog extends Phaser.GameObjects.Container {
     this.index = 0;
     this.currentText = '';
     this.finishedTyping = false;
+    this.motionEnabled = isMotionEnabled(SaveManager.readSettings());
 
     this.frame = new UIFrame(scene, 0, 0, options.width ?? 1060, options.height ?? 250, {
       fill: THEME.colors.panel,
@@ -25,7 +29,7 @@ export class StoryDialog extends Phaser.GameObjects.Container {
     this.bodyText = scene.add
       .text(-470, -40, '', {
         ...textStyle(25, THEME.css.body, { lineSpacing: 12 }),
-        wordWrap: { width: 940 }
+        wordWrap: cjkWordWrap(940)
       })
       .setOrigin(0, 0);
     this.hintText = scene.add.text(-470, 78, '点击文字可加速显示', textStyle(15, THEME.css.muted)).setOrigin(0, 0.5);
@@ -35,7 +39,7 @@ export class StoryDialog extends Phaser.GameObjects.Container {
       fill: 0x302822
     });
 
-    const hit = scene.add.rectangle(0, -10, options.width ?? 1060, 160, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    const hit = scene.add.rectangle(-1, -24, 940, 104, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
     hit.on('pointerup', () => this.next());
 
     this.add([this.frame, this.titleText, this.bodyText, this.hintText, this.nextButton, this.skipButton, hit]);
@@ -53,6 +57,12 @@ export class StoryDialog extends Phaser.GameObjects.Container {
     let cursor = 0;
     this.bodyText.setText('');
     this.scene.audio?.play('storyText');
+    if (!this.motionEnabled || !line.length) {
+      this.bodyText.setText(line);
+      this.currentText = line;
+      this.finishedTyping = true;
+      return;
+    }
     this.timer = this.scene.time.addEvent({
       delay: this.options.delay ?? 26,
       repeat: line.length - 1,

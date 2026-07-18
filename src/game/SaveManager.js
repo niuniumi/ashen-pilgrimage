@@ -87,7 +87,8 @@ export class SaveManager {
     if (!raw) return defaultsForDevice();
     try {
       const parsed = JSON.parse(raw);
-      const settings = { ...defaultSettings, ...parsed };
+      const deviceDefaults = defaultsForDevice();
+      const settings = { ...deviceDefaults, ...parsed };
       settings.bgmVolume = clamp01(settings.bgmVolume, defaultSettings.bgmVolume);
       settings.sfxVolume = clamp01(settings.sfxVolume, defaultSettings.sfxVolume);
       return settings;

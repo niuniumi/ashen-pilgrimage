@@ -3,8 +3,10 @@ import { runChoice } from '../game/RunRandom.js';
 
 export class RelicSystem {
   static value(run, hook) {
-    return (run.relics ?? []).reduce((total, relicId) => {
+    const relicIds = Array.isArray(run?.relics) ? run.relics : [];
+    return relicIds.reduce((total, relicId) => {
       const relic = getRelic(relicId);
+      if (!relic) return total;
       if (relic.hooks && Object.prototype.hasOwnProperty.call(relic.hooks, hook)) {
         return total + relic.hooks[hook];
       }
@@ -41,6 +43,8 @@ export class RelicSystem {
   }
 
   static addRandom(run) {
+    if (!run) return null;
+    run.relics = Array.isArray(run.relics) ? run.relics : [];
     const pool = getProductionRelics().filter((relic) => !(run.relics ?? []).includes(relic.id));
     const relic = runChoice(run, pool);
     if (!relic) return null;
@@ -50,7 +54,9 @@ export class RelicSystem {
   }
 
   static addById(run, relicId) {
+    if (!run || !Array.isArray(run.relics)) return null;
     const relic = getRelic(relicId);
+    if (!relic) return null;
     if (!run.relics.includes(relicId)) {
       run.relics.push(relicId);
       this.triggerOnAcquire(run, relic);

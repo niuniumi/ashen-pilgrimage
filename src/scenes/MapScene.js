@@ -212,19 +212,20 @@ export default class MapScene extends Phaser.Scene {
   }
 
   drawPanels() {
+    const relicIds = Array.isArray(this.run.relics) ? this.run.relics : [];
     new UIFrame(this, 204, 454, 250, 560, { fill: THEME.colors.panel, alpha: 0.9, stroke: THEME.colors.darkGold });
     new UIFrame(this, 1334, 454, 260, 560, { fill: THEME.colors.panel, alpha: 0.9, stroke: THEME.colors.darkGold });
 
     this.add.text(204, 205, '行者状态', titleStyle(26)).setOrigin(0.5);
     drawDivider(this, 204, 236, 178);
     this.add
-      .text(95, 266, `角色：${this.run.characterName}\n生命：${this.run.hp}/${this.run.maxHp}\n金币：${this.run.gold}\n层数：${this.run.floor}\n牌组：${this.run.deck.length} 张\n遗物：${this.run.relics.length} 件`, {
+      .text(95, 266, `角色：${this.run.characterName}\n生命：${this.run.hp}/${this.run.maxHp}\n金币：${this.run.gold}\n层数：${this.run.floor}\n牌组：${this.run.deck.length} 张\n遗物：${relicIds.length} 件`, {
         ...textStyle(19, THEME.css.body, { lineSpacing: 9 }),
         wordWrap: { width: 214 }
       })
       .setOrigin(0, 0);
 
-    const relicNames = this.run.relics.map((id) => getRelic(id).name).slice(0, 5);
+    const relicNames = relicIds.map((id) => getRelic(id)).filter(Boolean).map((relic) => relic.name).slice(0, 5);
     this.add.text(95, 500, '携带遗物', textStyle(19, THEME.css.paleGold)).setOrigin(0, 0);
     this.add
       .text(95, 536, relicNames.length ? relicNames.join('\n') : '暂无遗物', {

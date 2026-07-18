@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CHARACTER_SELECT_PORTRAIT } from '../art/ActorPresentation.js';
 import { drawPixelHero } from '../art/PixelActorFactory.js';
 import { PIXEL_PALETTE, drawPixelPanel } from '../art/PixelArtSystem.js';
 import { characters } from '../data/characters.js';
@@ -7,11 +8,11 @@ import { drawRebuiltCharacterSelectBackdrop } from '../art/RebuiltVisualFactory.
 import { createNewRun } from '../game/GameState.js';
 import { SaveManager } from '../game/SaveManager.js';
 import { SCENE_TITLES, THEME, textStyle, titleStyle } from '../game/Theme.js';
+import { CharacterSelectInputController } from '../input/CharacterSelectInputController.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { drawBackArrowButton, drawDivider } from '../ui/UIOrnament.js';
 import { addToast, attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
-import { addUiAsset, HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 
 export default class CharacterSelectScene extends Phaser.Scene {
   constructor() {
@@ -23,13 +24,18 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   create() {
+    this.characterInput?.destroy();
+    this.characterInput = null;
+    this.runStarting = false;
     attachSceneServices(this);
     this.audio?.startAmbience?.('menu');
+    this.motionEnabled = SaveManager.readSettings().animation !== false;
     this.selected = null;
     this.cards = [];
     this.drawBackdrop();
     this.addHeader();
     this.createCharacterSelectionLayout();
+    this.installCharacterInput();
   }
 
   drawBackdrop() {
@@ -47,14 +53,30 @@ export default class CharacterSelectScene extends Phaser.Scene {
       { x: 640, y: 462 },
       { x: 980, y: 462 }
     ];
-    characters.forEach((character, index) => this.createNewCharacterCard(character, layout[index].x, layout[index].y));
+    characters.forEach((character, index) => this.createNewCharacterCard(character, layout[index].x, layout[index].y, index));
     this.startButton = new UIButton(this, 1324, 798, 236, 56, '开始旅途', () => this.startRun(), {
       fontSize: 24,
       disabled: false,
       fill: 0x31515a
     });
     this.startButton.setDepth(26);
-    this.selectCharacter(characters[0].id, { silent: true });
+    this.selectCharacter(characters[0].id, { silent: true, animate: false });
+    this.playCardEntranceSequence();
+  }
+
+  installCharacterInput() {
+    const controller = new CharacterSelectInputController(characters.map((character) => character.id), {
+      selectedId: this.selected,
+      onSelect: (characterId) => this.selectCharacter(characterId),
+      onConfirm: () => this.startRun(),
+      onBack: () => this.returnToMenu(true)
+    });
+    this.characterInput = controller;
+    controller.install(this.input.keyboard);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      controller.destroy();
+      if (this.characterInput === controller) this.characterInput = null;
+    });
   }
 
   createDetailPanel() {
@@ -97,7 +119,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       .setDepth(22);
   }
 
-  createNewCharacterCard(character, x, y) {
+  createNewCharacterCard(character, x, y, index) {
     const w = 286;
     const h = 580;
     const accent = character.id === 'candle-nun' ? 0xd0a24f : character.id === 'ashblood-alchemist' ? 0x35706b : 0x91303a;
@@ -111,16 +133,27 @@ export default class CharacterSelectScene extends Phaser.Scene {
     });
     container.add(panel);
 
-    const artFrame = new UIFrame(this, 0, -45, 244, 326, {
+    const artFrame = new UIFrame(this, 0, -45, CHARACTER_SELECT_PORTRAIT.frameWidth, CHARACTER_SELECT_PORTRAIT.frameHeight, {
       fill: 0x2c3540,
-      alpha: 0.72,
+      alpha: 0.78,
       stroke: accent,
-      strokeAlpha: 0.46,
+      strokeAlpha: 0.58,
       parchment: false
     });
     container.add(artFrame);
-    const art = this.createCharacterCardFaceImages(character.id, 0, -45, 236, 316);
-    container.add([art.front, art.back]);
+
+    const selectionGlow = this.add.graphics().setAlpha(0);
+    selectionGlow.lineStyle(4, THEME.colors.candle, 0.9);
+    selectionGlow.strokeRect(
+      -CHARACTER_SELECT_PORTRAIT.frameWidth / 2 + 2,
+      -45 - CHARACTER_SELECT_PORTRAIT.frameHeight / 2 + 2,
+      CHARACTER_SELECT_PORTRAIT.frameWidth - 4,
+      CHARACTER_SELECT_PORTRAIT.frameHeight - 4
+    );
+    container.add(selectionGlow);
+
+    const art = this.createCharacterCardArt(character.id, 0, -45);
+    container.add(art);
 
     container.add(
       this.add
@@ -133,6 +166,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
         .setOrigin(0.5)
     );
     container.add(drawDivider(this, 0, -215, 218, { color: 0xb88935, alpha: 0.58 }));
+    const selectionMark = this.add
+      .text(112, -188, '◆', {
+        ...textStyle(16, '#ffd36a', { align: 'center', strokeThickness: 2 }),
+        stroke: '#08090d'
+      })
+      .setOrigin(0.5)
+      .setAlpha(0);
+    container.add(selectionMark);
     container.add(
       this.add
         .text(0, 146, character.mechanic, {
@@ -147,88 +188,99 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.addDeckTagsParchment(container, character);
 
     const hit = this.add.zone(x, y, w, h).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    const card = { container, panel, hit, character, baseY: y, frontArt: art.front, backArt: art.back, hovered: false };
+    const card = {
+      container,
+      panel,
+      hit,
+      character,
+      art,
+      selectionGlow,
+      selectionMark,
+      baseY: y,
+      index,
+      hovered: false
+    };
     hit.on('pointerover', () => {
       card.hovered = true;
-      this.audio?.play('uiHover');
-      this.revealCharacterCard(card, true, true);
+      this.audio?.play('uiHover', { cooldown: 72, variance: 0.025, volume: 0.86 });
+      this.syncCharacterCardPresentation(card, true);
       this.updateCharacterDetail(character, true);
     });
     hit.on('pointerout', () => {
       card.hovered = false;
-      if (this.selected !== character.id) this.revealCharacterCard(card, false, true);
+      this.syncCharacterCardPresentation(card, true);
       const selectedCharacter = characters.find((item) => item.id === this.selected);
       if (selectedCharacter) this.updateCharacterDetail(selectedCharacter, true);
-      this.tweens.add({ targets: container, scale: this.selected === character.id ? 1.025 : 1, duration: 130, ease: 'Sine.Out' });
     });
     hit.on('pointerup', () => this.selectCharacter(character.id));
     this.cards.push(card);
   }
 
-  createCharacterCardFaceImages(characterId, x, y, width, height) {
-    const front = drawPixelHero(this, characterId, x, y + height * 0.17, 1.12, {
+  createCharacterCardArt(characterId, x, frameCenterY) {
+    const y = frameCenterY + CHARACTER_SELECT_PORTRAIT.frameHeight / 2 - CHARACTER_SELECT_PORTRAIT.baselineY - 4;
+    const art = drawPixelHero(this, characterId, x, y, 1, {
       artPortrait: true,
       idle: false,
-      maxWidth: width - 8
+      generatedHeight: CHARACTER_SELECT_PORTRAIT.targetHeight,
+      maxWidth: CHARACTER_SELECT_PORTRAIT.maxWidth
     });
-    const back = drawPixelHero(this, characterId, x, y + height * 0.17, 1.28, {
-      artPortrait: true,
-      idle: false,
-      maxWidth: width - 8
-    });
-    back.setAlpha(0).setVisible(false);
-    return { front, back };
+    art.setAlpha(0.84);
+    return art;
   }
 
-  ensureCharacterCardFaceFrames() {
-    if (!this.textures.exists('generated-character-card-faces-atlas')) return false;
-    const texture = this.textures.get('generated-character-card-faces-atlas');
-    if (texture.has('exiled-knight-front')) return true;
-    const source = texture.getSourceImage();
-    const totalW = source.width;
-    const totalH = source.height;
-    const colW = Math.floor(totalW / 3);
-    const rowH = Math.floor(totalH / 2);
-    const frames = [
-      ['exiled-knight-front', 0, 0, colW, rowH],
-      ['candle-nun-front', colW, 0, colW, rowH],
-      ['ashblood-alchemist-front', colW * 2, 0, totalW - colW * 2, rowH],
-      ['exiled-knight-back', 0, rowH, colW, totalH - rowH],
-      ['candle-nun-back', colW, rowH, colW, totalH - rowH],
-      ['ashblood-alchemist-back', colW * 2, rowH, totalW - colW * 2, totalH - rowH]
-    ];
-    frames.forEach(([name, x, y, w, h]) => texture.add(name, 0, x, y, w, h));
-    return true;
-  }
+  syncCharacterCardPresentation(card, animate = false) {
+    const { art, character, container, panel, selectionGlow, selectionMark } = card;
+    const selected = character.id === this.selected;
+    const active = selected || card.hovered;
+    panel.options.stroke = selected ? THEME.colors.candle : card.hovered ? character.palette[2] : THEME.colors.darkGold;
+    panel.options.strokeAlpha = selected ? 1 : card.hovered ? 0.92 : 0.68;
+    panel.draw();
 
-  revealCharacterCard(card, visible, animate = false) {
-    const { frontArt, backArt, container } = card;
-    if (!frontArt || !backArt) return;
-    const apply = () => {
-      frontArt.setVisible(!visible);
-      frontArt.setAlpha(visible ? 0 : 0.98);
-      backArt.setVisible(visible);
-      backArt.setAlpha(visible ? 0.98 : 0);
+    const target = {
+      y: card.baseY,
+      artAlpha: active ? 1 : 0.82,
+      glowAlpha: selected ? 0.72 : card.hovered ? 0.28 : 0,
+      markAlpha: selected ? 1 : 0
     };
-    if (!animate) {
+    const apply = () => {
+      container.setY(target.y).setScale(1);
+      art.setAlpha(target.artAlpha);
+      selectionGlow.setAlpha(target.glowAlpha);
+      selectionMark.setAlpha(target.markAlpha);
+    };
+    if (!animate || !this.motionEnabled) {
       apply();
       return;
     }
+
+    this.tweens.killTweensOf(container);
+    this.tweens.killTweensOf(art);
+    this.tweens.killTweensOf(selectionGlow);
+    this.tweens.killTweensOf(selectionMark);
     this.tweens.add({
       targets: container,
-      scaleX: 0.94,
-      duration: 70,
-      ease: 'Sine.In',
-      onComplete: () => {
-        apply();
-        this.tweens.add({
-          targets: container,
-          scaleX: this.selected === card.character.id ? 1.025 : 1,
-          scaleY: this.selected === card.character.id ? 1.025 : 1,
-          duration: 120,
-          ease: 'Sine.Out'
-        });
-      }
+      y: target.y,
+      duration: 150,
+      ease: 'Cubic.Out'
+    });
+    this.tweens.add({ targets: art, alpha: target.artAlpha, duration: 130, ease: 'Sine.Out' });
+    this.tweens.add({ targets: selectionGlow, alpha: target.glowAlpha, duration: 170, ease: 'Sine.Out' });
+    this.tweens.add({ targets: selectionMark, alpha: target.markAlpha, duration: 130, ease: 'Sine.Out' });
+  }
+
+  playCardEntranceSequence() {
+    if (!this.motionEnabled) return;
+    this.cards.forEach((card, index) => {
+      const finalY = card.container.y;
+      card.container.setY(finalY + 18).setAlpha(0);
+      this.tweens.add({
+        targets: card.container,
+        y: finalY,
+        alpha: 1,
+        delay: 70 + index * 90,
+        duration: 260,
+        ease: 'Cubic.Out'
+      });
     });
   }
 
@@ -251,6 +303,12 @@ export default class CharacterSelectScene extends Phaser.Scene {
           ].join('\n')
         : ['三名行者通往灰白圣火的道路不同。', '', '移入角色卡查看完整立绘、机制说明与初始牌组。'].join('\n')
     );
+    if (this.motionEnabled && active) {
+      this.tweens.killTweensOf([this.detailName, this.detailBody]);
+      this.detailName.setAlpha(0.55);
+      this.detailBody.setAlpha(0.55);
+      this.tweens.add({ targets: [this.detailName, this.detailBody], alpha: 1, duration: 150, ease: 'Sine.Out' });
+    }
   }
 
   addHeaderParchment() {
@@ -271,7 +329,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     drawDivider(this, 768, 132, 520, { color: 0xb88935, alpha: 0.56 });
-    drawBackArrowButton(this, 126, 808, '返回', () => this.scene.start(SCENES.MainMenu), {
+    drawBackArrowButton(this, 126, 808, '返回', () => this.returnToMenu(), {
       width: 180,
       height: 54,
       fontSize: 20,
@@ -319,33 +377,32 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   selectCharacter(characterId, options = {}) {
+    if (!characters.some((character) => character.id === characterId)) return false;
+    if (this.characterInput && this.characterInput.selectedId !== characterId) {
+      return this.characterInput.setSelected(characterId);
+    }
+    const changed = this.selected !== characterId;
     this.selected = characterId;
-    if (!options.silent) this.audio?.play('cardSelect');
+    if (!options.silent && changed) this.audio?.play('cardSelect', { variance: 0.02, volume: 0.92 });
     this.startButton.setDisabled(false);
     const selectedCharacter = characters.find((item) => item.id === characterId);
     if (selectedCharacter) this.updateCharacterDetail(selectedCharacter, true);
     this.cards.forEach((card) => {
-      const { container, panel, character, baseY } = card;
-      const selected = character.id === characterId;
-      panel.options.stroke = selected ? THEME.colors.candle : THEME.colors.darkGold;
-      panel.options.strokeAlpha = selected ? 1 : 0.78;
-      panel.draw();
-      this.revealCharacterCard(card, selected || card.hovered, false);
-      this.tweens.add({
-        targets: container,
-        y: baseY,
-        scale: selected ? 1.025 : 1,
-        duration: 140,
-        ease: 'Sine.Out'
-      });
+      this.syncCharacterCardPresentation(card, options.animate !== false);
     });
+    return true;
   }
 
   startRun() {
+    if (this.runStarting) return;
     if (!this.selected) {
       addToast(this, '请先选择一名行者。', 'error');
       return;
     }
+    if (this.characterInput && !this.characterInput.locked && !this.characterInput.lock()) return;
+    this.runStarting = true;
+    this.startButton.setDisabled(true);
+    this.audio?.play('uiClick', { cooldown: 120, volume: 0.9 });
     SaveManager.clearRun();
     this.registry.remove('run');
     const run = createNewRun(this.selected);
@@ -353,5 +410,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.registry.set('run', run);
     SaveManager.saveRun(run);
     this.scene.start(SCENES.Vow);
+  }
+
+  returnToMenu(inputLocked = false) {
+    if (!inputLocked && this.characterInput && !this.characterInput.lock()) return;
+    this.audio?.play('uiClick', { cooldown: 120, volume: 0.82 });
+    this.scene.start(SCENES.MainMenu);
   }
 }

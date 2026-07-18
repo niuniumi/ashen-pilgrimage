@@ -1,6 +1,6 @@
 # 灰烬圣途 Ashen Pilgrimage
 
-[在线试玩](https://niuniumi.github.io/ashen-pilgrimage/) | 当前版本 `v2.3.0`
+[在线试玩](https://niuniumi.github.io/ashen-pilgrimage/) | 本地验收版本 `v2.4.0`（线上仍为上一稳定版）
 
 《灰烬圣途》是一款使用 Phaser 3 制作的单机网页 Roguelike 牌组构筑游戏。玩家从三名行者中选择一人，穿过三章共 36 层路线，构筑牌组、承担誓约、处理角色事件，并挑战拥有独立阶段规则的首领。
 
@@ -109,7 +109,7 @@ pnpm run qa:deploy-smoke -- --url=https://niuniumi.github.io/ashen-pilgrimage/
 - Phaser 与启动必需游戏模块保留单体启动 bundle；Vite 继续报告压缩体积，chunk warning 边界限制为 1600 KB。
 - 主要 QA 输出位于 `qa/`，属于验证产物，不应随发布配置提交。
 
-完整门禁、阈值和 CI/Pages 职责见 [生产验证手册](docs/PRODUCTION_VERIFICATION.md)，版本变更见 [v2.3 发布说明](docs/RELEASE_NOTES_2.3.md)。素材与许可证见 [像素资产清单](docs/PIXEL_ASSET_MANIFEST.md) 和 [音频素材清单](docs/AUDIO_ASSET_MANIFEST.md)。
+完整门禁、阈值和 CI/Pages 职责见 [生产验证手册](docs/PRODUCTION_VERIFICATION.md)，版本变更见 [v2.4 发布说明](docs/RELEASE_NOTES_2.4.md)。素材与许可证见 [像素资产清单](docs/PIXEL_ASSET_MANIFEST.md)、[第三方素材说明](THIRD_PARTY_ASSETS.md)和[音频素材清单](docs/AUDIO_ASSET_MANIFEST.md)。
 
 ## 技术栈
 

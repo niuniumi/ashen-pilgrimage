@@ -73,6 +73,13 @@ async function screenshot(page, name, delay = 240) {
   report.screenshots.push(rel(file));
 }
 
+async function waitCharacterCards(page) {
+  await page.waitForFunction(() => {
+    const cards = window.__ASHEN_GAME__?.scene?.keys?.CharacterSelectScene?.cards;
+    return cards?.length === 3 && cards.every((card) => card.container.alpha >= 0.99 && Math.abs(card.container.y - card.baseY) < 0.5);
+  });
+}
+
 async function closeTutorialIfOpen(page) {
   const open = await page.evaluate(() => Boolean(window.__ASHEN_GAME__?.scene?.keys?.BattleScene?.tutorialPanel));
   if (open) await clickGame(page, 854, 485, 260);
@@ -129,6 +136,7 @@ async function captureFinalScreens(browser) {
 
   await page.evaluate(() => window.__ASHEN_QA__.startScene('CharacterSelectScene'));
   await waitScene(page, 'CharacterSelectScene');
+  await waitCharacterCards(page);
   await screenshot(page, 'final_character_select.png');
   step('角色选择', 'pass');
   await clickGame(page, 300, 452, 260);

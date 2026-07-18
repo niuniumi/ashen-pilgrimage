@@ -20,21 +20,21 @@ function assertOrdered(source, fragments, label) {
   }
 }
 
-test('v2.3.0 identity is consistent across package, runtime, README, and release notes', () => {
+test('v2.4.0 identity is consistent across package, runtime, README, and release notes', () => {
   const packageJson = JSON.parse(read('package.json'));
   const versionSource = read('src/game/Version.js');
   const readme = read('README.md');
-  const releaseNotes = read('docs/RELEASE_NOTES_2.3.md');
+  const releaseNotes = read('docs/RELEASE_NOTES_2.4.md');
 
-  assert.equal(packageJson.version, '2.3.0');
+  assert.equal(packageJson.version, '2.4.0');
   assert.equal(packageJson.packageManager, 'pnpm@11.7.0');
-  assert.match(versionSource, /version:\s*'v2\.3\.0'/);
-  assert.match(versionSource, /buildTime:\s*'2026-07-16 \d{2}:\d{2}:\d{2} \+08:00'/);
-  assert.match(readme, /当前版本 `v2\.3\.0`/);
+  assert.match(versionSource, /version:\s*'v2\.4\.0'/);
+  assert.match(versionSource, /buildTime:\s*'2026-07-18 \d{2}:\d{2}:\d{2} \+08:00'/);
+  assert.match(readme, /本地验收版本 `v2\.4\.0`/);
   assert.match(readme, /AI 辅助开发项目/);
-  assert.match(readme, /docs\/RELEASE_NOTES_2\.3\.md/);
-  assert.match(releaseNotes, /^# v2\.3\.0\b/m);
-  assert.match(releaseNotes, /AI 辅助开发/);
+  assert.match(readme, /docs\/RELEASE_NOTES_2\.4\.md/);
+  assert.match(releaseNotes, /^# v2\.4\.0\b/m);
+  assert.match(releaseNotes, /70 张卡牌全部绑定独立语义插画帧/);
 });
 
 test('font references and Vite bundle warning policy support root and Pages builds', () => {

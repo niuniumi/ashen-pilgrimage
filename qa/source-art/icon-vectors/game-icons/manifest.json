@@ -1,0 +1,354 @@
+{
+  "3d-hammer": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/3d-hammer.svg"
+  },
+  "acid-tube": {
+    "author": "sbed",
+    "file": "qa/source-art/icon-vectors/game-icons/sbed/acid-tube.svg"
+  },
+  "armor-downgrade": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/armor-downgrade.svg"
+  },
+  "attached-shield": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/attached-shield.svg"
+  },
+  "bandage-roll": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/bandage-roll.svg"
+  },
+  "bloody-sword": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/bloody-sword.svg"
+  },
+  "bordered-shield": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/bordered-shield.svg"
+  },
+  "broadsword": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/broadsword.svg"
+  },
+  "broken-shield": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/broken-shield.svg"
+  },
+  "bubbling-flask": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/bubbling-flask.svg"
+  },
+  "campfire": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/campfire.svg"
+  },
+  "candle-flame": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/candle-flame.svg"
+  },
+  "candle-holder": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/candle-holder.svg"
+  },
+  "candle-light": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/candle-light.svg"
+  },
+  "candle-skull": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/candle-skull.svg"
+  },
+  "candlebright": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/candlebright.svg"
+  },
+  "candles": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/candles.svg"
+  },
+  "cape-armor": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/cape-armor.svg"
+  },
+  "cog": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/cog.svg"
+  },
+  "coins": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/coins.svg"
+  },
+  "crossbow": {
+    "author": "carl-olsen",
+    "file": "qa/source-art/icon-vectors/game-icons/carl-olsen/crossbow.svg"
+  },
+  "crossed-slashes": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/crossed-slashes.svg"
+  },
+  "crossed-swords": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/crossed-swords.svg"
+  },
+  "crow-dive": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/crow-dive.svg"
+  },
+  "crown-of-thorns": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/crown-of-thorns.svg"
+  },
+  "crowned-skull": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/crowned-skull.svg"
+  },
+  "dripping-sword": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/dripping-sword.svg"
+  },
+  "duel": {
+    "author": "sbed",
+    "file": "qa/source-art/icon-vectors/game-icons/sbed/duel.svg"
+  },
+  "egyptian-bird": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/egyptian-bird.svg"
+  },
+  "executioner-hood": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/executioner-hood.svg"
+  },
+  "fire-bowl": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/fire-bowl.svg"
+  },
+  "fire-gem": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/fire-gem.svg"
+  },
+  "fire-shrine": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/fire-shrine.svg"
+  },
+  "fizzing-flask": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/fizzing-flask.svg"
+  },
+  "flame-spin": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/flame-spin.svg"
+  },
+  "footsteps": {
+    "author": "skoll",
+    "file": "qa/source-art/icon-vectors/game-icons/skoll/footsteps.svg"
+  },
+  "glowing-artifact": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/glowing-artifact.svg"
+  },
+  "healing-shield": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/healing-shield.svg"
+  },
+  "heart": {
+    "author": "badges",
+    "file": "qa/source-art/icon-vectors/game-icons/badges/heart.svg"
+  },
+  "heart-armor": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/heart-armor.svg"
+  },
+  "holy-grail": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/holy-grail.svg"
+  },
+  "holy-symbol": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/holy-symbol.svg"
+  },
+  "holy-water": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/holy-water.svg"
+  },
+  "inspiration": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/inspiration.svg"
+  },
+  "lantern-flame": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/lantern-flame.svg"
+  },
+  "layered-armor": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/layered-armor.svg"
+  },
+  "leather-armor": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/leather-armor.svg"
+  },
+  "lightning-flame": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/lightning-flame.svg"
+  },
+  "lotus-flower": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/lotus-flower.svg"
+  },
+  "magic-potion": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/magic-potion.svg"
+  },
+  "moon": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/moon.svg"
+  },
+  "open-treasure-chest": {
+    "author": "skoll",
+    "file": "qa/source-art/icon-vectors/game-icons/skoll/open-treasure-chest.svg"
+  },
+  "open-wound": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/open-wound.svg"
+  },
+  "opened-food-can": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/opened-food-can.svg"
+  },
+  "pause-button": {
+    "author": "guard13007",
+    "file": "qa/source-art/icon-vectors/game-icons/guard13007/pause-button.svg"
+  },
+  "piercing-sword": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/piercing-sword.svg"
+  },
+  "poison-cloud": {
+    "author": "sbed",
+    "file": "qa/source-art/icon-vectors/game-icons/sbed/poison-cloud.svg"
+  },
+  "potion-ball": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/potion-ball.svg"
+  },
+  "potion-of-madness": {
+    "author": "starseeker",
+    "file": "qa/source-art/icon-vectors/game-icons/starseeker/potion-of-madness.svg"
+  },
+  "prayer": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/prayer.svg"
+  },
+  "prayer-beads": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/prayer-beads.svg"
+  },
+  "primitive-torch": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/primitive-torch.svg"
+  },
+  "quick-slash": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/quick-slash.svg"
+  },
+  "razor-blade": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/razor-blade.svg"
+  },
+  "regeneration": {
+    "author": "sbed",
+    "file": "qa/source-art/icon-vectors/game-icons/sbed/regeneration.svg"
+  },
+  "round-potion": {
+    "author": "caro-asercion",
+    "file": "qa/source-art/icon-vectors/game-icons/caro-asercion/round-potion.svg"
+  },
+  "salt-shaker": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/salt-shaker.svg"
+  },
+  "scar-wound": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/scar-wound.svg"
+  },
+  "scroll-unfurled": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/scroll-unfurled.svg"
+  },
+  "shattered-sword": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/shattered-sword.svg"
+  },
+  "shield": {
+    "author": "sbed",
+    "file": "qa/source-art/icon-vectors/game-icons/sbed/shield.svg"
+  },
+  "shield-reflect": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/shield-reflect.svg"
+  },
+  "shop": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/shop.svg"
+  },
+  "smoke-bomb": {
+    "author": "darkzaitzev",
+    "file": "qa/source-art/icon-vectors/game-icons/darkzaitzev/smoke-bomb.svg"
+  },
+  "smoking-orb": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/smoking-orb.svg"
+  },
+  "surrounded-shield": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/surrounded-shield.svg"
+  },
+  "sword-slice": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/sword-slice.svg"
+  },
+  "sword-smithing": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/sword-smithing.svg"
+  },
+  "sword-wound": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/sword-wound.svg"
+  },
+  "syringe": {
+    "author": "sbed",
+    "file": "qa/source-art/icon-vectors/game-icons/sbed/syringe.svg"
+  },
+  "templar-shield": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/templar-shield.svg"
+  },
+  "treasure-map": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/treasure-map.svg"
+  },
+  "two-handed-sword": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/two-handed-sword.svg"
+  },
+  "waterskin": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/waterskin.svg"
+  },
+  "wax-seal": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/wax-seal.svg"
+  },
+  "wax-tablet": {
+    "author": "delapouite",
+    "file": "qa/source-art/icon-vectors/game-icons/delapouite/wax-tablet.svg"
+  },
+  "winged-emblem": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/winged-emblem.svg"
+  },
+  "wingfoot": {
+    "author": "lorc",
+    "file": "qa/source-art/icon-vectors/game-icons/lorc/wingfoot.svg"
+  }
+}

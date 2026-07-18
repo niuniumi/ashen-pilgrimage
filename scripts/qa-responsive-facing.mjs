@@ -27,6 +27,13 @@ async function waitScene(page, key) {
   await page.waitForFunction((sceneKey) => window.__ASHEN_GAME__?.scene?.getScenes(true).some((scene) => scene.scene.key === sceneKey), key);
 }
 
+async function waitCharacterCards(page) {
+  await page.waitForFunction(() => {
+    const cards = window.__ASHEN_GAME__?.scene?.keys?.CharacterSelectScene?.cards;
+    return cards?.length === 3 && cards.every((card) => card.container.alpha >= 0.99 && Math.abs(card.container.y - card.baseY) < 0.5);
+  });
+}
+
 for (const viewport of viewports) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
@@ -51,6 +58,7 @@ for (const viewport of viewports) {
   await waitScene(page, 'MainMenuScene');
   await page.evaluate(() => window.__ASHEN_QA__.startScene('CharacterSelectScene'));
   await waitScene(page, 'CharacterSelectScene');
+  await waitCharacterCards(page);
 
   const selectState = await page.evaluate(() => {
     const scene = window.__ASHEN_GAME__.scene.keys.CharacterSelectScene;
@@ -58,8 +66,10 @@ for (const viewport of viewports) {
     return {
       selected: scene.selected,
       startDisabled: scene.startButton.disabled,
-      heroTextures: scene.cards.map((card) => card.frontArt.actorSprite?.texture?.key ?? null),
-      heroFlipX: scene.cards.map((card) => card.frontArt.actorSprite?.flipX ?? null),
+      heroTextures: scene.cards.map((card) => card.art.actorSprite?.texture?.key ?? null),
+      heroFlipX: scene.cards.map((card) => card.art.actorSprite?.flipX ?? null),
+      heroDisplayHeights: scene.cards.map((card) => card.art.actorSprite?.displayHeight ?? null),
+      heroFootLines: scene.cards.map((card) => card.container.y + card.art.y + (card.art.actorSprite?.y ?? 0)),
       canvas: { x: canvasRect.x, y: canvasRect.y, width: canvasRect.width, height: canvasRect.height },
       scroll: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight }
     };
@@ -72,6 +82,11 @@ for (const viewport of viewports) {
     'pixel-actor-ashblood-alchemist'
   ]);
   assert.deepEqual(selectState.heroFlipX, [false, false, false]);
+  assert.deepEqual(selectState.heroDisplayHeights, [300, 300, 300]);
+  assert.ok(
+    Math.max(...selectState.heroFootLines) - Math.min(...selectState.heroFootLines) < 0.5,
+    'character portrait foot baselines must remain visually identical'
+  );
   assert.ok(selectState.canvas.x >= -0.5 && selectState.canvas.y >= -0.5);
   assert.ok(selectState.canvas.x + selectState.canvas.width <= viewport.width + 0.5);
   assert.ok(selectState.canvas.y + selectState.canvas.height <= viewport.height + 0.5);

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { CARD_TYPES, COLORS } from '../game/constants.js';
 import { cardRarityColor, cardTypeBorder, CARD_TYPE_COLORS, drawCardIllustration } from '../art/CardArtFactory.js';
+import { CARD_ART_ATLAS, resolveCardArtFrame } from '../art/CardAssetCatalog.js';
 import { FONT } from '../design/textStyles.js';
 import { PIXEL_PALETTE, snapPixel } from '../art/PixelArtSystem.js';
 import { UITooltip } from './UITooltip.js';
@@ -28,7 +29,10 @@ export class UICard extends Phaser.GameObjects.Container {
     this.selectionRaise = options.selectionRaise ?? 0;
 
     this.frameImage = null;
-    this.artImage = null;
+    const artFrame = resolveCardArtFrame(scene, card.id);
+    this.artImage = artFrame
+      ? scene.add.image(0, -23, CARD_ART_ATLAS.key, artFrame).setOrigin(0.5)
+      : null;
     this.pressed = false;
     this.bg = scene.add.graphics();
     this.nameText = scene.add
@@ -194,7 +198,14 @@ export class UICard extends Phaser.GameObjects.Container {
     this.bg.fillRect(left + 8, top + 8, w - 16, h - 16);
     this.bg.fillStyle(fill, 0.9 * alpha);
     this.bg.fillRect(left + 8, top + 8, w - 16, 28);
-    drawCardIllustration(this.bg, this.card, left + 16, top + 40, w - 32, 58, alpha);
+    if (this.artImage) {
+      this.artImage
+        .setPosition(0, top + 69)
+        .setDisplaySize(w - 32, 58)
+        .setAlpha(alpha);
+    } else {
+      drawCardIllustration(this.bg, this.card, left + 16, top + 40, w - 32, 58, alpha);
+    }
     this.bg.fillStyle(PIXEL_PALETTE.black, alpha);
     this.bg.fillRect(left + 12, top + 104, w - 24, 56);
     this.bg.fillStyle(PIXEL_PALETTE.paperDark, 0.78 * alpha);

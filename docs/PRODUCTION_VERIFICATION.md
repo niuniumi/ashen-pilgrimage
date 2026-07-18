@@ -1,6 +1,6 @@
-# v2.3.0 生产验证手册
+# v2.4.0 生产验证手册
 
-本文固定《灰烬圣途》v2.3.0 的本地、CI 与 GitHub Pages 验证边界。命令默认从仓库根目录执行，环境为 Node.js 24、pnpm 11.7；浏览器 QA 还需要 Playwright Chromium。
+本文固定《灰烬圣途》v2.4.0 的本地、CI 与 GitHub Pages 验证边界。命令默认从仓库根目录执行，环境为 Node.js 24、pnpm 11.7；浏览器 QA 还需要 Playwright Chromium。
 
 ## 非浏览器门禁
 
@@ -35,6 +35,8 @@ pnpm run preview -- --port=4173
 pnpm run qa:map-migration -- --url=http://127.0.0.1:4173/
 pnpm run qa:progression -- --url=http://127.0.0.1:4173/
 pnpm run qa:chapter-transition -- --url=http://127.0.0.1:4173/
+pnpm run qa:character-select
+pnpm run qa:audio-runtime
 pnpm run qa:resume-stages -- --url=http://127.0.0.1:4173/
 pnpm run qa:role-matrix -- --url=http://127.0.0.1:4173/
 pnpm run qa:full-flow -- --url=http://127.0.0.1:4173/
@@ -83,12 +85,12 @@ pnpm run qa:deploy-smoke -- --url=https://niuniumi.github.io/ashen-pilgrimage/
 
 ## 最终运行记录
 
-本地记录时间：`2026-07-16 20:15:11 +08:00`。GitHub 项目仅在实际 workflow 与线上 smoke 完成后填写，不预先伪造发布结果。
+本地记录时间：`2026-07-18 23:41:14 +08:00`。GitHub 项目仅在实际 workflow 与线上 smoke 完成后填写，不预先伪造发布结果。
 
 | 项目 | 结果 | 证据 |
 | --- | --- | --- |
 | 合同测试 | 通过 | 发布合同 10/10；选择、续玩和视觉 QA 合同全部纳入完整测试 |
-| 完整测试与素材校验 | 通过 | 147/147；38/38 无损运行时图像；70 卡、24 正式遗物、28 敌人、21 事件、3 章 |
+| 完整测试与素材校验 | 通过 | 177/177；40/40 无损运行时图像；70 卡、24 正式遗物、28 敌人、21 事件、3 章 |
 | 根路径与 Pages base 构建 | 通过 | 两种构建均 0 warning；主 JS 1524.05 kB / gzip 434.29 kB；Pages 字体 URL 2/2 正确 |
 | 本地 Chromium 矩阵 | 通过 | 三章/断点/迁移/单次结算、三角色、28 敌人、9 像素场景、40 产品截图、响应式与暂停菜单全部通过；首屏 16 请求 / 3.14 MiB |
 | CI | 待主会话填写 | GitHub Actions run URL |

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { getEnemy } from '../data/enemies.js';
 import { PIXEL_PALETTE, snapPixel, stablePixelHash } from './PixelArtSystem.js';
 import { resolvePixelActorAsset } from './PixelAssetCatalog.js';
+import { fitActorDisplaySize } from './ActorPresentation.js';
 
 const BEAST_IDS = new Set(['black-hound', 'crownless-hound', 'plague-rat-swarm']);
 const FLYING_IDS = new Set(['crow-messenger', 'scripture-moth-swarm']);
@@ -62,14 +63,8 @@ function drawAtlasActor(scene, spriteName, x, y, scale, options = {}, actorType 
   const actor = scene.add.image(0, 112 + (asset.offsetY ?? 0), asset.key, asset.frame).setOrigin(0.5, 1);
   const frameWidth = actor.frame.realWidth || actor.frame.width;
   const frameHeight = actor.frame.realHeight || actor.frame.height;
-  let displayHeight = height;
-  let displayWidth = (frameWidth / frameHeight) * displayHeight;
-  if (Number.isFinite(options.maxWidth) && displayWidth > options.maxWidth) {
-    const ratio = options.maxWidth / displayWidth;
-    displayWidth *= ratio;
-    displayHeight *= ratio;
-  }
-  actor.setDisplaySize(Math.round(displayWidth), Math.round(displayHeight));
+  const displaySize = fitActorDisplaySize(frameWidth, frameHeight, height, options.maxWidth);
+  actor.setDisplaySize(displaySize.width, displaySize.height);
   actor.setFlipX(actorType === 'enemy' ? asset.facing !== 'left' : asset.facing === 'left');
   actor.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
   container.add([shadow, actor]);

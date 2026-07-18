@@ -11,7 +11,9 @@ try {
 }
 
 const root = process.cwd();
-const url = process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'http://127.0.0.1:4173/';
+const url = process.env.QA_URL
+  ?? process.argv.find((arg) => arg.startsWith('--url='))?.slice(6)
+  ?? 'http://127.0.0.1:4173/';
 const outDir = path.join(root, 'qa', 'screenshots', 'pixel_scenes');
 const reportFile = path.join(root, 'qa', 'pixel-scenes-report.json');
 fs.mkdirSync(outDir, { recursive: true });

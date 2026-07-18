@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { drawBadgeIcon } from '../art/IconFactory.js';
+import { UI_ICON_ATLAS, resolveUIIconFrame } from '../art/UIIconAssetCatalog.js';
 import { THEME } from '../game/Theme.js';
 
 export class UIIcon extends Phaser.GameObjects.Container {
@@ -9,7 +10,13 @@ export class UIIcon extends Phaser.GameObjects.Container {
     this.size = options.size ?? 42;
     this.options = options;
     this.relicImage = null;
-    this.asset = null;
+    const frame = resolveUIIconFrame(scene, type);
+    this.asset = frame
+      ? scene.add
+        .image(0, 0, UI_ICON_ATLAS.key, frame)
+        .setDisplaySize(this.size, this.size)
+        .setAlpha(options.alpha ?? (options.muted ? 0.45 : 1))
+      : null;
     this.g = scene.add.graphics();
     this.add([this.relicImage, this.asset, this.g].filter(Boolean));
     scene.add.existing(this);

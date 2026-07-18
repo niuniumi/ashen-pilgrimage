@@ -356,8 +356,27 @@ export default class MapScene extends Phaser.Scene {
     const compact = this.compactMap;
     const container = this.add.container(pos.x, pos.y);
     container.setAlpha(1);
-    container.setScale(selectable ? 1.08 : 1);
+    const restingScale = selectable ? 1.08 : 1;
+    container.setScale(restingScale);
     container.setDepth(20);
+    if (selectable) {
+      const aura = this.add.graphics();
+      const auraSize = compact ? 50 : 58;
+      aura.lineStyle(2, THEME.colors.candle, 0.72);
+      aura.strokeRect(-auraSize / 2, -auraSize / 2, auraSize, auraSize);
+      aura.setAlpha(this.motionEnabled ? 0.28 : 0.58);
+      container.add(aura);
+      if (this.motionEnabled) {
+        this.tweens.add({
+          targets: aura,
+          alpha: 0.82,
+          duration: 980,
+          ease: 'Sine.InOut',
+          yoyo: true,
+          repeat: -1
+        });
+      }
+    }
     if (!hasTexture(this, HANDPAINTED_KEYS.ui)) {
       const seal = this.add.graphics();
       seal.fillStyle(completed ? 0x3a2d20 : 0x6a3d20, completed ? 0.42 : 0.82);
@@ -382,9 +401,29 @@ export default class MapScene extends Phaser.Scene {
     hit.setInteractive({ useHandCursor: true });
     hit.on('pointerover', () => {
       this.audio?.play('uiHover');
+      this.tweens.killTweensOf(container);
+      this.tweens.add({
+        targets: container,
+        scaleX: restingScale + 0.1,
+        scaleY: restingScale + 0.1,
+        y: pos.y - 4,
+        duration: this.motionEnabled ? 130 : 0,
+        ease: 'Back.Out'
+      });
       this.tooltip.show(pos.x + 42, pos.y - 82, `${MapSystem.getNodeLabel(node.type)}\n${NODE_TIPS[node.type]}`);
     });
-    hit.on('pointerout', () => this.tooltip.hide());
+    hit.on('pointerout', () => {
+      this.tooltip.hide();
+      this.tweens.killTweensOf(container);
+      this.tweens.add({
+        targets: container,
+        scaleX: restingScale,
+        scaleY: restingScale,
+        y: pos.y,
+        duration: this.motionEnabled ? 150 : 0,
+        ease: 'Sine.Out'
+      });
+    });
     hit.on('pointerup', () => this.selectNode(node));
     this.nodeViews.push({ id: node.id, type: node.type, x: pos.x, y: pos.y, depth: container.depth, selectable, completed });
   }

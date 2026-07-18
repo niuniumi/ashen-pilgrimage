@@ -1,12 +1,12 @@
 {
-  "url": "http://127.0.0.1:4186/",
-  "generatedAt": "2026-07-14T09:49:18.829Z",
+  "url": "http://127.0.0.1:4193/",
+  "generatedAt": "2026-07-18T15:35:50.374Z",
   "scenes": [
     {
       "slug": "01_prologue",
       "sceneKey": "PrologueScene",
       "screenshot": "qa/screenshots/pixel_scenes/01_prologue.png",
-      "bytes": 787326,
+      "bytes": 788181,
       "active": true,
       "textCount": 0,
       "fonts": [],
@@ -38,7 +38,7 @@
       "slug": "03_chest",
       "sceneKey": "ChestScene",
       "screenshot": "qa/screenshots/pixel_scenes/03_chest.png",
-      "bytes": 943681,
+      "bytes": 943686,
       "active": true,
       "textCount": 2,
       "fonts": [
@@ -55,7 +55,7 @@
       "slug": "04_event",
       "sceneKey": "EventScene",
       "screenshot": "qa/screenshots/pixel_scenes/04_event.png",
-      "bytes": 818526,
+      "bytes": 820507,
       "active": true,
       "textCount": 3,
       "fonts": [
@@ -89,7 +89,7 @@
       "slug": "06_boss_intro",
       "sceneKey": "BossIntroScene",
       "screenshot": "qa/screenshots/pixel_scenes/06_boss_intro.png",
-      "bytes": 1273391,
+      "bytes": 1337953,
       "active": true,
       "textCount": 2,
       "fonts": [
@@ -106,7 +106,7 @@
       "slug": "07_act_clear",
       "sceneKey": "ActClearScene",
       "screenshot": "qa/screenshots/pixel_scenes/07_act_clear.png",
-      "bytes": 996886,
+      "bytes": 1006397,
       "active": true,
       "textCount": 2,
       "fonts": [
@@ -123,35 +123,27 @@
       "slug": "08_result_defeat",
       "sceneKey": "ResultScene",
       "screenshot": "qa/screenshots/pixel_scenes/08_result_defeat.png",
-      "bytes": 832834,
+      "bytes": 325081,
       "active": true,
-      "textCount": 8,
-      "fonts": [
-        "PixelCN, \"Microsoft YaHei\", monospace"
-      ],
+      "textCount": 0,
+      "fonts": [],
       "legacyFonts": [],
       "overflow": [],
       "defeatTombstone": true,
-      "pixelBackgrounds": [
-        "pixel-background-folio"
-      ]
+      "pixelBackgrounds": []
     },
     {
       "slug": "09_result_victory",
       "sceneKey": "ResultScene",
       "screenshot": "qa/screenshots/pixel_scenes/09_result_victory.png",
-      "bytes": 934571,
+      "bytes": 271060,
       "active": true,
-      "textCount": 8,
-      "fonts": [
-        "PixelCN, \"Microsoft YaHei\", monospace"
-      ],
+      "textCount": 0,
+      "fonts": [],
       "legacyFonts": [],
       "overflow": [],
       "defeatTombstone": false,
-      "pixelBackgrounds": [
-        "pixel-background-folio"
-      ]
+      "pixelBackgrounds": []
     }
   ],
   "errors": []

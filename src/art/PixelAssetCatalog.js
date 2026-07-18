@@ -1,3 +1,6 @@
+import { CARD_ART_ATLAS } from './CardAssetCatalog.js';
+import { UI_ICON_ATLAS } from './UIIconAssetCatalog.js';
+
 export const PIXEL_ASSETS = {
   menu: { key: 'pixel-bg-menu', url: 'assets/pixel/backgrounds/menu.webp' },
   map: { key: 'pixel-bg-map', url: 'assets/pixel/backgrounds/map.webp' },
@@ -74,7 +77,10 @@ const versionedActorFiles = {
   'hollow-crown-regent': 'hollow-crown-regent-v3'
 };
 
-export const PIXEL_ATLASES = {};
+export const PIXEL_ATLASES = {
+  cardArt: CARD_ART_ATLAS,
+  uiIcons: UI_ICON_ATLAS
+};
 
 export const PIXEL_DECORATIONS = {
   defeatTombstone: {
@@ -111,6 +117,7 @@ export function resolvePixelActorAsset(actorId) {
 
 export const PIXEL_TEXTURE_ASSETS = [
   ...Object.values(PIXEL_ASSETS),
+  ...Object.values(PIXEL_ATLASES),
   ...Object.values(directActors),
   ...Object.values(PIXEL_DECORATIONS)
 ];

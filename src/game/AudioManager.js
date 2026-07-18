@@ -1,5 +1,5 @@
-import Phaser from 'phaser';
 import { SaveManager } from './SaveManager.js';
+import { resolveSfxMixProfile } from './AudioMixProfiles.js';
 import { resolveBgmProfile } from './AudioProfiles.js';
 import { resolveAudioHintLayout } from './AudioHintLayout.js';
 import { FONT } from '../design/textStyles.js';
@@ -48,22 +48,6 @@ const SFX_KEYS = {
   turn: ['sfx-turn-1', 'sfx-turn-2']
 };
 
-const SFX_GAIN = {
-  uiHover: 0.34,
-  uiClick: 0.48,
-  cardHover: 0.38,
-  cardSelect: 0.56,
-  cardPlay: 0.68,
-  swordHit: 0.82,
-  shieldBlock: 0.78,
-  enemyHit: 0.7,
-  playerHit: 0.74,
-  pageTurn: 0.58,
-  storyText: 0.42,
-  coin: 0.64,
-  error: 0.52
-};
-
 function clamp01(value, fallback = 0.3) {
   const number = Number(value);
   if (!Number.isFinite(number)) return fallback;
@@ -71,9 +55,13 @@ function clamp01(value, fallback = 0.3) {
 }
 
 export class AudioManager {
-  constructor() {
+  constructor(dependencies = {}) {
     this.lastPlayed = new Map();
     this.poolCursor = new Map();
+    this.now = dependencies.now ?? (() => globalThis.performance?.now?.() ?? Date.now());
+    this.random = dependencies.random ?? Math.random;
+    this.schedule = dependencies.setTimeout ?? globalThis.setTimeout.bind(globalThis);
+    this.cancelSchedule = dependencies.clearTimeout ?? globalThis.clearTimeout.bind(globalThis);
     this.scene = null;
     this.unlocked = false;
     this.currentBgm = null;
@@ -81,6 +69,10 @@ export class AudioManager {
     this.currentBgmProfile = resolveBgmProfile('menu');
     this.desiredBgmKind = 'menu';
     this.ducked = false;
+    this.transientDuckGain = 1;
+    this.transientDuckTimer = null;
+    this.transientDuckToken = 0;
+    this.transientDuckUntil = 0;
     this.unlockHint = null;
     this.pendingBgmKey = null;
   }
@@ -100,14 +92,19 @@ export class AudioManager {
     }
     if (this.desiredBgmKind) {
       const kind = this.desiredBgmKind;
-      window.setTimeout(() => this.playBgm(kind), 80);
+      this.schedule(() => this.playBgm(kind), 80);
     }
   }
 
   targetBgmVolume() {
     const settings = SaveManager.readSettings();
     if (settings.muted || !settings.music) return 0;
-    return clamp01(settings.bgmVolume, 0.3) * (this.currentBgmProfile?.gain ?? 1) * (this.ducked ? 0.5 : 1);
+    return (
+      clamp01(settings.bgmVolume, 0.3) *
+      (this.currentBgmProfile?.gain ?? 1) *
+      (this.ducked ? 0.5 : 1) *
+      this.transientDuckGain
+    );
   }
 
   canUsePhaserAudio(key) {
@@ -243,6 +240,30 @@ export class AudioManager {
     if (this.currentBgm) this.fadeSound(this.currentBgm, this.targetBgmVolume(), 240);
   }
 
+  duckBgmFor(profile) {
+    if (!profile) return;
+    const duckGain = clamp01(profile.gain, 1);
+    const duration = Math.max(0, Number(profile.duration) || 0);
+    const attack = Math.max(0, Number(profile.attack) || 0);
+    const release = Math.max(0, Number(profile.release) || 0);
+    const now = this.now();
+    this.transientDuckUntil = Math.max(this.transientDuckUntil, now + duration);
+    const remaining = Math.max(0, this.transientDuckUntil - now);
+    const token = ++this.transientDuckToken;
+
+    if (this.transientDuckTimer !== null) this.cancelSchedule(this.transientDuckTimer);
+    this.transientDuckGain = Math.min(this.transientDuckGain, duckGain);
+    if (this.currentBgm) this.fadeSound(this.currentBgm, this.targetBgmVolume(), attack);
+
+    this.transientDuckTimer = this.schedule(() => {
+      if (token !== this.transientDuckToken) return;
+      this.transientDuckTimer = null;
+      this.transientDuckUntil = 0;
+      this.transientDuckGain = 1;
+      if (this.currentBgm) this.fadeSound(this.currentBgm, this.targetBgmVolume(), release);
+    }, remaining);
+  }
+
   fadeSound(sound, volume, duration = 800, onComplete = null) {
     const scene = this.scene;
     if (!sound) return;
@@ -291,11 +312,12 @@ export class AudioManager {
     const settings = SaveManager.readSettings();
     if (!settings.sound || settings.muted) return;
     const sound = ALIASES[kind] ?? kind;
-    const now = performance.now();
-    const last = this.lastPlayed.get(sound) ?? 0;
-    const cooldown = Number.isFinite(options.cooldown) ? options.cooldown : 34;
-    if (now - last < cooldown) return;
-    this.lastPlayed.set(sound, now);
+    const profile = resolveSfxMixProfile(sound);
+    const cooldownGroup = profile.cooldownGroup ?? sound;
+    const now = this.now();
+    const last = this.lastPlayed.get(cooldownGroup);
+    const cooldown = Number.isFinite(options.cooldown) ? Math.max(0, options.cooldown) : profile.cooldown;
+    if (last !== undefined && now - last < cooldown) return;
     const scene = this.scene;
     const pool = SFX_KEYS[sound] ?? SFX_KEYS.uiClick;
     const available = pool.filter((key) => scene?.cache?.audio?.exists?.(key));
@@ -305,13 +327,17 @@ export class AudioManager {
     }
     const cursor = this.poolCursor.get(sound) ?? 0;
     const key = available[cursor % available.length];
-    this.poolCursor.set(sound, cursor + 1);
     try {
-      const variance = Number.isFinite(options.variance) ? options.variance : 0;
-      const rate = Number.isFinite(options.rate) ? options.rate : 1 + (variance ? Phaser.Math.FloatBetween(-variance, variance) : 0);
+      const variance = Number.isFinite(options.variance) ? Math.max(0, options.variance) : profile.variance;
+      const random = clamp01(this.random(), 0.5);
+      const rate = Number.isFinite(options.rate) ? options.rate : 1 + (random * 2 - 1) * variance;
       const detune = Number.isFinite(options.detune) ? options.detune : 0;
-      const volume = clamp01(settings.sfxVolume, 0.62) * (SFX_GAIN[sound] ?? 0.72) * (Number.isFinite(options.volume) ? options.volume : 1);
-      scene.sound.play(key, { volume: clamp01(volume, 0.75), rate, detune });
+      const volume = clamp01(settings.sfxVolume, 0.62) * profile.gain * (Number.isFinite(options.volume) ? options.volume : 1);
+      const played = scene.sound.play(key, { volume: clamp01(volume, 0.75), rate, detune });
+      if (played === false) return;
+      this.lastPlayed.set(cooldownGroup, now);
+      this.poolCursor.set(sound, cursor + 1);
+      this.duckBgmFor(profile.duck);
     } catch (error) {
       console.warn(`SFX play failed: ${key}`, error);
     }

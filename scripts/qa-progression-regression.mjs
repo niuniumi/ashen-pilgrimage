@@ -8,7 +8,9 @@ try {
   ({ chromium } = require('C:/Users/16224/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/.pnpm/playwright@1.61.0/node_modules/playwright'));
 }
 
-const url = process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'http://127.0.0.1:4173/';
+const url = process.env.QA_URL
+  ?? process.argv.find((arg) => arg.startsWith('--url='))?.slice(6)
+  ?? 'http://127.0.0.1:4173/';
 const report = { url, states: [], errors: [] };
 
 function assert(value, message) {

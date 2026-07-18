@@ -7,6 +7,8 @@ qa/audio-source/
 qa/source-art/*
 !qa/source-art/runtime-masters/
 !qa/source-art/runtime-masters/**
+!qa/source-art/icon-vectors/
+!qa/source-art/icon-vectors/**
 !qa/source-art/curated-actors/
 !qa/source-art/curated-actors/**
 !qa/source-art/generated-enemies-v3/

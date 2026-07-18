@@ -1,4 +1,4 @@
-import { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_DECORATIONS, resolvePixelActorAsset } from '../art/PixelAssetCatalog.js';
+import { PIXEL_ACTORS, PIXEL_ASSETS, PIXEL_ATLASES, PIXEL_DECORATIONS, resolvePixelActorAsset } from '../art/PixelAssetCatalog.js';
 import { characters } from '../data/characters.js';
 import { ENCOUNTER_POOLS } from '../data/encounters.js';
 import { enemies } from '../data/enemies.js';
@@ -31,7 +31,7 @@ const STATIC_BUNDLES = {
     audio: [createBgmAsset('menu'), ...audioPools(['card-select'])]
   },
   folio: {
-    images: [PIXEL_ASSETS.folio],
+    images: [PIXEL_ASSETS.folio, PIXEL_ATLASES.cardArt, PIXEL_ATLASES.uiIcons],
     audio: []
   },
   'story-audio': {
@@ -127,14 +127,14 @@ function createActBundle(name) {
 
   if (kind === 'map') {
     return {
-      images: [PIXEL_ASSETS.map],
+      images: [PIXEL_ASSETS.map, PIXEL_ATLASES.uiIcons],
       audio: [createBgmAsset(`map-act-${act}`)]
     };
   }
 
   const boss = kind === 'boss';
   return {
-    images: [PIXEL_ASSETS[`battle${act}`], ...enemyAssetsForAct(act, boss ? 'boss' : 'battle')],
+    images: [PIXEL_ASSETS[`battle${act}`], PIXEL_ATLASES.cardArt, ...enemyAssetsForAct(act, boss ? 'boss' : 'battle')],
     audio: [
       createBgmAsset(boss ? 'boss' : `battle-act-${act}`),
       ...audioPools([...COMBAT_SFX, ...(boss ? ['boss'] : [])])

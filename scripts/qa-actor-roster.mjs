@@ -13,7 +13,9 @@ try {
 }
 
 const root = process.cwd();
-const url = process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'http://127.0.0.1:4173/';
+const url = process.env.QA_URL
+  ?? process.argv.find((arg) => arg.startsWith('--url='))?.slice(6)
+  ?? 'http://127.0.0.1:4173/';
 const outputDir = path.join(root, 'qa', 'screenshots', 'actor-roster');
 const reportPath = path.join(root, 'qa', 'actor-roster-report.json');
 const report = { url, actors: [], errors: [] };

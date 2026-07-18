@@ -1,5 +1,5 @@
 {
-  "url": "https://niuniumi.github.io/ashen-pilgrimage/",
+  "url": "http://127.0.0.1:4192/",
   "results": [
     {
       "viewport": {
@@ -18,6 +18,16 @@
           false,
           false,
           false
+        ],
+        "heroDisplayHeights": [
+          300,
+          300,
+          300
+        ],
+        "heroFootLines": [
+          578,
+          578,
+          578.0872389622211
         ],
         "canvas": {
           "x": 0,
@@ -38,8 +48,8 @@
         "tutorial": {
           "x": 0,
           "y": 0,
-          "width": 1454,
-          "height": 556.5
+          "width": 1467,
+          "height": 576
         }
       }
     },
@@ -61,6 +71,16 @@
           false,
           false
         ],
+        "heroDisplayHeights": [
+          300,
+          300,
+          300
+        ],
+        "heroFootLines": [
+          578,
+          578,
+          578.0872389622211
+        ],
         "canvas": {
           "x": 0,
           "y": 36,
@@ -80,8 +100,8 @@
         "tutorial": {
           "x": 0,
           "y": 0,
-          "width": 1454,
-          "height": 556.5
+          "width": 1467,
+          "height": 576
         }
       }
     }

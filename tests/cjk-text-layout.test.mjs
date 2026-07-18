@@ -25,6 +25,18 @@ test('wrapMeasuredText keeps Chinese opening and closing punctuation with text',
   assert.equal(lines.some((line) => openingPunctuation.test(line.at(-1) ?? '')), false);
 });
 
+test('wrapMeasuredText prioritizes measured width when a closing mark cannot share a legal line', () => {
+  const measure = (value) => [...value].reduce(
+    (total, glyph) => total + ({ A: 1, '甲': 2, '，': 2 }[glyph] ?? 1),
+    0
+  );
+  const wrapped = wrapMeasuredText('A甲，', 3, measure);
+  const lines = wrapped.split('\n');
+
+  assert.deepEqual(lines, ['A甲', '，']);
+  assert.ok(lines.every((line) => measure(line) <= 3));
+});
+
 test('wrapMeasuredText preserves authored blank paragraphs', () => {
   assert.equal(
     wrapMeasuredText('第一段\n\n第二段', 12, (value) => [...value].length),

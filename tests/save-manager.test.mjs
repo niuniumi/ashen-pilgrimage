@@ -68,3 +68,13 @@ test('readSettings keeps the device motion preference when legacy settings omit 
 
   assert.equal(SaveManager.readSettings().animation, false);
 });
+
+test('readSettings preserves explicit animation choices over the reduced-motion device default', () => {
+  const storage = installStorage();
+  window.matchMedia = () => ({ matches: true });
+
+  storage.set(SETTINGS_KEY, JSON.stringify({ animation: true }));
+  assert.equal(SaveManager.readSettings().animation, true);
+  storage.set(SETTINGS_KEY, JSON.stringify({ animation: false }));
+  assert.equal(SaveManager.readSettings().animation, false);
+});

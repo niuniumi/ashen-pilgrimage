@@ -41,18 +41,28 @@ function wrapParagraph(paragraph, maxWidth, measure) {
 
     if (isClosing(glyph) && line.length > 1 && !isOpening(line.at(-1))) {
       const trailingGlyph = line.pop();
-      commit();
-      line = [trailingGlyph, glyph];
-      continue;
+      const repairedLine = [trailingGlyph, glyph].join('');
+      if (measuredWidth(repairedLine, measure) <= maxWidth) {
+        commit();
+        line = [trailingGlyph, glyph];
+        continue;
+      }
+      line.push(trailingGlyph);
     }
 
     if (isOpening(line.at(-1)) && line.length > 1) {
       const openingGlyph = line.pop();
-      commit();
-      line = [openingGlyph, glyph];
-      continue;
+      const repairedLine = [openingGlyph, glyph].join('');
+      if (measuredWidth(repairedLine, measure) <= maxWidth) {
+        commit();
+        line = [openingGlyph, glyph];
+        continue;
+      }
+      line.push(openingGlyph);
     }
 
+    // Width wins if one legal CJK punctuation pair cannot fit together. This
+    // permits a singleton forbidden mark only in that mathematically impossible case.
     commit();
     line = [glyph];
   }

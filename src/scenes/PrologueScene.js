@@ -104,17 +104,6 @@ export default class PrologueScene extends Phaser.Scene {
     }
   }
 
-  fitPageImage(image) {
-    const texture = this.textures.get(image.texture.key);
-    const source = texture.getSourceImage();
-    const sourceWidth = source?.width ?? 1536;
-    const sourceHeight = source?.height ?? 864;
-    const maxWidth = 1488;
-    const maxHeight = 824;
-    const scale = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight);
-    image.setDisplaySize(sourceWidth * scale, sourceHeight * scale);
-  }
-
   createControls() {
     this.prevButton = drawBackArrowButton(this, 82, GAME_HEIGHT / 2, '', () => this.turnPage(-1), {
       width: 142,

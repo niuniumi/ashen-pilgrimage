@@ -178,8 +178,9 @@ test('preserves a pending reward checkpoint instead of rolling back its active n
 
 test('preserves explicit non-battle stages instead of rolling back the active node', () => {
   const map = MapSystem.createSeededMap(1, createRngState(94)).map;
-  map.activeNode = 'n0';
-  map.path = ['n0'];
+  const shop = map.nodes.find((node) => node.type === 'shop');
+  map.activeNode = shop.id;
+  map.path = [shop.id];
   const migrated = migrateRun(legacyRun({
     version: 4,
     seed: 94,
@@ -189,8 +190,34 @@ test('preserves explicit non-battle stages instead of rolling back the active no
   }));
 
   assert.equal(migrated.pendingScene, 'shop');
-  assert.equal(migrated.map.activeNode, 'n0');
-  assert.deepEqual(migrated.map.path, ['n0']);
+  assert.equal(migrated.map.activeNode, shop.id);
+  assert.deepEqual(migrated.map.path, [shop.id]);
+});
+
+test('rolls an incompatible legacy node stage back to a playable map', () => {
+  const map = MapSystem.createSeededMap(1, createRngState(96)).map;
+  map.activeNode = 'n0';
+  map.path = ['n0'];
+  const migrated = migrateRun(legacyRun({
+    version: 4,
+    seed: 96,
+    rngState: createRngState(96),
+    map,
+    pendingScene: 'chest',
+    checkpoint: { sceneKey: 'BattleScene' },
+    pendingReward: { gold: 99 }
+  }));
+
+  assert.equal(migrated.pendingScene, null);
+  assert.equal(migrated.map.activeNode, null);
+  assert.deepEqual(migrated.map.available, ['n0']);
+  assert.equal(migrated.checkpoint, null);
+  assert.equal(migrated.pendingReward, undefined);
+});
+
+test('fills missing legacy relic collections with an empty list', () => {
+  const migrated = migrateRun(legacyRun({ relics: undefined }));
+  assert.deepEqual(migrated.relics, []);
 });
 
 test('infers act clear for a legacy save with a completed boss and no available nodes', () => {

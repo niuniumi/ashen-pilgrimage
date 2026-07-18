@@ -55,3 +55,8 @@ test('loadRun migrates valid old saves and persists the repaired v4 value', () =
   assert.equal(persisted.version, 4);
   assert.ok(persisted.rngState);
 });
+
+test('saveRun rejects a run with an unknown relic id', () => {
+  installStorage();
+  assert.equal(SaveManager.saveRun({ ...v1Run(), relics: ['unknown-relic'] }), false);
+});

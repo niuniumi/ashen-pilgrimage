@@ -267,7 +267,7 @@ export const relics = [
 ];
 
 export function getRelic(relicId) {
-  return relics.find((relic) => relic.id === relicId) ?? relics[0];
+  return relics.find((relic) => relic.id === relicId);
 }
 
 export function isLegacyRelic(relic) {

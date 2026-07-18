@@ -1,6 +1,7 @@
 import { SCENES } from '../game/constants.js';
 import { SaveManager } from '../game/SaveManager.js';
 import { MapSystem } from '../systems/MapSystem.js';
+import { prepareMainMenuExit, prepareMapExit } from '../game/RunStagePolicy.js';
 import { THEME, textStyle, titleStyle } from '../game/Theme.js';
 import { UIButton } from './UIButton.js';
 import { UIFrame } from './UIFrame.js';
@@ -78,6 +79,7 @@ export class PauseMenu {
     else if (this.submenu === 'guide') this.drawGuide();
     else if (this.submenu === 'confirm-menu') this.drawConfirm('返回主菜单', '当前进度会先保存到本地。确认返回主菜单？', () => this.goMainMenu());
     else if (this.submenu === 'confirm-map') this.drawConfirm('返回地图', '当前战斗进度不会保留。确认返回地图？', () => this.goMap());
+    else if (this.submenu === 'map-locked') this.drawMapLocked();
     else if (this.submenu === 'confirm-restart') this.drawConfirm('重新开始本局', '这会清除当前旅途并重新选择角色。确认？', () => this.restartRun());
     else if (this.submenu === 'confirm-clear') {
       this.drawConfirm('清除存档', '这会清除当前旅途和设置。确认？', () => {
@@ -96,6 +98,7 @@ export class PauseMenu {
       guide: '旅途指南',
       'confirm-menu': '确认操作',
       'confirm-map': '确认操作',
+      'map-locked': '结算进行中',
       'confirm-restart': '确认操作',
       'confirm-clear': '确认操作'
     }[this.submenu] ?? '暂停';
@@ -211,26 +214,49 @@ export class PauseMenu {
     this.addButton(166, '取消', () => this.redraw('main'), { width: 180 });
   }
 
+  drawMapLocked() {
+    this.container.add(
+      this.scene.add
+        .text(0, -56, '战斗结果正在结算，请等待奖励、章节结算或结局页面打开。', {
+          ...textStyle(21, THEME.css.body, { align: 'center', lineSpacing: 10 }),
+          wordWrap: { width: 430 }
+        })
+        .setOrigin(0.5)
+    );
+    this.addButton(126, '继续等待', () => this.redraw('main'), { width: 220 });
+  }
+
   goMainMenu() {
-    const run = this.prepareRunForMapReturn();
-    if (run) SaveManager.saveRun(run);
+    const run = this.currentRun();
+    const result = prepareMainMenuExit(run);
+    if (result.ok) {
+      this.scene.registry.set('run', result.run);
+      SaveManager.saveRun(result.run);
+    }
     this.close();
     this.scene.scene.start(SCENES.MainMenu);
   }
 
   goMap() {
-    const run = this.prepareRunForMapReturn();
-    if (run) SaveManager.saveRun(run);
+    const run = this.currentRun();
+    const result = prepareMapExit(run);
+    if (!result.ok) {
+      this.scene.audio?.play('error');
+      this.redraw('map-locked');
+      return false;
+    }
+    if (result.run?.map?.activeNode && !result.run.pendingReward) MapSystem.abandonActiveNode(result.run);
+    if (result.run) {
+      this.scene.registry.set('run', result.run);
+      SaveManager.saveRun(result.run);
+    }
     this.close();
     this.scene.scene.start(SCENES.Map);
+    return true;
   }
 
-  prepareRunForMapReturn() {
-    const run = this.scene.registry.get('run') ?? SaveManager.loadRun();
-    if (!run) return null;
-    if (run.map?.activeNode && !run.pendingReward) MapSystem.abandonActiveNode(run);
-    this.scene.registry.set('run', run);
-    return run;
+  currentRun() {
+    return this.scene.registry.get('run') ?? SaveManager.loadRun();
   }
 
   restartRun() {

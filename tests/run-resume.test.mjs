@@ -86,3 +86,18 @@ test('boss node identity recovers the battle type when legacy stage metadata is 
     data: { restoredBattle: battle, battleType: 'boss' }
   });
 });
+
+test('does not resume an incompatible node stage into an orphaned scene', () => {
+  const run = {
+    pendingScene: 'shop',
+    map: {
+      activeNode: 'n3',
+      nodes: [{ id: 'n3', type: 'battle', row: 3 }],
+      available: [],
+      completed: [],
+      path: ['n3']
+    }
+  };
+  assert.deepEqual(getRunResumeTarget(run), { sceneKey: 'MapScene', data: {} });
+  assert.equal(run.map.activeNode, null);
+});

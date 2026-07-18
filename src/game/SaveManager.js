@@ -1,6 +1,7 @@
 import { SAVE_KEY, SETTINGS_KEY } from './constants.js';
 import { isValidCharacterId } from '../data/characters.js';
 import { getCard, isKnownCardId } from '../data/cards.js';
+import { getRelic } from '../data/relics.js';
 import { migrateRun } from './RunMigration.js';
 
 const defaultSettings = {
@@ -67,6 +68,8 @@ function isValidRun(run) {
       Array.isArray(run.deck) &&
       run.deck.length > 0 &&
       run.deck.every((instance) => isDeckCardAllowed(run.characterId, instance)) &&
+      Array.isArray(run.relics) &&
+      run.relics.every((id) => Boolean(getRelic(id))) &&
       run.map &&
       Array.isArray(run.map.nodes)
   );

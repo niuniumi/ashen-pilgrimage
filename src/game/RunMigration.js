@@ -3,6 +3,7 @@ import { getCard, isKnownCardId } from '../data/cards.js';
 import { MapSystem } from '../systems/MapSystem.js';
 import { hasPendingRewardCheckpoint } from './RunResume.js';
 import { createRngState, normalizeRngState } from './RunRng.js';
+import { normalizeRunStage, rollbackOrphanedNode } from './RunStagePolicy.js';
 
 export const CURRENT_RUN_VERSION = 4;
 
@@ -130,23 +131,6 @@ function hasRestorableCheckpoint(run) {
   );
 }
 
-function rollbackOrphanedNode(run) {
-  const activeNode = run.map.activeNode;
-  if (!activeNode) return;
-  run.map.available = Array.isArray(run.map.available) ? run.map.available : [];
-  if (!run.map.available.includes(activeNode)) run.map.available.unshift(activeNode);
-  run.map.path = Array.isArray(run.map.path) ? run.map.path : [];
-  const pathIndex = run.map.path.lastIndexOf(activeNode);
-  if (pathIndex >= 0) run.map.path.splice(pathIndex, 1);
-  run.map.activeNode = null;
-  const completed = new Set(Array.isArray(run.map.completed) ? run.map.completed : []);
-  run.floor = run.map.nodes.reduce((highest, node) => {
-    return completed.has(node.id) ? Math.max(highest, (node.row ?? -1) + 1) : highest;
-  }, 0);
-  delete run.pendingReward;
-  run.rewardClaimed = false;
-}
-
 export function migrateRun(raw) {
   if (!raw || typeof raw !== 'object' || !isValidCharacterId(raw.characterId)) return null;
   if (!isAllowedDeck(raw.characterId, raw.deck)) return null;
@@ -168,6 +152,7 @@ export function migrateRun(raw) {
   run.map.available = Array.isArray(run.map.available) ? run.map.available : [];
   run.map.path = Array.isArray(run.map.path) ? run.map.path : [];
   run.vows = Array.isArray(run.vows) ? run.vows : [];
+  run.relics = Array.isArray(run.relics) ? run.relics : [];
   run.storyFlags = Array.isArray(run.storyFlags) ? run.storyFlags : [];
   run.eventHistory = Array.isArray(run.eventHistory) ? run.eventHistory : [];
 
@@ -187,6 +172,7 @@ export function migrateRun(raw) {
   if (run.map.activeNode && !hasRestorableCheckpoint(run) && !hasPendingRewardCheckpoint(run) && !run.pendingScene) {
     rollbackOrphanedNode(run);
   }
+  normalizeRunStage(run);
   return run;
 }
 

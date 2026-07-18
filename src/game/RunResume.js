@@ -1,5 +1,6 @@
 import { SCENES } from './constants.js';
 import { restoreBattleCheckpoint } from './BattleCheckpoint.js';
+import { normalizeRunStage } from './RunStagePolicy.js';
 
 export function hasPendingRewardCheckpoint(run) {
   return Boolean(
@@ -11,6 +12,7 @@ export function hasPendingRewardCheckpoint(run) {
 }
 
 export function getRunResumeTarget(run, options = {}) {
+  if (Array.isArray(run?.map?.nodes)) normalizeRunStage(run);
   const checkpoint = options.checkpoint ?? restoreBattleCheckpoint(run);
   if (checkpoint) {
     const activeNode = run?.map?.nodes?.find((node) => node.id === run?.map?.activeNode);

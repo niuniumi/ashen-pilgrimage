@@ -11,9 +11,12 @@ try {
 }
 
 const root = process.cwd();
+const inlineUrl = process.argv.find((argument) => argument.startsWith('--url='))?.slice('--url='.length);
+const urlFlagIndex = process.argv.indexOf('--url');
 const url = process.env.QA_URL
-  ?? process.argv.find((arg) => arg.startsWith('--url='))?.slice(6)
-  ?? 'http://127.0.0.1:4173/';
+  ?? inlineUrl
+  ?? (urlFlagIndex >= 0 ? process.argv[urlFlagIndex + 1] : null)
+  ?? 'http://127.0.0.1:4193/';
 const outDir = path.join(root, 'qa', 'screenshots', 'pixel_scenes');
 const reportFile = path.join(root, 'qa', 'pixel-scenes-report.json');
 fs.mkdirSync(outDir, { recursive: true });

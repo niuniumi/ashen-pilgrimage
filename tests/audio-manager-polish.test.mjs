@@ -28,10 +28,16 @@ function installSettings(overrides = {}) {
       }
     }
   };
+  return {
+    update(next) {
+      Object.assign(settings, next);
+      values.set('ashen-pilgrimage-settings-v1', JSON.stringify(settings));
+    }
+  };
 }
 
-function createHarness({ random = 1 } = {}) {
-  installSettings();
+function createHarness({ random = 1, context = null, settings = {} } = {}) {
+  const settingsStore = installSettings(settings);
   let now = 1000;
   let timerId = 0;
   const timers = new Map();
@@ -51,6 +57,7 @@ function createHarness({ random = 1 } = {}) {
   const scene = {
     cache: { audio: { exists: () => true } },
     sound: {
+      context,
       play(key, config) {
         plays.push({ key, config });
       },
@@ -72,15 +79,32 @@ function createHarness({ random = 1 } = {}) {
     timers,
     clearedTimers,
     unlocks,
+    settingsStore,
     advance(milliseconds) {
       now += milliseconds;
     },
     attachBgm(volume = 0.3) {
       const bgm = {
         volume,
+        isPlaying: true,
+        isPaused: false,
+        pauseCalls: 0,
+        resumeCalls: 0,
+        pause() {
+          this.pauseCalls += 1;
+          this.isPlaying = false;
+          this.isPaused = true;
+        },
+        resume() {
+          this.resumeCalls += 1;
+          this.isPlaying = true;
+          this.isPaused = false;
+        },
         setVolume(nextVolume) {
           this.volume = nextVolume;
-        }
+        },
+        stop() {},
+        destroy() {}
       };
       manager.currentBgm = bgm;
       manager.currentBgmProfile = { gain: 1 };
@@ -201,6 +225,188 @@ test('unlock still retries the desired BGM after Phaser audio is unlocked', () =
   assert.equal(timer.delay, 80);
   harness.fire(id);
   assert.deepEqual(requested, ['menu']);
+});
+
+test('unlock awaits a suspended AudioContext before exposing the unlocked state', async () => {
+  let finishResume;
+  const context = {
+    state: 'suspended',
+    resumeCalls: 0,
+    resume() {
+      this.resumeCalls += 1;
+      return new Promise((resolve) => {
+        finishResume = () => {
+          this.state = 'running';
+          resolve();
+        };
+      });
+    }
+  };
+  const harness = createHarness({ context });
+
+  const unlocking = harness.manager.unlock();
+  assert.equal(context.resumeCalls, 1);
+  assert.equal(harness.manager.unlocked, false);
+
+  finishResume();
+  assert.equal(await unlocking, true);
+  assert.equal(harness.manager.unlocked, true);
+});
+
+test('a failed AudioContext resume keeps audio locked and does not queue BGM', async () => {
+  const context = {
+    state: 'suspended',
+    resumeCalls: 0,
+    async resume() {
+      this.resumeCalls += 1;
+      throw new Error('gesture rejected');
+    }
+  };
+  const harness = createHarness({ context });
+  const originalWarn = console.warn;
+  console.warn = () => {};
+
+  try {
+    assert.equal(await harness.manager.unlock(), false);
+    assert.equal(context.resumeCalls, 1);
+    assert.equal(harness.manager.unlocked, false);
+    assert.equal(harness.timers.size, 0);
+  } finally {
+    console.warn = originalWarn;
+  }
+});
+
+test('lifecycle listeners install once and route visibility and pagehide state', async () => {
+  const harness = createHarness();
+  const documentListeners = new Map();
+  const windowListeners = new Map();
+  const documentTarget = {
+    hidden: false,
+    visibilityState: 'visible',
+    addEventListener(name, handler) {
+      documentListeners.set(name, handler);
+    }
+  };
+  const windowTarget = {
+    addEventListener(name, handler) {
+      windowListeners.set(name, handler);
+    }
+  };
+  const states = [];
+  harness.manager.handleVisibilityChange = async (hidden) => states.push(hidden);
+
+  assert.equal(harness.manager.installLifecycleListeners(documentTarget, windowTarget), true);
+  assert.equal(harness.manager.installLifecycleListeners(documentTarget, windowTarget), false);
+  assert.equal(documentListeners.size, 1);
+  assert.equal(windowListeners.size, 1);
+
+  documentTarget.hidden = true;
+  documentTarget.visibilityState = 'hidden';
+  documentListeners.get('visibilitychange')();
+  documentTarget.hidden = false;
+  documentTarget.visibilityState = 'visible';
+  documentListeners.get('visibilitychange')();
+  windowListeners.get('pagehide')();
+  await Promise.resolve();
+  assert.deepEqual(states, [true, false, true]);
+});
+
+test('lifecycle resumes only BGM that it paused and fades to the configured target', async () => {
+  const context = {
+    state: 'running',
+    resumeCalls: 0,
+    async resume() {
+      this.resumeCalls += 1;
+    }
+  };
+  const harness = createHarness({ context });
+  const bgm = harness.attachBgm();
+  harness.manager.unlocked = true;
+
+  await harness.manager.handleVisibilityChange(true);
+  assert.equal(bgm.pauseCalls, 1);
+  assert.equal(bgm.resumeCalls, 0);
+
+  context.state = 'suspended';
+  await harness.manager.handleVisibilityChange(false);
+  assert.equal(context.resumeCalls, 1);
+  assert.equal(bgm.resumeCalls, 1);
+  assert.equal(bgm.volume, 0.3);
+});
+
+test('lifecycle does not claim a manually paused BGM or revive music disabled while hidden', async () => {
+  const manualHarness = createHarness();
+  const manuallyPaused = manualHarness.attachBgm();
+  manualHarness.manager.unlocked = true;
+  manuallyPaused.isPlaying = false;
+  manuallyPaused.isPaused = true;
+
+  await manualHarness.manager.handleVisibilityChange(true);
+  await manualHarness.manager.handleVisibilityChange(false);
+  assert.equal(manuallyPaused.pauseCalls, 0);
+  assert.equal(manuallyPaused.resumeCalls, 0);
+
+  const disabledHarness = createHarness();
+  const disabledBgm = disabledHarness.attachBgm();
+  disabledHarness.manager.unlocked = true;
+  await disabledHarness.manager.handleVisibilityChange(true);
+  disabledHarness.settingsStore.update({ music: false });
+  await disabledHarness.manager.handleVisibilityChange(false);
+  assert.equal(disabledBgm.resumeCalls, 0);
+});
+
+test('SceneHelpers installs pointer and keyboard unlock gestures as one shared binding', async () => {
+  const source = await readFile(new URL('../src/scenes/SceneHelpers.js', import.meta.url), 'utf8');
+
+  assert.match(source, /if \(scene\.audio\?\.unlocked\) return;/);
+  assert.match(source, /input\?\.once\?\.\('pointerdown', unlockAudio\)/);
+  assert.match(source, /input\?\.keyboard\?\.once\?\.\('keydown', unlockAudio\)/);
+  assert.match(source, /input\?\.off\?\.\('pointerdown', unlockAudio\)/);
+  assert.match(source, /input\?\.keyboard\?\.off\?\.\('keydown', unlockAudio\)/);
+});
+
+test('BGM fades drive setVolume even when the Phaser volume property is not directly writable', () => {
+  const harness = createHarness();
+  let audibleVolume = 1;
+  const sound = {
+    get volume() {
+      return audibleVolume;
+    },
+    set volume(_value) {},
+    setVolume(value) {
+      audibleVolume = value;
+    }
+  };
+  harness.manager.scene.tweens = {
+    killTweensOf() {},
+    add(config) {
+      config.targets.volume = config.volume;
+      config.onUpdate();
+    }
+  };
+
+  harness.manager.fadeSound(sound, 0.272, 260);
+
+  assert.equal(audibleVolume, 0.272);
+});
+
+test('new BGM is explicitly silenced before its entrance fade starts', () => {
+  const harness = createHarness();
+  const volumeWrites = [];
+  const sound = {
+    volume: 1,
+    play() {},
+    setVolume(value) {
+      this.volume = value;
+      volumeWrites.push(value);
+    }
+  };
+  harness.manager.unlocked = true;
+  harness.manager.scene.sound.add = () => sound;
+
+  harness.manager.playBgm('menu');
+
+  assert.equal(volumeWrites[0], 0);
 });
 
 test('explicit play options and legacy aliases remain authoritative', () => {

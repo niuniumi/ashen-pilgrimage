@@ -22,7 +22,12 @@ const docsDir = path.join(root, 'docs');
 fs.mkdirSync(outDir, { recursive: true });
 fs.mkdirSync(docsDir, { recursive: true });
 
-const URL = process.env.QA_URL ?? process.argv.find((arg) => arg.startsWith('--url='))?.slice(6) ?? 'http://127.0.0.1:4173';
+const inlineUrl = process.argv.find((argument) => argument.startsWith('--url='))?.slice('--url='.length);
+const urlFlagIndex = process.argv.indexOf('--url');
+const URL = process.env.QA_URL
+  ?? inlineUrl
+  ?? (urlFlagIndex >= 0 ? process.argv[urlFlagIndex + 1] : null)
+  ?? 'http://127.0.0.1:4193/';
 
 const roles = [
   {

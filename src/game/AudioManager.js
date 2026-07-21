@@ -64,6 +64,7 @@ export class AudioManager {
     this.cancelSchedule = dependencies.clearTimeout ?? globalThis.clearTimeout.bind(globalThis);
     this.scene = null;
     this.unlocked = false;
+    this.unlockPromise = null;
     this.currentBgm = null;
     this.currentBgmKey = null;
     this.currentBgmProfile = resolveBgmProfile('menu');
@@ -75,6 +76,10 @@ export class AudioManager {
     this.transientDuckUntil = 0;
     this.unlockHint = null;
     this.pendingBgmKey = null;
+    this.lifecycleHidden = false;
+    this.lifecyclePausedBgm = null;
+    this.lifecycleListenersInstalled = false;
+    this.fadeTargets = new WeakMap();
   }
 
   attachScene(scene) {
@@ -82,18 +87,106 @@ export class AudioManager {
     return this;
   }
 
-  unlock() {
-    this.unlocked = true;
-    this.hideUnlockHint();
+  getAudioContext() {
+    return this.scene?.sound?.context ?? this.scene?.sound?.manager?.context ?? null;
+  }
+
+  async unlock() {
+    if (this.unlockPromise) return this.unlockPromise;
+
+    const attempt = async () => {
+      const context = this.getAudioContext();
+      if (context?.state === 'suspended') {
+        try {
+          await context.resume();
+        } catch (error) {
+          this.unlocked = false;
+          console.warn('AudioContext resume failed', error);
+          return false;
+        }
+      }
+
+      try {
+        this.scene?.sound?.unlock?.();
+      } catch (error) {
+        console.warn('Phaser audio unlock failed', error);
+      }
+      this.unlocked = true;
+      this.hideUnlockHint();
+      if (this.desiredBgmKind && !this.lifecycleHidden) {
+        const kind = this.desiredBgmKind;
+        this.schedule(() => this.playBgm(kind), 80);
+      }
+      return true;
+    };
+
+    this.unlockPromise = attempt();
     try {
-      this.scene?.sound?.unlock?.();
-    } catch (error) {
-      console.warn('Phaser audio unlock failed', error);
+      return await this.unlockPromise;
+    } finally {
+      this.unlockPromise = null;
     }
-    if (this.desiredBgmKind) {
-      const kind = this.desiredBgmKind;
-      this.schedule(() => this.playBgm(kind), 80);
+  }
+
+  installLifecycleListeners(documentTarget = globalThis.document, windowTarget = globalThis.window) {
+    if (this.lifecycleListenersInstalled) return false;
+    if (!documentTarget?.addEventListener || !windowTarget?.addEventListener) return false;
+
+    const onVisibilityChange = () => {
+      const hidden = documentTarget.hidden === true || documentTarget.visibilityState === 'hidden';
+      void this.handleVisibilityChange(hidden);
+    };
+    const onPageHide = () => {
+      void this.handleVisibilityChange(true);
+    };
+    documentTarget.addEventListener('visibilitychange', onVisibilityChange);
+    windowTarget.addEventListener('pagehide', onPageHide);
+    this.lifecycleListenersInstalled = true;
+    return true;
+  }
+
+  async handleVisibilityChange(hidden) {
+    const nextHidden = Boolean(hidden);
+    if (nextHidden) {
+      this.lifecycleHidden = true;
+      if (this.lifecyclePausedBgm) return false;
+      const sound = this.currentBgm;
+      const isActive = sound && sound.isPaused !== true && sound.isPlaying !== false;
+      if (!isActive) return false;
+      sound.pause?.();
+      this.lifecyclePausedBgm = sound;
+      return true;
     }
+
+    this.lifecycleHidden = false;
+    const sound = this.lifecyclePausedBgm;
+    if (!sound) return false;
+
+    const settings = SaveManager.readSettings();
+    if (!this.unlocked || settings.muted || !settings.music || this.currentBgm !== sound) {
+      this.lifecyclePausedBgm = null;
+      return false;
+    }
+
+    const context = this.getAudioContext();
+    if (context?.state === 'suspended') {
+      try {
+        await context.resume();
+      } catch (error) {
+        console.warn('AudioContext lifecycle resume failed', error);
+        return false;
+      }
+    }
+
+    const latestSettings = SaveManager.readSettings();
+    if (latestSettings.muted || !latestSettings.music || this.currentBgm !== sound) {
+      this.lifecyclePausedBgm = null;
+      return false;
+    }
+    this.lifecyclePausedBgm = null;
+    sound.resume?.();
+    this.fadeSound(sound, this.targetBgmVolume(), 260);
+    return true;
   }
 
   targetBgmVolume() {
@@ -141,6 +234,7 @@ export class AudioManager {
       this.showUnlockHint();
       return;
     }
+    if (this.lifecycleHidden) return;
     if (scene.sound.locked) {
       try {
         scene.sound.unlock?.();
@@ -174,6 +268,7 @@ export class AudioManager {
     try {
       sound = scene.sound.add(key, { loop: true, volume: 0, rate: profile.rate });
       sound.play();
+      sound.setVolume?.(0);
     } catch (error) {
       console.warn(`BGM play failed: ${key}`, error);
       return;
@@ -186,6 +281,7 @@ export class AudioManager {
 
   stopBgm(clearDesired = true) {
     if (clearDesired) this.desiredBgmKind = null;
+    this.lifecyclePausedBgm = null;
     if (!this.currentBgm) return;
     const sound = this.currentBgm;
     this.currentBgm = null;
@@ -197,6 +293,7 @@ export class AudioManager {
   }
 
   pauseBgm() {
+    this.lifecyclePausedBgm = null;
     this.currentBgm?.pause?.();
   }
 
@@ -272,14 +369,21 @@ export class AudioManager {
       onComplete?.();
       return;
     }
+    const previousTarget = this.fadeTargets.get(sound);
+    if (previousTarget) scene.tweens.killTweensOf(previousTarget);
     scene.tweens.killTweensOf(sound);
+    const fadeTarget = { volume: Number.isFinite(sound.volume) ? sound.volume : 0 };
+    this.fadeTargets.set(sound, fadeTarget);
     scene.tweens.add({
-      targets: sound,
+      targets: fadeTarget,
       volume,
       duration,
       ease: 'Sine.InOut',
-      onUpdate: () => sound.setVolume?.(sound.volume),
-      onComplete
+      onUpdate: () => sound.setVolume?.(fadeTarget.volume),
+      onComplete: () => {
+        if (this.fadeTargets.get(sound) === fadeTarget) this.fadeTargets.delete(sound);
+        onComplete?.();
+      }
     });
   }
 
@@ -289,7 +393,7 @@ export class AudioManager {
     const sceneKey = scene.scene?.key ?? scene.sys?.settings?.key ?? '';
     const layout = resolveAudioHintLayout(sceneKey);
     this.unlockHint = scene.add
-      .text(layout.x, layout.y, '点击任意位置开启音乐', {
+      .text(layout.x, layout.y, '点击或按任意键开启音乐', {
         fontFamily: FONT,
         fontSize: 16,
         color: '#f6edd0',
@@ -300,7 +404,6 @@ export class AudioManager {
       })
       .setOrigin(...layout.origin)
       .setDepth(30000);
-    scene.input?.once?.('pointerdown', () => this.unlock());
   }
 
   hideUnlockHint() {

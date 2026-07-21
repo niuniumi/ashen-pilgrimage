@@ -11,14 +11,21 @@ try {
   ({ chromium } = require('C:/Users/16224/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/.pnpm/playwright@1.61.0/node_modules/playwright'));
 }
 
-const URL = process.env.QA_URL ?? 'http://127.0.0.1:4185';
+const inlineUrl = process.argv.find((argument) => argument.startsWith('--url='))?.slice('--url='.length);
+const urlFlagIndex = process.argv.indexOf('--url');
+const URL = process.env.QA_URL
+  ?? inlineUrl
+  ?? (urlFlagIndex >= 0 ? process.argv[urlFlagIndex + 1] : null)
+  ?? 'http://127.0.0.1:4193/';
 const root = process.cwd();
 const outDir = path.join(root, 'qa', 'screenshots', 'responsive-v3');
 fs.mkdirSync(outDir, { recursive: true });
 
 const viewports = [
-  { width: 1150, height: 768 },
-  { width: 1171, height: 731 }
+  { width: 1280, height: 720 },
+  { width: 1366, height: 768 },
+  { width: 1536, height: 864 },
+  { width: 1920, height: 1080 }
 ];
 const errors = [];
 const results = [];

@@ -41,3 +41,20 @@ test('cleanup is idempotent and rebinding leaves exactly one active handler', ()
   second.cleanup();
   assert.equal(keyboard.listenerCount('keydown'), 0);
 });
+
+test('Phaser queue replays consume each DOM key event object only once under pressure', () => {
+  const keyboard = new EventEmitter();
+  const items = makeItems();
+  const binding = bindMenuInput(keyboard, items);
+
+  for (let index = 0; index < 100; index += 1) {
+    const code = index % 2 === 0 ? 'ArrowDown' : 'ArrowUp';
+    const event = { code, preventDefault() {} };
+    keyboard.emit('keydown', event);
+    keyboard.emit('keydown', event);
+    const expectedIndex = index % 2 === 0 ? 2 : 1;
+    assert.equal(items.findIndex((item) => item.button.selected), expectedIndex, `iteration ${index}`);
+  }
+
+  binding.cleanup();
+});

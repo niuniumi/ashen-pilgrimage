@@ -1,8 +1,11 @@
+import { createKeyboardEventGuard } from './KeyboardEventGuard.js';
+
 export class MenuInputController {
   constructor(items = [], options = {}) {
     this.items = items;
     this.announce = options.announce;
     this.onSelection = options.onSelection;
+    this.acceptKeyEvent = createKeyboardEventGuard();
     this.selectedIndex = Math.max(0, items.findIndex((item) => !item.disabled));
     this.select(this.selectedIndex);
   }
@@ -34,6 +37,7 @@ export class MenuInputController {
   }
 
   handleKey(event) {
+    if (!this.acceptKeyEvent(event)) return false;
     const code = event?.code || event?.key;
     let handled = false;
     if (code === 'ArrowDown' || code === 'KeyS' || code === 's' || code === 'S') handled = this.move(1);

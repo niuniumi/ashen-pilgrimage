@@ -2,10 +2,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { installAudioUnlockGestures } from '../src/game/AudioUnlockBinding.js';
+import { bindMenuInput } from '../src/input/MenuInputController.js';
 
 class Emitter {
   constructor() {
     this.listeners = new Map();
+  }
+
+  on(event, listener) {
+    const entries = this.listeners.get(event) ?? [];
+    entries.push({ listener, once: false });
+    this.listeners.set(event, entries);
   }
 
   once(event, listener) {
@@ -111,4 +118,35 @@ test('a rejected unlock can retry, but shutdown during rejection never rebinds',
   assert.equal(shutdownScene.input.listenerCount('pointerdown'), 0);
   assert.equal(shutdownScene.input.keyboard.listenerCount('keydown'), 0);
   assert.equal(shutdownScene.events.listenerCount('shutdown'), 0);
+});
+
+test('first-key audio unlock and Phaser queue replay cannot move the menu twice', async () => {
+  const scene = createScene();
+  const audio = {
+    unlocked: false,
+    calls: 0,
+    async unlock() {
+      this.calls += 1;
+      this.unlocked = true;
+      return true;
+    }
+  };
+  const items = [
+    { label: '继续', disabled: true, button: { selected: false, setSelected(value) { this.selected = value; } } },
+    { label: '开始', disabled: false, button: { selected: false, setSelected(value) { this.selected = value; } } },
+    { label: '指南', disabled: false, button: { selected: false, setSelected(value) { this.selected = value; } } },
+    { label: '离开', disabled: false, button: { selected: false, setSelected(value) { this.selected = value; } } }
+  ];
+
+  installAudioUnlockGestures(scene, audio);
+  const menu = bindMenuInput(scene.input.keyboard, items);
+  const firstDomEvent = { code: 'ArrowDown', preventDefault() {} };
+  scene.input.keyboard.emit('keydown', firstDomEvent);
+  scene.input.keyboard.emit('keydown', firstDomEvent);
+  await flush();
+
+  assert.equal(audio.calls, 1);
+  assert.equal(scene.input.keyboard.listenerCount('keydown'), 1);
+  assert.equal(items.find((item) => item.button.selected)?.label, '指南');
+  menu.cleanup();
 });

@@ -1,3 +1,5 @@
+import { createKeyboardEventGuard } from './KeyboardEventGuard.js';
+
 export class CharacterSelectInputController {
   constructor(ids, options = {}) {
     this.ids = [...new Set(ids ?? [])];
@@ -8,7 +10,9 @@ export class CharacterSelectInputController {
     this.locked = false;
     this.destroyed = false;
     this.keyboard = null;
+    this.acceptKeyEvent = createKeyboardEventGuard();
     this.onKeyDown = (event) => {
+      if (!this.acceptKeyEvent(event)) return;
       const handled = this.handleKey(event?.code || event?.key);
       if (handled) event?.preventDefault?.();
     };

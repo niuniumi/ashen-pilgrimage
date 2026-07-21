@@ -1,7 +1,13 @@
+import { createKeyboardEventGuard } from './KeyboardEventGuard.js';
+
 export class BattleInputController {
   constructor(scene) {
     this.scene = scene;
-    this.onKeyDown = (event) => this.handleKey(event.code || event.key);
+    this.acceptKeyEvent = createKeyboardEventGuard();
+    this.onKeyDown = (event) => {
+      if (!this.acceptKeyEvent(event)) return false;
+      return this.handleKey(event.code || event.key);
+    };
   }
 
   install() {

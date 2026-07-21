@@ -1,3 +1,5 @@
+import { createKeyboardEventGuard } from './KeyboardEventGuard.js';
+
 const DIRECTION_VECTORS = Object.freeze({
   left: { x: -1, y: 0 },
   right: { x: 1, y: 0 },
@@ -17,9 +19,11 @@ export class MapInputController {
     this.onSelect = typeof options.onSelect === 'function' ? options.onSelect : () => {};
     this.onConfirm = typeof options.onConfirm === 'function' ? options.onConfirm : () => {};
     this.keyboard = null;
+    this.acceptKeyEvent = createKeyboardEventGuard();
     this.locked = false;
     this.destroyed = false;
     this.onKeyDown = (event) => {
+      if (!this.acceptKeyEvent(event)) return;
       const handled = this.handleKey(event?.code || event?.key);
       if (handled) event?.preventDefault?.();
     };

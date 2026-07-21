@@ -109,6 +109,20 @@ test('install consumes handled keys and destroy removes the listener idempotentl
   assert.equal(calls.length, 1);
 });
 
+test('Phaser queue replays cannot cycle characters twice for one DOM event object', () => {
+  const keyboard = new EventEmitter();
+  const { calls, controller } = createController();
+  const event = { code: 'ArrowRight', preventDefault() {} };
+  controller.install(keyboard);
+
+  keyboard.emit('keydown', event);
+  keyboard.emit('keydown', event);
+
+  assert.equal(controller.selectedId, IDS[1]);
+  assert.deepEqual(calls, [['select', IDS[1], 1]]);
+  controller.destroy();
+});
+
 test('character select scene installs the controller and routes pointer and keyboard transitions through one lock', async () => {
   const source = await readFile(new URL('../src/scenes/CharacterSelectScene.js', import.meta.url), 'utf8');
 

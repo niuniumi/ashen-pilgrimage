@@ -95,7 +95,7 @@ test('release QA covers keyboard, semantic actions, and both mobile orientations
   assert.match(qa, /canvas\.focus\(\)/);
   assert.match(qa, /keyboard\.down\(key\)/);
   assert.match(qa, /keyboard\.up\(key\)/);
-  assert.match(qa, /registry\?\.get\('audio'\)\?\.unlocked === true/);
+  assert.doesNotMatch(qa, /registry\?\.get\('audio'\)\?\.unlocked === true/);
   assert.match(qa, /paused-map-action-recovery/);
   assert.match(qa, /ashen-live-region/);
   assert.match(qa, /ashen-scene-actions/);

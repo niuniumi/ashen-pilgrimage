@@ -49,7 +49,6 @@ async function navigateMenu(page, key, label) {
   await page.keyboard.down(key);
   try {
     await waitForMenuSelection(page, label);
-    await page.waitForFunction(() => window.__ASHEN_GAME__?.registry?.get('audio')?.unlocked === true);
   } catch (error) {
     const diagnostics = await menuDiagnostics(page);
     throw new Error(`menu navigation with ${key} failed: ${JSON.stringify(diagnostics)}; ${error.message}`);

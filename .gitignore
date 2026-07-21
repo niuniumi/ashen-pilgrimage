@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .worktrees/
+/.superpowers/
 .netlify/
 .codex_audio_tmp/
 qa/audio-source/

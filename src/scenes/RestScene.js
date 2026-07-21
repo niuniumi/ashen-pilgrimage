@@ -17,6 +17,7 @@ import { drawCandle, drawDivider, drawVignette } from '../ui/UIOrnament.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
 import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { addHandPaintedBackground, addVfxAsset, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
+import { createKeyboardEventGuard } from '../input/KeyboardEventGuard.js';
 
 export default class RestScene extends Phaser.Scene {
   constructor() {
@@ -48,7 +49,9 @@ export default class RestScene extends Phaser.Scene {
     this.choiceViews = [];
     this.choiceController = new SceneChoiceController(ids, { enabledIds });
     this.choiceUnsubscribe = this.choiceController.subscribe((state) => this.updateChoiceState(state));
+    const acceptKeyEvent = createKeyboardEventGuard();
     this.choiceKeyHandler = (event) => {
+      if (!acceptKeyEvent(event)) return;
       if (this.uiPaused) return;
       const code = event.code || event.key;
       const handled = code === 'Enter' || code === 'NumpadEnter' || code === 'Space' || code === ' '

@@ -10,6 +10,7 @@ import { drawPixelPanel, PIXEL_PALETTE } from '../art/PixelArtSystem.js';
 import { FONT } from '../design/textStyles.js';
 import { motionDuration } from '../game/MotionPolicy.js';
 import { cjkWordWrap } from '../ui/CjkTextLayout.js';
+import { createKeyboardEventGuard } from '../input/KeyboardEventGuard.js';
 
 const PROLOGUE_PAGES = [
   {
@@ -138,7 +139,9 @@ export default class PrologueScene extends Phaser.Scene {
   }
 
   installPrologueInput() {
+    const acceptKeyEvent = createKeyboardEventGuard();
     const onKeyDown = (event) => {
+      if (!acceptKeyEvent(event)) return;
       const code = event?.code || event?.key;
       let handled = true;
       if (code === 'ArrowLeft' || code === 'KeyA' || code === 'a' || code === 'A') this.turnPage(-1);

@@ -80,6 +80,27 @@ test('arrow and WASD keys navigate while enter and space share the transition lo
   assert.equal(keyboard.listenerCount('keydown'), 0);
 });
 
+test('Phaser queue replays cannot move the map twice for one DOM event object', () => {
+  const keyboard = new EventEmitter();
+  const selected = [];
+  const controller = new MapInputController([
+    { id: 'n1', x: 0, y: 0 },
+    { id: 'n2', x: 100, y: 0 },
+    { id: 'n3', x: 200, y: 0 }
+  ], {
+    selectedId: 'n1',
+    onSelect: (id) => selected.push(id)
+  }).install(keyboard);
+  const event = { code: 'ArrowRight', preventDefault() {} };
+
+  keyboard.emit('keydown', event);
+  keyboard.emit('keydown', event);
+
+  assert.equal(controller.selectedId, 'n2');
+  assert.deepEqual(selected, ['n2']);
+  controller.destroy();
+});
+
 test('map scene creates a 100 by 100 pointer target only for selectable nodes', async () => {
   const source = await readFile(new URL('../src/scenes/MapScene.js', import.meta.url), 'utf8');
 

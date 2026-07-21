@@ -151,4 +151,3 @@ try {
 }
 
 console.log(JSON.stringify({ cards: CARD_ART_ENTRIES.length, uiIcons: UI_ICON_ENTRIES.length }, null, 2));
-

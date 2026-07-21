@@ -7,16 +7,13 @@ import { UIButton } from './UIButton.js';
 import { UIFrame } from './UIFrame.js';
 import { drawDivider } from './UIOrnament.js';
 import { PIXEL_PALETTE, snapPixel } from '../art/PixelArtSystem.js';
-import { createKeyboardEventGuard } from '../input/KeyboardEventGuard.js';
+import { bindPauseMenuEscape } from '../input/PauseMenuInputBinding.js';
 
 export function installPauseMenu(scene, options = {}) {
   scene.uiPaused = false;
   const menu = new PauseMenu(scene, options);
   scene.pauseMenu = menu;
-  const acceptKeyEvent = createKeyboardEventGuard();
-  scene.input.keyboard?.on('keydown-ESC', (event) => {
-    if (acceptKeyEvent(event)) menu.toggle();
-  });
+  const cleanup = bindPauseMenuEscape(scene, menu);
   const button = new UIButton(scene, options.buttonX ?? 1466, options.buttonY ?? 52, 46, 38, 'Ⅱ', () => menu.open(), {
     fontSize: 20,
     tooltip: '暂停',
@@ -24,7 +21,7 @@ export function installPauseMenu(scene, options = {}) {
     hitDepth: 18000,
     fill: THEME.colors.iron
   });
-  return { menu, button };
+  return { menu, button, cleanup };
 }
 
 export class PauseMenu {

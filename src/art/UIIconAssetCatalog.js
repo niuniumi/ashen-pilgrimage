@@ -56,4 +56,3 @@ export function resolveUIIconFrame(scene, type) {
   if (!entry || !ensureUIIconFrames(scene)) return null;
   return entry.frame;
 }
-

@@ -110,4 +110,3 @@ export function resolveCardArtFrame(scene, cardId) {
   if (!entry || !ensureCardArtFrames(scene)) return null;
   return entry.frame;
 }
-

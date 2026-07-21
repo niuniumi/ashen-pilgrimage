@@ -42,11 +42,14 @@ test('every application-owned Phaser keyboard consumer installs an identity guar
     '../src/scenes/RewardScene.js',
     '../src/scenes/EventScene.js',
     '../src/scenes/RestScene.js',
-    '../src/ui/PauseMenu.js'
+    '../src/input/PauseMenuInputBinding.js'
   ];
 
   for (const file of files) {
     const source = await readFile(new URL(file, import.meta.url), 'utf8');
     assert.match(source, /createKeyboardEventGuard/, file);
   }
+
+  const pauseMenu = await readFile(new URL('../src/ui/PauseMenu.js', import.meta.url), 'utf8');
+  assert.match(pauseMenu, /bindPauseMenuEscape/);
 });

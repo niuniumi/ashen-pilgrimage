@@ -69,8 +69,17 @@ export class MapInputController {
 
   confirm() {
     if (this.selectedId == null || !this.lock()) return null;
-    this.onConfirm(this.selectedId);
-    return this.selectedId;
+    const selectedId = this.selectedId;
+    try {
+      if (this.onConfirm(selectedId) === false) {
+        this.locked = false;
+        return null;
+      }
+    } catch (error) {
+      this.locked = false;
+      throw error;
+    }
+    return selectedId;
   }
 
   lock() {

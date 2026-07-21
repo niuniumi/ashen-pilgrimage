@@ -437,7 +437,8 @@ export default class MapScene extends Phaser.Scene {
       onSelect: (id) => this.setNodeFocus(id, true),
       onConfirm: (id) => {
         const view = this.nodeViews.find((candidate) => candidate.id === id);
-        if (view) this.selectNode(view.node);
+        if (!view) return false;
+        return this.selectNode(view.node);
       }
     });
     this.mapInput = controller;

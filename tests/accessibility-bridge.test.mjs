@@ -90,6 +90,8 @@ test('release QA covers keyboard, semantic actions, and both mobile orientations
   ]);
 
   assert.match(qa, /keyboard\.press\('Enter'\)/);
+  assert.match(qa, /waitForMenuSelection/);
+  assert.match(qa, /paused-map-action-recovery/);
   assert.match(qa, /ashen-live-region/);
   assert.match(qa, /ashen-scene-actions/);
   assert.match(qa, /width: 390, height: 844/);

@@ -35,6 +35,27 @@ test('confirm returns the selected node once and locks every later transition', 
   assert.deepEqual(confirmed, ['n2']);
 });
 
+test('a rejected confirmation releases the lock so a later transition can succeed once', () => {
+  let attempts = 0;
+  const confirmed = [];
+  const controller = new MapInputController(NODES, {
+    selectedId: 'n2',
+    onConfirm: (id) => {
+      attempts += 1;
+      if (attempts === 1) return false;
+      confirmed.push(id);
+      return true;
+    }
+  });
+
+  assert.equal(controller.confirm(), null);
+  assert.equal(controller.locked, false);
+  assert.equal(controller.confirm(), 'n2');
+  assert.equal(controller.locked, true);
+  assert.equal(controller.confirm(), null);
+  assert.deepEqual(confirmed, ['n2']);
+});
+
 test('arrow and WASD keys navigate while enter and space share the transition lock', () => {
   const keyboard = new EventEmitter();
   const selected = [];
@@ -66,6 +87,7 @@ test('map scene creates a 100 by 100 pointer target only for selectable nodes', 
   assert.doesNotMatch(source, /const hit = this\.add\.zone\(pos\.x, pos\.y, compact \? 68 : 88/);
   assert.match(source, /this\.transitionLocked/);
   assert.match(source, /new MapInputController/);
+  assert.match(source, /return this\.selectNode\(view\.node\)/);
   assert.match(source, /this\.mapInput\?\.destroy\(\)/);
 });
 

@@ -89,16 +89,16 @@ pnpm run qa:deploy-smoke -- --url=https://niuniumi.github.io/ashen-pilgrimage/
 
 ## 最终运行记录
 
-本地记录时间：`2026-07-22 02:41:06 +08:00`。GitHub 项目仅在实际 workflow 与线上 smoke 完成后填写，不预先伪造发布结果。
+最终记录时间：`2026-07-22 04:39:27 +08:00`。产品发布提交为 `6545d3752c5536df891c8d7bad5b26da628988d4`；下列 GitHub 项目均在对应 workflow 与线上 smoke 实际完成后填写。
 
 | 项目 | 结果 | 证据 |
 | --- | --- | --- |
-| 合同测试 | 通过 | release-config-contract 随完整 Node 测试通过；231 项测试、0 失败 |
+| 合同测试 | 通过 | release-config-contract 随完整 Node 测试通过；241 项测试、0 失败 |
 | 完整测试与素材校验 | 通过 | 40 个无损运行时图像验证通过；素材、内容、绑定、战斗布局与 180 次模拟全部通过 |
-| 根路径与 Pages base 构建 | 通过 | 两种构建均为 122 modules；JS 1549.07 kB，gzip 442.13 kB，0 warning |
+| 根路径与 Pages base 构建 | 通过 | 最终 Pages base 构建为 124 modules；JS 1549.85 kB，gzip 442.45 kB，0 warning |
 | 本地 Chromium 矩阵 | 通过 | `http://127.0.0.1:4173/` 的 17 项 release gate 与资源预算均退出 0 |
-| CI | 待主会话填写 | GitHub Actions run URL |
-| Pages 部署与线上 smoke | 待主会话填写 | deployment URL 和 Actions step |
+| CI | 通过 | [CI run 29865416449](https://github.com/niuniumi/ashen-pilgrimage/actions/runs/29865416449)：云端单测、素材、静态 QA、模拟、构建与 17 项浏览器 gate 全部成功 |
+| Pages 部署与线上 smoke | 通过 | [Pages run 29866455685](https://github.com/niuniumi/ashen-pilgrimage/actions/runs/29866455685) 成功；[线上地址](https://niuniumi.github.io/ashen-pilgrimage/) 另经 8 场景 smoke、键盘/移动端、12 页序章、地图迁移与 58 个音频资源复验，0 错误 |
 
 ## 官方依据
 

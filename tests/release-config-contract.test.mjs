@@ -256,7 +256,11 @@ test('release documentation contains reproducible commands, thresholds, ownershi
   assert.match(verification, /6\s*MiB/i);
   assert.match(verification, /CI.*Pages|Pages.*CI/s);
   assert.doesNotMatch(verification, /workflow_dispatch[^\r\n]*保留/);
-  assert.match(verification, /待主会话填写/);
+  assert.doesNotMatch(verification, /待主会话填写/);
+  assert.match(verification, /6545d3752c5536df891c8d7bad5b26da628988d4/);
+  assert.match(verification, /actions\/runs\/29865416449/);
+  assert.match(verification, /actions\/runs\/29866455685/);
+  assert.match(verification, /https:\/\/niuniumi\.github\.io\/ashen-pilgrimage\//);
   assert.match(verification, /https:\/\/docs\.github\.com\/en\/pages\/getting-started-with-github-pages\/using-custom-workflows-with-github-pages/);
   assert.match(verification, /https:\/\/vite\.dev\/guide\/static-deploy\.html/);
 });

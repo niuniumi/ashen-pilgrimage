@@ -2,6 +2,7 @@ import { SaveManager } from './SaveManager.js';
 import { resolveSfxMixProfile } from './AudioMixProfiles.js';
 import { resolveBgmProfile } from './AudioProfiles.js';
 import { resolveAudioHintLayout } from './AudioHintLayout.js';
+import { isMotionEnabled } from './MotionPolicy.js';
 import { FONT } from '../design/textStyles.js';
 
 const ALIASES = {
@@ -375,12 +376,15 @@ export class AudioManager {
   fadeSound(sound, volume, duration = 800, onComplete = null) {
     const scene = this.scene;
     if (!sound) return;
-    if (!scene?.tweens) {
+    const previousFade = this.fadeTargets.get(sound);
+    if (!scene?.tweens || !isMotionEnabled(SaveManager.readSettings())) {
+      if (previousFade) previousFade.tweens.killTweensOf(previousFade.target);
+      scene?.tweens?.killTweensOf?.(sound);
+      this.fadeTargets.delete(sound);
       sound.setVolume?.(volume);
       onComplete?.();
       return;
     }
-    const previousFade = this.fadeTargets.get(sound);
     if (previousFade) previousFade.tweens.killTweensOf(previousFade.target);
     scene.tweens.killTweensOf(sound);
     const fadeTarget = { volume: Number.isFinite(sound.volume) ? sound.volume : 0 };

@@ -508,6 +508,23 @@ test('BGM fades drive setVolume even when the Phaser volume property is not dire
   assert.equal(audibleVolume, 0.272);
 });
 
+test('reduced motion applies BGM volume immediately without owning a scene tween', () => {
+  const harness = createHarness({ settings: { animation: false } });
+  const sound = { volume: 0, setVolume(value) { this.volume = value; } };
+  let tweenAdds = 0;
+  let completed = 0;
+  harness.manager.scene.tweens = {
+    killTweensOf() {},
+    add() { tweenAdds += 1; }
+  };
+
+  harness.manager.fadeSound(sound, 0.3, 800, () => { completed += 1; });
+
+  assert.equal(sound.volume, 0.3);
+  assert.equal(tweenAdds, 0);
+  assert.equal(completed, 1);
+});
+
 test('new BGM is explicitly silenced before its entrance fade starts', () => {
   const harness = createHarness();
   const volumeWrites = [];

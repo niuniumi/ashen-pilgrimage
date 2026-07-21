@@ -91,6 +91,13 @@ test('map scene creates a 100 by 100 pointer target only for selectable nodes', 
   assert.match(source, /this\.mapInput\?\.destroy\(\)/);
 });
 
+test('map migration QA snapshots only serializable node view fields', async () => {
+  const source = await readFile(new URL('../scripts/qa-map-migration.mjs', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(source, /nodeViews:\s*scene\.nodeViews,/);
+  assert.match(source, /nodeViews:\s*scene\.nodeViews\.map\(\(\{ id, x, y, depth \}\) => \(\{ id, x, y, depth \}\)\)/);
+});
+
 test('progression QA resets the run before all five n2 edge probes', async () => {
   const source = await readFile(new URL('../scripts/qa-progression-regression.mjs', import.meta.url), 'utf8');
 

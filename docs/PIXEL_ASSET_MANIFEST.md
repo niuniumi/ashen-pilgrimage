@@ -32,6 +32,7 @@
 
 卡牌、遗物、节点图标、状态条与特效由相关 UI 组件按 4 px 网格实时绘制。
 失败结算的 `pixel/ui/defeat-tombstone.webp` 由项目墓碑设定图经绿幕透明化、调色板量化、无损 WebP 转换和最近邻显示后生成，失败页不再使用绿幕原图或简化几何墓碑。
+其可复现 master 固定保存在 `qa/source-art/runtime-masters/assets/pixel/ui/defeat-tombstone.png`，不复制到 `public/` 运行时目录。
 
 ## Master 重建工作流
 

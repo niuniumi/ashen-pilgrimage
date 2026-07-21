@@ -99,10 +99,5 @@ test('documented actor and tombstone rebuilds immediately refresh runtime WebP',
     assert.match(readme, /python scripts\/.+\.py\s+pnpm assets:runtime/);
   }
 
-  const releasePlan = await readFile(
-    path.join(projectRoot, 'docs', 'superpowers', 'plans', '2026-07-14-release-grade-final-optimization.md'),
-    'utf8'
-  );
-  assert.doesNotMatch(releasePlan, /public\/assets\/pixel\/ui\/defeat-tombstone\.png/);
-  assert.match(releasePlan, /qa\/source-art\/runtime-masters\/assets\/pixel\/ui\/defeat-tombstone\.png/);
+  assert.match(documentation, /qa\/source-art\/runtime-masters\/assets\/pixel\/ui\/defeat-tombstone\.png/);
 });

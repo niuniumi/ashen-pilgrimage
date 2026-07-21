@@ -39,6 +39,8 @@ test('card and icon components prefer texture frames over procedural glyphs', ()
 test('map nodes provide motion-aware hover and selectable-state feedback', () => {
   const source = fs.readFileSync(new URL('../src/scenes/MapScene.js', import.meta.url), 'utf8');
   assert.match(source, /targets: aura,[\s\S]*repeat: -1/);
-  assert.match(source, /targets: candidate\.container,[\s\S]*candidate\.restingScale \+ \(active \? 0\.1 : 0\)/);
-  assert.match(source, /duration: this\.motionEnabled \? 130 : 0/);
+  assert.match(source, /const targetScale = candidate\.restingScale \+ \(active \? 0\.1 : 0\)/);
+  assert.match(source, /if \(!this\.motionEnabled\) \{[\s\S]*candidate\.container\.setScale\(targetScale\)\.setY\(targetY\);[\s\S]*continue;/);
+  assert.match(source, /targets: candidate\.container,[\s\S]*duration: 130/);
+  assert.doesNotMatch(source, /duration: this\.motionEnabled \? 130 : 0/);
 });

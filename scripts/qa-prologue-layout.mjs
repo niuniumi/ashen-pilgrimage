@@ -33,9 +33,8 @@ try {
     for (let pageIndex = 0; pageIndex < 4; pageIndex += 1) {
       await page.waitForFunction((index) => {
         const scene = window.__ASHEN_GAME__?.scene?.keys?.PrologueScene;
-        return scene?.pageIndex === index && scene?.pageBody;
+        return scene?.pageIndex === index && scene?.isTurning === false && Boolean(scene?.pageBody);
       }, pageIndex);
-      await page.waitForTimeout(540);
       const layout = await page.evaluate(() => {
         const scene = window.__ASHEN_GAME__.scene.keys.PrologueScene;
         const body = scene.pageBody.getBounds();

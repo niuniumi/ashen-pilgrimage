@@ -1,16 +1,15 @@
 import Phaser from 'phaser';
 import { getActDefinition } from '../data/acts.js';
 import { getRelic } from '../data/relics.js';
-import { GAME_HEIGHT, GAME_WIDTH, NODE_TIPS, SCENES } from '../game/constants.js';
+import { NODE_TIPS, SCENES } from '../game/constants.js';
 import { drawMapBackdrop } from '../art/BackgroundFactory.js';
 import { SCENE_TITLES, THEME, textStyle, titleStyle } from '../game/Theme.js';
 import { SaveManager } from '../game/SaveManager.js';
 import { MapSystem } from '../systems/MapSystem.js';
-import { addAmbientAsh } from '../effects/AmbientParticles.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UITooltip } from '../ui/UITooltip.js';
 import { UIFrame } from '../ui/UIFrame.js';
-import { drawBackArrowButton, drawDivider, drawVignette, drawWaxSeal } from '../ui/UIOrnament.js';
+import { drawBackArrowButton, drawDivider } from '../ui/UIOrnament.js';
 import { drawIcon, UIIcon } from '../ui/UIIcon.js';
 import { installPauseMenu } from '../ui/PauseMenu.js';
 import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
@@ -56,35 +55,6 @@ export default class MapScene extends Phaser.Scene {
 
   drawBackdrop() {
     drawMapBackdrop(this);
-    return;
-    const g = this.add.graphics();
-    g.fillGradientStyle(0x191221, 0x191221, 0x4c2c20, 0x140c09, 1);
-    g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    g.fillStyle(0x251f31, 0.78);
-    g.fillTriangle(0, 600, 320, 335, 660, 600);
-    g.fillTriangle(450, 602, 885, 292, 1310, 602);
-    g.fillStyle(0x111117, 0.9);
-    g.fillRect(0, 620, GAME_WIDTH, 244);
-    g.fillStyle(0x2a1711, 0.85);
-    g.fillRect(0, 628, GAME_WIDTH, 54);
-
-    const map = this.add.graphics();
-    map.fillStyle(0x704725, 0.94);
-    map.fillRoundedRect(332, 132, 872, 640, 18);
-    map.fillStyle(THEME.colors.parchment, 0.94);
-    map.fillRoundedRect(350, 150, 836, 604, 14);
-    map.lineStyle(4, 0x2b170d, 0.55);
-    map.strokeRoundedRect(350, 150, 836, 604, 14);
-    map.lineStyle(1, 0xffffff, 0.2);
-    map.strokeRoundedRect(366, 166, 804, 572, 8);
-    for (let i = 0; i < 76; i += 1) {
-      map.fillStyle(i % 2 ? 0x4a2f1d : 0xffffff, i % 2 ? 0.045 : 0.05);
-      map.fillEllipse(382 + ((i * 83) % 760), 184 + ((i * 47) % 526), 18 + (i % 13), 4 + (i % 5));
-    }
-    drawWaxSeal(this, 1124, 708, 30);
-    drawVignette(this, 5);
-    addAmbientAsh(this, { count: 42, depth: 6 });
   }
 
   drawChapterMapDressing() {
@@ -465,13 +435,19 @@ export default class MapScene extends Phaser.Scene {
     for (const candidate of this.nodeViews) {
       if (!candidate.selectable) continue;
       const active = candidate.id === id && focused;
+      const targetScale = candidate.restingScale + (active ? 0.1 : 0);
+      const targetY = candidate.y - (active ? 4 : 0);
       this.tweens.killTweensOf(candidate.container);
+      if (!this.motionEnabled) {
+        candidate.container.setScale(targetScale).setY(targetY);
+        continue;
+      }
       this.tweens.add({
         targets: candidate.container,
-        scaleX: candidate.restingScale + (active ? 0.1 : 0),
-        scaleY: candidate.restingScale + (active ? 0.1 : 0),
-        y: candidate.y - (active ? 4 : 0),
-        duration: this.motionEnabled ? 130 : 0,
+        scaleX: targetScale,
+        scaleY: targetScale,
+        y: targetY,
+        duration: 130,
         ease: active ? 'Back.Out' : 'Sine.Out'
       });
     }

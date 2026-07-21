@@ -66,8 +66,9 @@ test('scene actions are semantic buttons and stale cleanup cannot erase newer ac
 });
 
 test('main menu, prologue and map register keyboard and accessibility actions', async () => {
-  const [mainMenu, prologue, map, helpers, main] = await Promise.all([
+  const [mainMenu, menuInput, prologue, map, helpers, main] = await Promise.all([
     readFile(new URL('../src/scenes/MainMenuScene.js', import.meta.url), 'utf8'),
+    readFile(new URL('../src/input/MenuInputController.js', import.meta.url), 'utf8'),
     readFile(new URL('../src/scenes/PrologueScene.js', import.meta.url), 'utf8'),
     readFile(new URL('../src/scenes/MapScene.js', import.meta.url), 'utf8'),
     readFile(new URL('../src/scenes/SceneHelpers.js', import.meta.url), 'utf8'),
@@ -76,7 +77,7 @@ test('main menu, prologue and map register keyboard and accessibility actions', 
 
   assert.match(helpers, /scene\.accessibility = scene\.registry\.get\('accessibility'\)/);
   assert.match(main, /new AccessibilityBridge\(document\)/);
-  assert.match(mainMenu, /ArrowDown/);
+  assert.match(menuInput, /ArrowDown/);
   assert.match(mainMenu, /setActions\?\.\(SCENES\.MainMenu/);
   assert.match(prologue, /ArrowRight/);
   assert.match(prologue, /setActions\?\.\(SCENES\.Prologue/);
@@ -91,6 +92,10 @@ test('release QA covers keyboard, semantic actions, and both mobile orientations
 
   assert.match(qa, /keyboard\.press\('Enter'\)/);
   assert.match(qa, /waitForMenuSelection/);
+  assert.match(qa, /canvas\.focus\(\)/);
+  assert.match(qa, /keyboard\.down\(key\)/);
+  assert.match(qa, /keyboard\.up\(key\)/);
+  assert.match(qa, /registry\?\.get\('audio'\)\?\.unlocked === true/);
   assert.match(qa, /paused-map-action-recovery/);
   assert.match(qa, /ashen-live-region/);
   assert.match(qa, /ashen-scene-actions/);

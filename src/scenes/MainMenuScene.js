@@ -1,18 +1,18 @@
 import Phaser from 'phaser';
 import { BUILD_TIME, BUILD_VERSION, GAME_WIDTH, SCENES } from '../game/constants.js';
 import { drawRebuiltMenuBackdrop } from '../art/RebuiltVisualFactory.js';
-import { SCENE_TITLES, THEME, textStyle, titleStyle } from '../game/Theme.js';
+import { SCENE_TITLES, textStyle, titleStyle } from '../game/Theme.js';
 import { SaveManager } from '../game/SaveManager.js';
 import { restoreBattleCheckpoint } from '../game/BattleCheckpoint.js';
 import { getRunResumeTarget } from '../game/RunResume.js';
-import { addAmbientAsh } from '../effects/AmbientParticles.js';
 import { UIButton } from '../ui/UIButton.js';
 import { UIDialog } from '../ui/UIDialog.js';
 import { UIFrame } from '../ui/UIFrame.js';
 import { drawHeroArt } from '../ui/UICharacterArt.js';
-import { drawCandle, drawDivider, drawVignette } from '../ui/UIOrnament.js';
+import { drawDivider } from '../ui/UIOrnament.js';
 import { addToast, attachSceneServices, preloadSceneAssets } from './SceneHelpers.js';
 import { HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
+import { bindMenuInput } from '../input/MenuInputController.js';
 
 export default class MainMenuScene extends Phaser.Scene {
   constructor() {
@@ -36,115 +36,18 @@ export default class MainMenuScene extends Phaser.Scene {
 
   drawBackdrop() {
     drawRebuiltMenuBackdrop(this);
-    return;
-    const g = this.add.graphics();
-    g.fillGradientStyle(0x17111f, 0x17111f, 0x4a2a25, 0x1a0f0c, 1);
-    g.fillRect(0, 0, 1536, 864);
-    g.fillStyle(0x72503c, 0.16);
-    g.fillEllipse(650, 385, 850, 180);
-    this.drawCloud(g, 500, 175, 1.1);
-    this.drawCloud(g, 950, 145, 0.86);
-    g.fillStyle(0x272338, 0.78);
-    g.fillTriangle(0, 590, 300, 320, 620, 590);
-    g.fillTriangle(410, 590, 810, 260, 1200, 590);
-    g.fillStyle(0x15141d, 0.92);
-    g.fillTriangle(100, 610, 360, 370, 650, 610);
-    g.fillTriangle(680, 610, 1010, 310, 1320, 610);
-    this.drawVillage(g);
-    this.drawCamp(g);
-    drawVignette(this, 3);
-    addAmbientAsh(this, { count: 58, depth: 4 });
   }
 
   hasJourneyBackdrop() {
     return hasTexture(this, HANDPAINTED_KEYS.menuJourneyBgV2) || hasTexture(this, HANDPAINTED_KEYS.menuJourneyBg);
   }
 
-  drawCloud(g, x, y, scale) {
-    g.fillStyle(0xd2b989, 0.08);
-    g.fillEllipse(x, y, 180 * scale, 44 * scale);
-    g.fillEllipse(x + 70 * scale, y + 8 * scale, 230 * scale, 38 * scale);
-    g.fillEllipse(x - 90 * scale, y + 12 * scale, 150 * scale, 34 * scale);
-  }
-
-  drawVillage(g) {
-    g.fillStyle(0x0d0d12, 0.94);
-    for (let i = 0; i < 7; i += 1) {
-      const x = 690 + i * 70;
-      const h = 96 + (i % 3) * 32;
-      g.fillRect(x, 548 - h, 46, h);
-      g.fillTriangle(x - 10, 548 - h, x + 23, 500 - h, x + 56, 548 - h);
-      g.fillStyle(0xf1c76a, 0.16);
-      g.fillRect(x + 16, 520 - h + (i % 2) * 22, 7, 18);
-      g.fillStyle(0x0d0d12, 0.94);
-    }
-    g.fillRect(1050, 322, 64, 226);
-    g.fillTriangle(1025, 322, 1082, 250, 1138, 322);
-    g.fillRect(1082, 228, 42, 106);
-    g.fillTriangle(1062, 228, 1103, 154, 1144, 228);
-  }
-
-  drawCamp(g) {
-    g.fillStyle(0x170d0a, 1);
-    g.fillRect(0, 585, 1536, 279);
-    g.fillStyle(0x362017, 0.88);
-    g.fillRect(0, 585, 1536, 62);
-    for (let i = 0; i < 40; i += 1) {
-      g.fillStyle(0x7a5832, 0.22);
-      g.fillEllipse(45 + ((i * 83) % 1360), 632 + ((i * 31) % 180), 12 + (i % 8), 3 + (i % 4));
-    }
-    g.fillStyle(0x0b0908, 0.85);
-    g.fillEllipse(368, 732, 320, 42);
-    g.fillStyle(0x382013, 0.95);
-    g.fillCircle(365, 692, 92);
-    g.fillStyle(0x4f2a17, 0.95);
-    g.fillTriangle(318, 704, 366, 575, 420, 704);
-    g.fillStyle(THEME.colors.candle, 0.96);
-    g.fillTriangle(337, 705, 370, 613, 408, 705);
-    g.fillStyle(0xe5672d, 0.88);
-    g.fillTriangle(360, 706, 384, 642, 428, 706);
-    drawCandle(this, 208, 590, 1.2);
-    drawCandle(this, 252, 620, 0.8);
-  }
-
   addTitle() {
     this.addTitleParchment();
-    return;
-    const [title, subtitle] = SCENE_TITLES.menu;
-    this.add.text(120, 130, title, titleStyle(78)).setOrigin(0, 0.5);
-    this.add.text(128, 198, subtitle, textStyle(30, '#cfa65b')).setOrigin(0, 0.5);
-    drawDivider(this, 320, 238, 390);
-    this.add
-      .text(128, 286, '穿过暮鸦村、墓园与修道院，寻找灰白圣火的源头。', {
-        ...textStyle(22, '#e6cf9b'),
-        wordWrap: { width: 560 }
-      })
-      .setOrigin(0, 0.5);
   }
 
   addMenu() {
     this.addMenuParchment();
-    return;
-    new UIFrame(this, 1132, 460, 360, 500, { fill: THEME.colors.panel, alpha: 0.88, stroke: THEME.colors.darkGold });
-    this.add.text(1132, 248, '旅途菜单', titleStyle(30)).setOrigin(0.5);
-    drawDivider(this, 1132, 286, 260);
-    const hasRun = SaveManager.hasRun();
-    const buttons = [
-      ['继续旅途', () => this.continueRun(), !hasRun],
-      ['开始新旅程', () => this.startNewJourney(), false],
-      ['旅途指南', () => this.scene.start(SCENES.Guide), false],
-      ['图鉴', () => this.scene.start(SCENES.Codex), false],
-      [this.musicLabel(), () => this.toggleMusic(), false],
-      ['设置', () => this.scene.start(SCENES.Settings), false],
-      ['制作组', () => this.showCredits(), false],
-      ['离开', () => this.showExitNotice(), false]
-    ];
-    buttons.forEach(([label, action, disabled], index) => {
-      new UIButton(this, 1132, 330 + index * 56, 248, 44, label, action, { disabled, fontSize: 21 });
-    });
-    this.add
-      .text(GAME_WIDTH - 86, 818, `${BUILD_VERSION} · ${BUILD_TIME}`, textStyle(15, '#a98b5d'))
-      .setOrigin(1, 0.5);
   }
 
   addHeroStudy() {
@@ -221,7 +124,6 @@ export default class MainMenuScene extends Phaser.Scene {
   }
 
   addMenuParchment() {
-    {
     const menuX = 1192;
     const hasRun = SaveManager.hasRun();
     const frame = new UIFrame(this, menuX, 472, 360, 520, {
@@ -255,179 +157,32 @@ export default class MainMenuScene extends Phaser.Scene {
       .text(GAME_WIDTH - 72, 824, `${BUILD_VERSION} · ${BUILD_TIME}`, textStyle(13, '#85745c'))
       .setOrigin(1, 0.5)
       .setDepth(6);
-    return;
-    }
-    if (this.hasJourneyBackdrop()) {
-      this.drawJourneyMenuWash(1190, 520, 410, 500);
-      this.add
-        .text(1190, 292, '旅途菜单', {
-          ...titleStyle(34),
-          color: '#6b4c2f',
-          stroke: '#fff0d2',
-          strokeThickness: 4
-        })
-        .setOrigin(0.5)
-        .setDepth(5);
-      drawDivider(this, 1190, 336, 300).setDepth?.(5);
-      const hasRun = SaveManager.hasRun();
-      const buttons = [
-        ...(hasRun ? [['继续旅途', () => this.continueRun(), false]] : []),
-        ['开始新旅程', () => this.startNewJourney(), false],
-        ['旅途指南', () => this.scene.start(SCENES.Guide), false],
-        ['图鉴', () => this.scene.start(SCENES.Codex), false],
-        [this.musicLabel(), () => this.toggleMusic(), false],
-        ['设置', () => this.scene.start(SCENES.Settings), false],
-        ['制作组', () => this.showCredits(), false],
-        ['离开', () => this.showExitNotice(), false]
-      ];
-      buttons.forEach(([label, action, disabled], index) => {
-        const button = new UIButton(this, 1190, 386 + index * 50, 292, 44, label, action, {
-          disabled,
-          fontSize: label === '开始新旅程' ? 23 : 21,
-          fill: label === '开始新旅程' ? 0x31515a : 0x2f4546
-        });
-        button.setDepth(6);
-      });
-      this.add
-        .text(GAME_WIDTH - 86, 820, `${BUILD_VERSION} · ${BUILD_TIME}`, {
-          ...textStyle(14, '#6a5841'),
-          stroke: '#fff1d5',
-          strokeThickness: 2
-        })
-        .setOrigin(1, 0.5)
-        .setDepth(4);
-      return;
-    }
-    if (hasTexture(this, HANDPAINTED_KEYS.menuJourneyBg)) {
-      this.drawJourneyMenuWash(1200, 548, 340, 416);
-      this.add
-        .text(1200, 362, '旅途菜单', {
-          ...titleStyle(30),
-          color: '#6b4c2f',
-          stroke: '#fff0d2',
-          strokeThickness: 4
-        })
-        .setOrigin(0.5)
-        .setDepth(5);
-      drawDivider(this, 1200, 400, 260).setDepth?.(5);
-      const hasRun = SaveManager.hasRun();
-      const buttons = [
-        ...(hasRun ? [['继续旅途', () => this.continueRun(), false]] : []),
-        ['开始新旅程', () => this.startNewJourney(), false],
-        ['旅途指南', () => this.scene.start(SCENES.Guide), false],
-        ['图鉴', () => this.scene.start(SCENES.Codex), false],
-        [this.musicLabel(), () => this.toggleMusic(), false],
-        ['设置', () => this.scene.start(SCENES.Settings), false],
-        ['制作组', () => this.showCredits(), false],
-        ['离开', () => this.showExitNotice(), false]
-      ];
-      buttons.forEach(([label, action, disabled], index) => {
-        const button = new UIButton(this, 1200, 448 + index * 50, 238, 40, label, action, {
-          disabled,
-          fontSize: label === '开始新旅程' ? 21 : 19,
-          fill: label === '开始新旅程' ? 0x31515a : 0x2f4546
-        });
-        button.setDepth(6);
-      });
-      this.add
-        .text(GAME_WIDTH - 86, 820, `${BUILD_VERSION} · ${BUILD_TIME}`, {
-          ...textStyle(14, '#6a5841'),
-          stroke: '#fff1d5',
-          strokeThickness: 2
-        })
-        .setOrigin(1, 0.5)
-        .setDepth(4);
-      return;
-    }
-    this.drawMenuPaper(1132, 456, 360, 500);
-    this.add
-      .text(1132, 238, '旅途菜单', {
-        ...titleStyle(30),
-        color: '#725027',
-        stroke: '#f8ecd5',
-        strokeThickness: 4
-      })
-      .setOrigin(0.5)
-      .setDepth(5);
-    drawDivider(this, 1132, 282, 260).setDepth?.(5);
-    const hasRun = SaveManager.hasRun();
-    const buttons = [
-      ['继续旅途', () => this.continueRun(), !hasRun],
-      ['开始新旅程', () => this.startNewJourney(), false],
-      ['旅途指南', () => this.scene.start(SCENES.Guide), false],
-      ['图鉴', () => this.scene.start(SCENES.Codex), false],
-      [this.musicLabel(), () => this.toggleMusic(), false],
-      ['设置', () => this.scene.start(SCENES.Settings), false],
-      ['制作组', () => this.showCredits(), false],
-      ['离开', () => this.showExitNotice(), false]
-    ];
-    buttons.forEach(([label, action, disabled], index) => {
-      const button = new UIButton(this, 1132, 326 + index * 56, 248, 44, label, action, {
-        disabled,
-        fontSize: 21,
-        fill: 0x31515a
-      });
-      button.setDepth(6);
-    });
-    this.add
-      .text(GAME_WIDTH - 86, 818, `${BUILD_VERSION} · ${BUILD_TIME}`, {
-        ...textStyle(15, '#7d6546'),
-        stroke: '#f7ecd5',
-        strokeThickness: 2
-      })
-      .setOrigin(1, 0.5)
-      .setDepth(4);
   }
 
   installMenuInput() {
+    this.menuInputCleanup?.();
     const items = this.menuItems ?? [];
     if (items.length === 0) return;
-    let selectedIndex = Math.max(0, items.findIndex((item) => !item.disabled));
-    const select = (index) => {
-      if (items.length === 0) return false;
-      let next = index;
-      for (let attempts = 0; attempts < items.length; attempts += 1) {
-        next = (next + items.length) % items.length;
-        if (!items[next].disabled) {
-          selectedIndex = next;
-          items.forEach((item, itemIndex) => item.button.setSelected(itemIndex === selectedIndex));
-          this.accessibility?.announce?.(`旅途菜单：${items[selectedIndex].label}`);
-          return true;
-        }
-        next += index >= selectedIndex ? 1 : -1;
-      }
-      return false;
-    };
-    const move = (direction) => {
-      let next = selectedIndex;
-      for (let attempts = 0; attempts < items.length; attempts += 1) {
-        next = (next + direction + items.length) % items.length;
-        if (!items[next].disabled) return select(next);
-      }
-      return false;
-    };
-    const onKeyDown = (event) => {
-      const code = event?.code || event?.key;
-      let handled = false;
-      if (code === 'ArrowDown' || code === 'KeyS' || code === 's' || code === 'S') handled = move(1);
-      else if (code === 'ArrowUp' || code === 'KeyW' || code === 'w' || code === 'W') handled = move(-1);
-      else if (code === 'Enter' || code === 'NumpadEnter' || code === 'Space' || code === ' ') {
-        items[selectedIndex]?.action?.();
-        handled = true;
-      }
-      if (handled) event?.preventDefault?.();
-    };
-    select(selectedIndex);
-    this.input.keyboard?.on('keydown', onKeyDown);
+    const binding = bindMenuInput(this.input.keyboard, items, {
+      announce: (label) => this.accessibility?.announce?.(`旅途菜单：${label}`),
+      onSelection: (index) => { this.menuSelectedIndex = index; }
+    });
     const clearActions = this.accessibility?.setActions?.(SCENES.MainMenu, items.map((item) => ({
       label: item.label,
       disabled: item.disabled,
       onActivate: item.action
     })));
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.keyboard?.off('keydown', onKeyDown);
+    let active = true;
+    const cleanup = () => {
+      if (!active) return;
+      active = false;
+      binding.cleanup();
       clearActions?.();
-    });
+      this.events.off(Phaser.Scenes.Events.SHUTDOWN, cleanup);
+      if (this.menuInputCleanup === cleanup) this.menuInputCleanup = null;
+    };
+    this.menuInputCleanup = cleanup;
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);
   }
 
   addJourneyFirelight() {
@@ -574,21 +329,6 @@ export default class MainMenuScene extends Phaser.Scene {
     }
   }
 
-  drawJourneyMenuWash(x, y, w, h) {
-    const g = this.add.graphics().setDepth(3);
-    g.fillStyle(0xf4e4c5, 0.22);
-    g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 18);
-    g.lineStyle(1, 0x8a6a3c, 0.26);
-    g.strokeRoundedRect(x - w / 2 + 8, y - h / 2 + 8, w - 16, h - 16, 16);
-    g.lineStyle(2, 0xb88935, 0.28);
-    g.lineBetween(x - w / 2 + 36, y - h / 2 + 80, x + w / 2 - 36, y - h / 2 + 64);
-    g.lineBetween(x - w / 2 + 28, y + h / 2 - 52, x + w / 2 - 42, y + h / 2 - 70);
-    g.fillStyle(0xffffff, 0.1);
-    g.fillEllipse(x + 22, y - 148, w * 0.76, 52);
-    g.fillStyle(0x6b5133, 0.08);
-    g.fillEllipse(x - 12, y + 142, w * 0.82, 68);
-  }
-
   drawLeftNotes() {
     const g = this.add.graphics().setDepth(4);
     g.lineStyle(1, 0x7f6340, 0.28);
@@ -617,24 +357,6 @@ export default class MainMenuScene extends Phaser.Scene {
       })
       .setOrigin(0, 0.5)
       .setDepth(4);
-  }
-
-  drawMenuPaper(x, y, w, h) {
-    const g = this.add.graphics().setDepth(3);
-    g.fillStyle(0x6b5133, 0.18);
-    g.fillRoundedRect(x - w / 2 + 8, y - h / 2 + 12, w, h, 12);
-    g.fillStyle(0xf3e3c5, 0.94);
-    g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 12);
-    g.fillStyle(0xffffff, 0.16);
-    g.fillRoundedRect(x - w / 2 + 14, y - h / 2 + 14, w - 28, 72, 8);
-    g.lineStyle(2, 0xb88935, 0.74);
-    g.strokeRoundedRect(x - w / 2, y - h / 2, w, h, 12);
-    g.lineStyle(1, 0x6b5133, 0.28);
-    g.strokeRoundedRect(x - w / 2 + 13, y - h / 2 + 13, w - 26, h - 26, 8);
-    for (let i = 0; i < 26; i += 1) {
-      g.fillStyle(i % 2 ? 0x7b6040 : 0xffffff, i % 2 ? 0.045 : 0.08);
-      g.fillEllipse(x - w / 2 + 24 + ((i * 37) % (w - 48)), y - h / 2 + 24 + ((i * 61) % (h - 48)), 9 + (i % 8), 3 + (i % 4));
-    }
   }
 
   musicLabel() {

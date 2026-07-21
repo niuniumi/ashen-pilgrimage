@@ -47,3 +47,16 @@ test('resume QA uses the event select-confirm contract instead of the removed ch
   assert.match(source, /scene\.confirmChoice\(\)/);
   assert.doesNotMatch(source, /scene\.choose\(/);
 });
+
+test('resume QA saves node-backed stages against a compatible map node', () => {
+  const source = readScript('qa-resume-stages.mjs');
+  assert.match(source, /pendingScene === 'boss-intro' \? 'boss' : pendingScene/);
+  assert.match(source, /find\(\(item\) => item\.type === nodeType\)/);
+});
+
+test('resume QA verifies reward map rejection through the public pause-menu action', () => {
+  const source = readScript('qa-resume-stages.mjs');
+  assert.match(source, /scene\.pauseMenu\.open\(\)/);
+  assert.match(source, /scene\.pauseMenu\.goMap\(\)/);
+  assert.doesNotMatch(source, /prepareRunForMapReturn/);
+});

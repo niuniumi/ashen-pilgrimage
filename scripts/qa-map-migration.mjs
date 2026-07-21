@@ -65,7 +65,7 @@ async function readMapState(page) {
       maxRow: Math.max(...run.map.nodes.map((node) => node.row)),
       completedRows: run.map.completed.map((id) => run.map.nodes.find((node) => node.id === id)?.row),
       availableRows: run.map.available.map((id) => run.map.nodes.find((node) => node.id === id)?.row),
-      nodeViews: scene.nodeViews,
+      nodeViews: scene.nodeViews.map(({ id, x, y, depth }) => ({ id, x, y, depth })),
       nodeAlphas: nodeContainers.map((node) => node.alpha),
       routeAlpha: scene.children.list.find((child) => child.type === 'Graphics' && child.depth === 10)?.alpha ?? null,
       unlockPath: (() => {

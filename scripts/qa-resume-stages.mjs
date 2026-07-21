@@ -41,7 +41,9 @@ async function saveStage(stage, options = {}) {
     run.pendingScene = pendingScene;
     if (resultVictory !== undefined) run.resultVictory = resultVictory;
     if (active) {
-      const node = run.map.nodes.find((item) => item.id === run.map.available[0]) ?? run.map.nodes[0];
+      const nodeType = pendingScene === 'boss-intro' ? 'boss' : pendingScene;
+      const node = run.map.nodes.find((item) => item.type === nodeType);
+      if (!node) throw new Error(`resume fixture has no ${nodeType} node`);
       run.map.activeNode = node.id;
       if (!run.map.path.includes(node.id)) run.map.path.push(node.id);
     } else {
@@ -136,9 +138,11 @@ try {
     run.pendingScene = 'reward';
     const activeNode = run.map.activeNode;
     const reward = structuredClone(run.pendingReward);
-    scene.pauseMenu.prepareRunForMapReturn();
-    return { activeNode, afterActiveNode: run.map.activeNode, reward, afterReward: run.pendingReward };
+    scene.pauseMenu.open();
+    const goMapResult = scene.pauseMenu.goMap();
+    return { activeNode, afterActiveNode: run.map.activeNode, reward, afterReward: run.pendingReward, goMapResult };
   });
+  assert(rewardPause.goMapResult === false, 'pause menu allowed reward settlement to return to the map');
   assert(rewardPause.activeNode === rewardPause.afterActiveNode, 'pause menu rolled back a settled battle node');
   assert(JSON.stringify(rewardPause.reward) === JSON.stringify(rewardPause.afterReward), 'pause menu deleted pending reward');
   report.transactions.push({ type: 'reward-pause', preserved: true });

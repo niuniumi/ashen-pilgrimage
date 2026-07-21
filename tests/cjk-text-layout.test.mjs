@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { cjkWordWrap, wrapMeasuredText } from '../src/ui/CjkTextLayout.js';
@@ -51,4 +52,12 @@ test('cjkWordWrap delegates Phaser measuring to measured wrapping', () => {
     wordWrap.callback('灰白圣火照亮归途', { context: { measureText: (value) => ({ width: [...value].length }) } }),
     '灰白圣火\n照亮归途'
   );
+});
+
+test('prologue layout QA polls a serializable readiness boolean', async () => {
+  const source = await readFile(new URL('../scripts/qa-prologue-layout.mjs', import.meta.url), 'utf8');
+
+  assert.match(source, /scene\?\.pageIndex === index && scene\?\.isTurning === false && Boolean\(scene\?\.pageBody\)/);
+  assert.doesNotMatch(source, /scene\?\.pageIndex === index && scene\?\.pageBody/);
+  assert.doesNotMatch(source, /waitForTimeout\(540\)/);
 });

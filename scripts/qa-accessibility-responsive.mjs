@@ -42,6 +42,22 @@ async function waitForMenuSelection(page, label) {
   }, label);
 }
 
+async function navigateMenu(page, key, label) {
+  const canvas = page.locator('canvas');
+  await page.waitForFunction(() => document.querySelector('canvas')?.tabIndex === 0);
+  await canvas.focus();
+  await page.keyboard.down(key);
+  try {
+    await waitForMenuSelection(page, label);
+    await page.waitForFunction(() => window.__ASHEN_GAME__?.registry?.get('audio')?.unlocked === true);
+  } catch (error) {
+    const diagnostics = await menuDiagnostics(page);
+    throw new Error(`menu navigation with ${key} failed: ${JSON.stringify(diagnostics)}; ${error.message}`);
+  } finally {
+    await page.keyboard.up(key);
+  }
+}
+
 async function waitForMenuTransition(page, sceneKey) {
   try {
     await waitScene(page, sceneKey);
@@ -85,10 +101,8 @@ try {
   assert(menu.liveText.includes('开始新旅程'), 'main menu selection was not announced');
   assert(menu.actionLabels.includes('开始新旅程'), 'main menu semantic action is missing');
   assert(menu.actionScenes.every((scene) => scene === 'MainMenuScene'), 'main menu contains stale scene actions');
-  await page.keyboard.press('ArrowDown');
-  await waitForMenuSelection(page, '旅途指南');
-  await page.keyboard.press('ArrowUp');
-  await waitForMenuSelection(page, '开始新旅程');
+  await navigateMenu(page, 'ArrowDown', '旅途指南');
+  await navigateMenu(page, 'ArrowUp', '开始新旅程');
   await page.keyboard.press('Enter');
 
   await waitForMenuTransition(page, 'PrologueScene');

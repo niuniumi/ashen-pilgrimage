@@ -70,6 +70,10 @@ jobs:
           test "$ready" -eq 1
 
           pnpm run qa:map-migration
+          pnpm run qa:accessibility-responsive
+          pnpm run qa:prologue-layout
+          pnpm run qa:character-select
+          pnpm run qa:audio-runtime
           pnpm run qa:progression -- --url="$QA_URL"
           pnpm run qa:chapter-transition -- --url="$QA_URL"
           pnpm run qa:resume-stages -- --url="$QA_URL"

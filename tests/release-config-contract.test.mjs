@@ -24,16 +24,21 @@ test('v2.4.0 identity is consistent across package, runtime, README, and release
   const packageJson = JSON.parse(read('package.json'));
   const versionSource = read('src/game/Version.js');
   const readme = read('README.md');
+  const deployment = read('docs/DEPLOYMENT.md');
   const releaseNotes = read('docs/RELEASE_NOTES_2.4.md');
 
   assert.equal(packageJson.version, '2.4.0');
   assert.equal(packageJson.packageManager, 'pnpm@11.7.0');
   assert.match(versionSource, /version:\s*'v2\.4\.0'/);
-  assert.match(versionSource, /buildTime:\s*'2026-07-18 \d{2}:\d{2}:\d{2} \+08:00'/);
+  assert.match(versionSource, /buildTime:\s*'2026-07-22 \d{2}:\d{2}:\d{2} \+08:00'/);
   assert.match(readme, /本地验收版本 `v2\.4\.0`/);
+  assert.doesNotMatch(readme, /线上仍为上一稳定版/);
   assert.match(readme, /AI 辅助开发项目/);
   assert.match(readme, /docs\/RELEASE_NOTES_2\.4\.md/);
-  assert.match(releaseNotes, /^# v2\.4\.0\b/m);
+  assert.match(deployment, /Platform:\s*GitHub Pages/);
+  assert.match(deployment, /Version:\s*`v2\.4\.0`/);
+  assert.match(releaseNotes, /^# v2\.4\.0 发布说明$/m);
+  assert.doesNotMatch(releaseNotes, /当前仅用于本地试玩验收/);
   assert.match(releaseNotes, /70 张卡牌全部绑定独立语义插画帧/);
 });
 
@@ -50,7 +55,9 @@ test('font references and Vite bundle warning policy support root and Pages buil
 
 test('CI runs the complete release gate on Node 24 and tears down preview', () => {
   const ci = read('.github/workflows/ci.yml');
+  const packageJson = JSON.parse(read('package.json'));
 
+  assert.equal(packageJson.scripts['qa:prologue-layout'], 'node scripts/qa-prologue-layout.mjs');
   assert.match(ci, /pnpm\/action-setup@v6/);
   assert.match(ci, /version:\s*11\.7\.0/);
   assert.match(ci, /actions\/setup-node@v6/);
@@ -74,6 +81,10 @@ test('CI runs the complete release gate on Node 24 and tears down preview', () =
   assert.match(ci, /QA_URL=['"]?http:\/\/127\.0\.0\.1:4173\/?['"]?/);
   assertOrdered(ci, [
     'pnpm run qa:map-migration',
+    'pnpm run qa:accessibility-responsive',
+    'pnpm run qa:prologue-layout',
+    'pnpm run qa:character-select',
+    'pnpm run qa:audio-runtime',
     'pnpm run qa:progression -- --url="$QA_URL"',
     'pnpm run qa:chapter-transition -- --url="$QA_URL"',
     'pnpm run qa:resume-stages -- --url="$QA_URL"',
@@ -222,6 +233,10 @@ test('release documentation contains reproducible commands, thresholds, ownershi
     'pnpm build',
     'pnpm exec vite build --base=/ashen-pilgrimage/',
     'pnpm run qa:map-migration',
+    'pnpm run qa:accessibility-responsive',
+    'pnpm run qa:prologue-layout',
+    'pnpm run qa:character-select',
+    'pnpm run qa:audio-runtime',
     'pnpm run qa:progression',
     'pnpm run qa:chapter-transition',
     'pnpm run qa:resume-stages',
@@ -240,6 +255,7 @@ test('release documentation contains reproducible commands, thresholds, ownershi
   assert.match(verification, /24\s*个请求/);
   assert.match(verification, /6\s*MiB/i);
   assert.match(verification, /CI.*Pages|Pages.*CI/s);
+  assert.doesNotMatch(verification, /workflow_dispatch[^\r\n]*保留/);
   assert.match(verification, /待主会话填写/);
   assert.match(verification, /https:\/\/docs\.github\.com\/en\/pages\/getting-started-with-github-pages\/using-custom-workflows-with-github-pages/);
   assert.match(verification, /https:\/\/vite\.dev\/guide\/static-deploy\.html/);

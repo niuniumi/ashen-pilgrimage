@@ -8,10 +8,10 @@ import { drawBackArrowButton } from '../ui/UIOrnament.js';
 import { addHandPaintedBackground, HANDPAINTED_KEYS } from '../art/HandPaintedAssets.js';
 import { getSceneBundleNames } from '../game/AssetBundleCatalog.js';
 import { installSceneLoadingView, queueAssetBundles } from '../game/SceneAssetLoader.js';
+import { installAudioUnlockGestures } from '../game/AudioUnlockBinding.js';
 import { FONT } from '../design/textStyles.js';
 
 const ASSET_LOAD_FAILED = '__sceneAssetLoadFailed';
-const AUDIO_UNLOCK_BINDING = '__sceneAudioUnlockBinding';
 
 export function areSceneAssetsReady(scene) {
   return scene?.[ASSET_LOAD_FAILED] !== true;
@@ -134,26 +134,7 @@ export function attachSceneServices(scene) {
   scene.accessibility = scene.registry.get('accessibility');
   scene.audio?.attachScene?.(scene);
   scene.audio?.installLifecycleListeners?.();
-
-  scene[AUDIO_UNLOCK_BINDING]?.();
-  if (scene.audio?.unlocked) return;
-  let active = true;
-  const cleanupAudioUnlock = () => {
-    if (!active) return;
-    active = false;
-    scene.input?.off?.('pointerdown', unlockAudio);
-    scene.input?.keyboard?.off?.('keydown', unlockAudio);
-    scene.events?.off?.('shutdown', cleanupAudioUnlock);
-    if (scene[AUDIO_UNLOCK_BINDING] === cleanupAudioUnlock) scene[AUDIO_UNLOCK_BINDING] = null;
-  };
-  const unlockAudio = () => {
-    cleanupAudioUnlock();
-    void scene.audio?.unlock?.();
-  };
-  scene[AUDIO_UNLOCK_BINDING] = cleanupAudioUnlock;
-  scene.input?.once?.('pointerdown', unlockAudio);
-  scene.input?.keyboard?.once?.('keydown', unlockAudio);
-  scene.events?.once?.('shutdown', cleanupAudioUnlock);
+  installAudioUnlockGestures(scene, scene.audio);
 }
 
 export function addToast(scene, message, kind = 'info') {

@@ -78,8 +78,10 @@ export class AudioManager {
     this.pendingBgmKey = null;
     this.lifecycleHidden = false;
     this.lifecyclePausedBgm = null;
+    this.lifecycleResumeToken = 0;
     this.lifecycleListenersInstalled = false;
     this.fadeTargets = new WeakMap();
+    this.retiredSounds = new WeakMap();
   }
 
   attachScene(scene) {
@@ -146,6 +148,7 @@ export class AudioManager {
   }
 
   async handleVisibilityChange(hidden) {
+    const resumeToken = ++this.lifecycleResumeToken;
     const nextHidden = Boolean(hidden);
     if (nextHidden) {
       this.lifecycleHidden = true;
@@ -179,8 +182,16 @@ export class AudioManager {
     }
 
     const latestSettings = SaveManager.readSettings();
-    if (latestSettings.muted || !latestSettings.music || this.currentBgm !== sound) {
-      this.lifecyclePausedBgm = null;
+    const resumeStillValid = resumeToken === this.lifecycleResumeToken
+      && !this.lifecycleHidden
+      && this.lifecyclePausedBgm === sound
+      && !latestSettings.muted
+      && latestSettings.music
+      && this.currentBgm === sound;
+    if (!resumeStillValid) {
+      const ownershipIsObsolete = this.lifecyclePausedBgm === sound
+        && (latestSettings.muted || !latestSettings.music || this.currentBgm !== sound);
+      if (ownershipIsObsolete) this.lifecyclePausedBgm = null;
       return false;
     }
     this.lifecyclePausedBgm = null;
@@ -224,6 +235,10 @@ export class AudioManager {
     const profile = resolveBgmProfile(kind);
     const key = profile.key;
     this.desiredBgmKind = profile.id;
+    if (this.lifecyclePausedBgm) {
+      this.lifecycleResumeToken += 1;
+      this.lifecyclePausedBgm = null;
+    }
     if (settings.muted || !settings.music) {
       this.stopBgm(false);
       return;
@@ -258,10 +273,7 @@ export class AudioManager {
 
     const previous = this.currentBgm;
     if (previous) {
-      this.fadeSound(previous, 0, 800, () => {
-        previous.stop();
-        previous.destroy();
-      });
+      this.retireSound(previous, 800);
     }
 
     let sound = null;
@@ -281,18 +293,17 @@ export class AudioManager {
 
   stopBgm(clearDesired = true) {
     if (clearDesired) this.desiredBgmKind = null;
+    this.lifecycleResumeToken += 1;
     this.lifecyclePausedBgm = null;
     if (!this.currentBgm) return;
     const sound = this.currentBgm;
     this.currentBgm = null;
     this.currentBgmKey = null;
-    this.fadeSound(sound, 0, 500, () => {
-      sound.stop();
-      sound.destroy();
-    });
+    this.retireSound(sound, 500);
   }
 
   pauseBgm() {
+    this.lifecycleResumeToken += 1;
     this.lifecyclePausedBgm = null;
     this.currentBgm?.pause?.();
   }
@@ -369,11 +380,12 @@ export class AudioManager {
       onComplete?.();
       return;
     }
-    const previousTarget = this.fadeTargets.get(sound);
-    if (previousTarget) scene.tweens.killTweensOf(previousTarget);
+    const previousFade = this.fadeTargets.get(sound);
+    if (previousFade) previousFade.tweens.killTweensOf(previousFade.target);
     scene.tweens.killTweensOf(sound);
     const fadeTarget = { volume: Number.isFinite(sound.volume) ? sound.volume : 0 };
-    this.fadeTargets.set(sound, fadeTarget);
+    const fade = { target: fadeTarget, tweens: scene.tweens };
+    this.fadeTargets.set(sound, fade);
     scene.tweens.add({
       targets: fadeTarget,
       volume,
@@ -381,10 +393,51 @@ export class AudioManager {
       ease: 'Sine.InOut',
       onUpdate: () => sound.setVolume?.(fadeTarget.volume),
       onComplete: () => {
-        if (this.fadeTargets.get(sound) === fadeTarget) this.fadeTargets.delete(sound);
+        if (this.fadeTargets.get(sound) === fade) this.fadeTargets.delete(sound);
         onComplete?.();
       }
     });
+  }
+
+  retireSound(sound, duration = 500) {
+    if (!sound) return null;
+    const existing = this.retiredSounds.get(sound);
+    if (existing) return existing.finalize;
+
+    const record = { finalized: false, timer: null, finalize: null };
+    const finalize = () => {
+      if (record.finalized) return;
+      record.finalized = true;
+      if (record.timer !== null) this.cancelSchedule(record.timer);
+      const fade = this.fadeTargets.get(sound);
+      if (fade) {
+        try {
+          fade.tweens.killTweensOf(fade.target);
+        } catch (error) {
+          console.warn('BGM fade cancellation failed', error);
+        }
+        this.fadeTargets.delete(sound);
+      }
+      try {
+        sound.stop?.();
+      } catch (error) {
+        console.warn('BGM stop failed', error);
+      }
+      try {
+        sound.destroy?.();
+      } catch (error) {
+        console.warn('BGM destroy failed', error);
+      }
+    };
+    record.finalize = finalize;
+    this.retiredSounds.set(sound, record);
+    record.timer = this.schedule(finalize, Math.max(0, Number(duration) || 0) + 50);
+    try {
+      this.fadeSound(sound, 0, duration, finalize);
+    } catch (error) {
+      console.warn('BGM retirement fade failed', error);
+    }
+    return finalize;
   }
 
   showUnlockHint() {

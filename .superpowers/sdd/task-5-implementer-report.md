@@ -50,8 +50,30 @@
 ## Self-review
 
 - Lifecycle resume requires all four conditions: this lifecycle instance paused the same current BGM, audio remains unlocked, music remains enabled, and global mute remains off.
-- `pagehide` and `visibilitychange` listeners are manager-owned and installed only once; scene gesture listeners remove both alternatives after the first gesture and clean up on shutdown.
+- `pagehide` and `visibilitychange` listeners are manager-owned and installed only once; scene gesture listeners remove both alternatives after the first successful gesture and clean up on shutdown.
 - Context resume rejection keeps `unlocked` false and queues no BGM retry.
 - Full-motion SceneTransition keeps caller-supplied durations (for example 460/520ms); reduced motion starts the destination immediately and restores input state.
 - Existing duck/cooldown/variance tests were retained and passed unchanged.
 - The pre-existing `qa/pause-menu-regression-report.json` worktree modification was not staged or altered for Task 5.
+
+## Review fix
+
+The independent Task 5 review requested three Important corrections. Each was reproduced before production changes.
+
+### Review red / green evidence
+
+- RED lifecycle race: 2 reviewer scenarios failed because an older visible call resumed BGM after a later `pagehide` or `pauseBgm()`; the old call returned `true` and invoked `resume()`.
+- GREEN lifecycle race: every lifecycle request now advances a resume token. After `await context.resume()`, commit requires the same token, `lifecycleHidden === false`, ownership of the same current sound, and current settings permission. Stop and track-replacement paths also have direct coverage. A failed context resume retains ownership and passes on a later visible retry.
+- RED retirement fallback: a replaced BGM had no timer outside the scene TweenManager, so simulated Phaser `killAll()` left it playing with zero `stop()`/`destroy()` calls.
+- GREEN retirement fallback: retired sounds own a global timer and an idempotent finalizer. The finalizer cancels the originating TweenManager proxy when possible and calls `stop()`/`destroy()` exactly once whether Tween completion, timer fallback, or a repeated stale callback wins.
+- RED unlock retry: the behavior-test module did not exist, matching the prior regex-only coverage gap and failed-retry dead end.
+- GREEN unlock retry: `AudioUnlockBinding` removes both gesture alternatives while one attempt is in flight, reinstalls both after `false` or rejection while the scene remains active, and permanently cleans up only on success or shutdown.
+
+### Review verification
+
+- Targeted: `node --test tests/audio-unlock-binding.test.mjs tests/audio-manager-polish.test.mjs tests/scene-transition.test.mjs` — PASS, 31/31.
+- Full: `pnpm test` — PASS, 224/224.
+- Assets: `pnpm assets:verify` — PASS, 40/40 verified, 0 changed.
+- Build: `pnpm build` — PASS, 121 modules transformed.
+- Browser audio, consecutive round 1 and round 2 — PASS each: 58 decoded, 0 page/console errors, one unlock call, duck gain `0.68`.
+- Visual screenshot QA was not repeated because review fixes touch only audio lifecycle/cleanup/binding code and tests.

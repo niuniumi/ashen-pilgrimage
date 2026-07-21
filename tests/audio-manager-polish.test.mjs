@@ -90,6 +90,8 @@ function createHarness({ random = 1, context = null, settings = {} } = {}) {
         isPaused: false,
         pauseCalls: 0,
         resumeCalls: 0,
+        stopCalls: 0,
+        destroyCalls: 0,
         pause() {
           this.pauseCalls += 1;
           this.isPlaying = false;
@@ -103,8 +105,13 @@ function createHarness({ random = 1, context = null, settings = {} } = {}) {
         setVolume(nextVolume) {
           this.volume = nextVolume;
         },
-        stop() {},
-        destroy() {}
+        stop() {
+          this.stopCalls += 1;
+          this.isPlaying = false;
+        },
+        destroy() {
+          this.destroyCalls += 1;
+        }
       };
       manager.currentBgm = bgm;
       manager.currentBgmProfile = { gain: 1 };
@@ -355,14 +362,125 @@ test('lifecycle does not claim a manually paused BGM or revive music disabled wh
   assert.equal(disabledBgm.resumeCalls, 0);
 });
 
-test('SceneHelpers installs pointer and keyboard unlock gestures as one shared binding', async () => {
+test('a later pagehide invalidates an in-flight lifecycle resume', async () => {
+  let finishResume;
+  const context = {
+    state: 'running',
+    resume() {
+      return new Promise((resolve) => {
+        finishResume = resolve;
+      });
+    }
+  };
+  const harness = createHarness({ context });
+  const bgm = harness.attachBgm();
+  harness.manager.unlocked = true;
+  await harness.manager.handleVisibilityChange(true);
+  context.state = 'suspended';
+
+  const restoring = harness.manager.handleVisibilityChange(false);
+  await Promise.resolve();
+  await harness.manager.handleVisibilityChange(true);
+  finishResume();
+
+  assert.equal(await restoring, false);
+  assert.equal(harness.manager.lifecycleHidden, true);
+  assert.equal(harness.manager.lifecyclePausedBgm, bgm);
+  assert.equal(bgm.resumeCalls, 0);
+  assert.equal(bgm.isPaused, true);
+});
+
+test('manual pause invalidates an in-flight lifecycle resume', async () => {
+  let finishResume;
+  const context = {
+    state: 'running',
+    resume() {
+      return new Promise((resolve) => {
+        finishResume = resolve;
+      });
+    }
+  };
+  const harness = createHarness({ context });
+  const bgm = harness.attachBgm();
+  harness.manager.unlocked = true;
+  await harness.manager.handleVisibilityChange(true);
+  context.state = 'suspended';
+
+  const restoring = harness.manager.handleVisibilityChange(false);
+  await Promise.resolve();
+  harness.manager.pauseBgm();
+  finishResume();
+
+  assert.equal(await restoring, false);
+  assert.equal(harness.manager.lifecyclePausedBgm, null);
+  assert.equal(bgm.resumeCalls, 0);
+  assert.equal(bgm.isPaused, true);
+});
+
+test('stop and track replacement cannot be undone by an older lifecycle resume', async (t) => {
+  for (const action of ['stop', 'replace']) {
+    await t.test(action, async () => {
+      let finishResume;
+      const context = {
+        state: 'running',
+        resume() {
+          return new Promise((resolve) => {
+            finishResume = resolve;
+          });
+        }
+      };
+      const harness = createHarness({ context });
+      const bgm = harness.attachBgm();
+      harness.manager.unlocked = true;
+      await harness.manager.handleVisibilityChange(true);
+      context.state = 'suspended';
+      const restoring = harness.manager.handleVisibilityChange(false);
+      await Promise.resolve();
+
+      if (action === 'stop') harness.manager.stopBgm(false);
+      else harness.manager.currentBgm = harness.attachBgm(0.2);
+      finishResume();
+
+      assert.equal(await restoring, false);
+      assert.equal(bgm.resumeCalls, 0);
+    });
+  }
+});
+
+test('failed lifecycle context resume retains ownership for a later visible retry', async () => {
+  const context = {
+    state: 'running',
+    resumeCalls: 0,
+    async resume() {
+      this.resumeCalls += 1;
+      if (this.resumeCalls === 1) throw new Error('transient lifecycle failure');
+      this.state = 'running';
+    }
+  };
+  const harness = createHarness({ context });
+  const bgm = harness.attachBgm();
+  harness.manager.unlocked = true;
+  await harness.manager.handleVisibilityChange(true);
+  context.state = 'suspended';
+  const originalWarn = console.warn;
+  console.warn = () => {};
+
+  try {
+    assert.equal(await harness.manager.handleVisibilityChange(false), false);
+    assert.equal(harness.manager.lifecyclePausedBgm, bgm);
+    assert.equal(await harness.manager.handleVisibilityChange(false), true);
+  } finally {
+    console.warn = originalWarn;
+  }
+  assert.equal(context.resumeCalls, 2);
+  assert.equal(bgm.resumeCalls, 1);
+});
+
+test('SceneHelpers delegates scene gesture ownership to the retryable audio binding', async () => {
   const source = await readFile(new URL('../src/scenes/SceneHelpers.js', import.meta.url), 'utf8');
 
-  assert.match(source, /if \(scene\.audio\?\.unlocked\) return;/);
-  assert.match(source, /input\?\.once\?\.\('pointerdown', unlockAudio\)/);
-  assert.match(source, /input\?\.keyboard\?\.once\?\.\('keydown', unlockAudio\)/);
-  assert.match(source, /input\?\.off\?\.\('pointerdown', unlockAudio\)/);
-  assert.match(source, /input\?\.keyboard\?\.off\?\.\('keydown', unlockAudio\)/);
+  assert.match(source, /import \{ installAudioUnlockGestures \}/);
+  assert.match(source, /installAudioUnlockGestures\(scene, scene\.audio\)/);
 });
 
 test('BGM fades drive setVolume even when the Phaser volume property is not directly writable', () => {
@@ -407,6 +525,48 @@ test('new BGM is explicitly silenced before its entrance fade starts', () => {
   harness.manager.playBgm('menu');
 
   assert.equal(volumeWrites[0], 0);
+});
+
+test('replaced BGM cleanup survives scene tween shutdown and runs exactly once', () => {
+  const harness = createHarness();
+  const oldBgm = harness.attachBgm(1);
+  harness.manager.currentBgmKey = 'bgm-menu';
+  harness.manager.unlocked = true;
+  const tweenConfigs = [];
+  const activeTweens = [];
+  harness.manager.scene.tweens = {
+    killTweensOf() {},
+    add(config) {
+      tweenConfigs.push(config);
+      activeTweens.push(config);
+    },
+    killAll() {
+      activeTweens.length = 0;
+    }
+  };
+  const nextBgm = {
+    volume: 1,
+    play() {},
+    setVolume(value) {
+      this.volume = value;
+    }
+  };
+  harness.manager.scene.sound.add = () => nextBgm;
+
+  harness.manager.playBgm('battle');
+
+  const fallbackId = [...harness.timers.keys()][0];
+  assert.ok(fallbackId, 'retired sound needs a timer outside the scene TweenManager');
+  harness.manager.scene.tweens.killAll();
+  assert.equal(activeTweens.length, 0, 'scene shutdown must discard Tween callbacks without completing them');
+  harness.fire(fallbackId);
+  assert.equal(oldBgm.stopCalls, 1);
+  assert.equal(oldBgm.destroyCalls, 1);
+
+  tweenConfigs[0].onComplete();
+  harness.fire(fallbackId, { includeCleared: true });
+  assert.equal(oldBgm.stopCalls, 1);
+  assert.equal(oldBgm.destroyCalls, 1);
 });
 
 test('explicit play options and legacy aliases remain authoritative', () => {

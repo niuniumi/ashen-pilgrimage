@@ -31,6 +31,7 @@ export default class MainMenuScene extends Phaser.Scene {
     this.addJourneyMicroMotion();
     this.addTitle();
     this.addMenu();
+    this.installMenuInput();
   }
 
   drawBackdrop() {
@@ -241,13 +242,14 @@ export default class MainMenuScene extends Phaser.Scene {
       ['制作组', () => this.showCredits(), false],
       ['离开', () => this.showExitNotice(), false]
     ];
-    buttons.forEach(([label, action, disabled], index) => {
+    this.menuItems = buttons.map(([label, action, disabled], index) => {
       const button = new UIButton(this, menuX, 326 + index * 54, 280, 42, label, action, {
         disabled,
         fontSize: 19,
         fill: label === '开始新旅程' ? 0x35706b : 0x2c3540
       });
       button.setDepth(7);
+      return { label, action, disabled, button };
     });
     this.add
       .text(GAME_WIDTH - 72, 824, `${BUILD_VERSION} · ${BUILD_TIME}`, textStyle(13, '#85745c'))
@@ -375,6 +377,57 @@ export default class MainMenuScene extends Phaser.Scene {
       })
       .setOrigin(1, 0.5)
       .setDepth(4);
+  }
+
+  installMenuInput() {
+    const items = this.menuItems ?? [];
+    if (items.length === 0) return;
+    let selectedIndex = Math.max(0, items.findIndex((item) => !item.disabled));
+    const select = (index) => {
+      if (items.length === 0) return false;
+      let next = index;
+      for (let attempts = 0; attempts < items.length; attempts += 1) {
+        next = (next + items.length) % items.length;
+        if (!items[next].disabled) {
+          selectedIndex = next;
+          items.forEach((item, itemIndex) => item.button.setSelected(itemIndex === selectedIndex));
+          this.accessibility?.announce?.(`旅途菜单：${items[selectedIndex].label}`);
+          return true;
+        }
+        next += index >= selectedIndex ? 1 : -1;
+      }
+      return false;
+    };
+    const move = (direction) => {
+      let next = selectedIndex;
+      for (let attempts = 0; attempts < items.length; attempts += 1) {
+        next = (next + direction + items.length) % items.length;
+        if (!items[next].disabled) return select(next);
+      }
+      return false;
+    };
+    const onKeyDown = (event) => {
+      const code = event?.code || event?.key;
+      let handled = false;
+      if (code === 'ArrowDown' || code === 'KeyS' || code === 's' || code === 'S') handled = move(1);
+      else if (code === 'ArrowUp' || code === 'KeyW' || code === 'w' || code === 'W') handled = move(-1);
+      else if (code === 'Enter' || code === 'NumpadEnter' || code === 'Space' || code === ' ') {
+        items[selectedIndex]?.action?.();
+        handled = true;
+      }
+      if (handled) event?.preventDefault?.();
+    };
+    select(selectedIndex);
+    this.input.keyboard?.on('keydown', onKeyDown);
+    const clearActions = this.accessibility?.setActions?.(SCENES.MainMenu, items.map((item) => ({
+      label: item.label,
+      disabled: item.disabled,
+      onActivate: item.action
+    })));
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard?.off('keydown', onKeyDown);
+      clearActions?.();
+    });
   }
 
   addJourneyFirelight() {

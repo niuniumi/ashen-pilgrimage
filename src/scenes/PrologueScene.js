@@ -50,9 +50,11 @@ export default class PrologueScene extends Phaser.Scene {
     this.pageIndex = 0;
     this.pageImage = null;
     this.isTurning = false;
+    this.isFinishing = false;
     this.drawBackdrop();
     this.createPage();
     this.createControls();
+    this.installPrologueInput();
     const fadeDuration = motionDuration(this.settings, 360);
     if (fadeDuration) this.cameras.main.fadeIn(fadeDuration, 0, 0, 0);
   }
@@ -125,6 +127,33 @@ export default class PrologueScene extends Phaser.Scene {
 
   updateControls() {
     this.prevButton?.setVisible(this.pageIndex > 0);
+    const page = PROLOGUE_PAGES[this.pageIndex];
+    this.accessibility?.announce?.(`序章第 ${this.pageIndex + 1} 页，${page.title}。${page.body}`);
+    this.prologueActionCleanup?.();
+    this.prologueActionCleanup = this.accessibility?.setActions?.(SCENES.Prologue, [
+      { label: '上一页', disabled: this.pageIndex === 0, onActivate: () => this.turnPage(-1) },
+      { label: this.pageIndex === PROLOGUE_PAGES.length - 1 ? '开始旅途' : '下一页', onActivate: () => this.turnPage(1) },
+      { label: '跳过剧情', onActivate: () => this.finish() }
+    ]);
+  }
+
+  installPrologueInput() {
+    const onKeyDown = (event) => {
+      const code = event?.code || event?.key;
+      let handled = true;
+      if (code === 'ArrowLeft' || code === 'KeyA' || code === 'a' || code === 'A') this.turnPage(-1);
+      else if (code === 'ArrowRight' || code === 'KeyD' || code === 'd' || code === 'D') this.turnPage(1);
+      else if (code === 'Enter' || code === 'NumpadEnter' || code === 'Space' || code === ' ') this.turnPage(1);
+      else if (code === 'Escape') this.finish();
+      else handled = false;
+      if (handled) event?.preventDefault?.();
+    };
+    this.input.keyboard?.on('keydown', onKeyDown);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard?.off('keydown', onKeyDown);
+      this.prologueActionCleanup?.();
+      this.prologueActionCleanup = null;
+    });
   }
 
   turnPage(direction) {
@@ -162,10 +191,13 @@ export default class PrologueScene extends Phaser.Scene {
   }
 
   finish() {
+    if (this.isFinishing) return false;
+    this.isFinishing = true;
     const settings = SaveManager.readSettings();
     settings.storySeen = true;
     SaveManager.saveSettings(settings);
     this.audio?.play('dialogClose');
     SceneTransition.fadeTo(this, SCENES.CharacterSelect, {}, 420);
+    return true;
   }
 }

@@ -130,6 +130,7 @@ export function preloadSceneAssets(scene, sceneKey, options = {}) {
 
 export function attachSceneServices(scene) {
   scene.audio = scene.registry.get('audio');
+  scene.accessibility = scene.registry.get('accessibility');
   scene.audio?.attachScene?.(scene);
   scene.input?.once?.('pointerdown', () => scene.audio?.unlock?.());
 }

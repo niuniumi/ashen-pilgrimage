@@ -63,6 +63,86 @@
         outline-offset: -4px;
       }
 
+      .visually-hidden {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+      }
+
+      .visually-hidden-focusable {
+        position: fixed;
+        left: -10000px;
+        bottom: 16px;
+        z-index: 1000;
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border: 3px solid #8b632f;
+        background: #11131a;
+        font-family: PixelCN, "Microsoft YaHei", monospace;
+      }
+
+      .visually-hidden-focusable:focus-within {
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .visually-hidden-focusable button {
+        min-width: 44px;
+        min-height: 44px;
+        border: 2px solid #d0a24f;
+        background: #232630;
+        color: #f4e7c5;
+        font: inherit;
+      }
+
+      #rotate-device {
+        position: absolute;
+        inset: 0;
+        z-index: 100;
+        display: none;
+        place-content: center;
+        gap: 12px;
+        padding: 28px;
+        box-sizing: border-box;
+        border: 8px solid #8b632f;
+        background:
+          linear-gradient(rgba(8, 9, 13, 0.94), rgba(17, 19, 26, 0.98)),
+          repeating-linear-gradient(0deg, transparent 0 7px, rgba(208, 162, 79, 0.05) 7px 8px);
+        color: #f4e7c5;
+        text-align: center;
+        font-family: PixelCN, "Microsoft YaHei", monospace;
+        pointer-events: none;
+      }
+
+      #rotate-device strong {
+        color: #f2c86d;
+        font-size: clamp(30px, 10vw, 52px);
+        font-weight: 400;
+      }
+
+      #rotate-device span {
+        color: #c7a96f;
+        font-size: clamp(17px, 5vw, 24px);
+      }
+
+      @media (orientation: portrait) and (max-width: 700px) {
+        #rotate-device {
+          display: grid;
+          pointer-events: auto;
+        }
+
+        canvas {
+          pointer-events: none;
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         #game {
           background: #08090d;
@@ -76,6 +156,10 @@
         <strong>灰烬圣途</strong>
         <span>正在唤醒余烬</span>
       </div>
+      <aside id="rotate-device" role="status" aria-label="设备方向提示">
+        <strong>请旋转设备</strong>
+        <span>横屏展开圣途</span>
+      </aside>
     </main>
     <script type="module" src="/src/main.js"></script>
   </body>

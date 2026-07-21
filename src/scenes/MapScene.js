@@ -16,6 +16,7 @@ import { installPauseMenu } from '../ui/PauseMenu.js';
 import { addToast, attachSceneServices, getActiveRun, preloadSceneAssets, saveActiveRun } from './SceneHelpers.js';
 import { HANDPAINTED_KEYS, hasTexture } from '../art/HandPaintedAssets.js';
 import { FONT } from '../design/textStyles.js';
+import { MapInputController } from '../input/MapInputController.js';
 
 const MAP_BOUNDS = { xMin: 360, xMax: 1160, yTop: 142, yBottom: 704 };
 const SOURCE_X_MIN = 300;
@@ -31,6 +32,9 @@ export default class MapScene extends Phaser.Scene {
   }
 
   create() {
+    this.mapInput?.destroy();
+    this.mapInput = null;
+    this.transitionLocked = false;
     attachSceneServices(this);
     this.run = getActiveRun(this);
     if (!this.run) return;
@@ -45,6 +49,7 @@ export default class MapScene extends Phaser.Scene {
     this.drawHeader();
     this.drawPanels();
     this.drawMap();
+    this.installMapInput();
     this.drawControls();
     installPauseMenu(this, { buttonX: 1466, buttonY: 54, allowMap: false });
   }
@@ -398,35 +403,80 @@ export default class MapScene extends Phaser.Scene {
       .setOrigin(0.5);
     container.add(label);
 
-    const hit = this.add.zone(pos.x, pos.y, compact ? 68 : 88, compact ? 68 : 88).setDepth(40);
-    hit.setInteractive({ useHandCursor: true });
-    hit.on('pointerover', () => {
-      this.audio?.play('uiHover');
-      this.tweens.killTweensOf(container);
+    let hit = null;
+    if (selectable) {
+      hit = this.add.zone(pos.x, pos.y, 100, 100).setDepth(60);
+      hit.setInteractive({ useHandCursor: true });
+      hit.on('pointerover', () => {
+        this.mapInput?.setSelected(node.id);
+        this.audio?.play('uiHover');
+        this.setNodeFocus(node.id, true);
+        this.tooltip.show(pos.x + 42, pos.y - 82, `${MapSystem.getNodeLabel(node.type)}\n${NODE_TIPS[node.type]}`);
+      });
+      hit.on('pointerdown', () => {
+        if (this.transitionLocked) return;
+        this.tweens.killTweensOf(container);
+        container.setScale(restingScale - 0.04).setY(pos.y + 2);
+      });
+      hit.on('pointerout', () => {
+        this.tooltip.hide();
+        this.setNodeFocus(node.id, this.mapInput?.selectedId === node.id);
+      });
+      hit.on('pointerup', () => {
+        this.mapInput?.setSelected(node.id);
+        this.selectNode(node);
+      });
+    }
+    this.nodeViews.push({ id: node.id, type: node.type, x: pos.x, y: pos.y, depth: container.depth, selectable, completed, node, container, hit, restingScale });
+  }
+
+  installMapInput() {
+    const selectable = this.nodeViews.filter((view) => view.selectable);
+    if (selectable.length === 0) return;
+    const controller = new MapInputController(selectable, {
+      onSelect: (id) => this.setNodeFocus(id, true),
+      onConfirm: (id) => {
+        const view = this.nodeViews.find((candidate) => candidate.id === id);
+        if (view) this.selectNode(view.node);
+      }
+    });
+    this.mapInput = controller;
+    controller.install(this.input.keyboard);
+    this.setNodeFocus(controller.selectedId, true);
+    this.accessibility?.announce?.(`可选路线：${selectable.map((view) => MapSystem.getNodeLabel(view.type)).join('、')}。使用方向键选择，回车确认。`);
+    const clearActions = this.accessibility?.setActions?.(SCENES.Map, selectable.map((view) => ({
+      label: `进入${MapSystem.getNodeLabel(view.type)}`,
+      onActivate: () => {
+        controller.setSelected(view.id);
+        controller.confirm();
+      }
+    })));
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      controller.destroy();
+      clearActions?.();
+      if (this.mapInput === controller) this.mapInput = null;
+    });
+  }
+
+  setNodeFocus(id, focused) {
+    const view = this.nodeViews.find((candidate) => candidate.id === id);
+    if (!view?.selectable || this.transitionLocked) return;
+    for (const candidate of this.nodeViews) {
+      if (!candidate.selectable) continue;
+      const active = candidate.id === id && focused;
+      this.tweens.killTweensOf(candidate.container);
       this.tweens.add({
-        targets: container,
-        scaleX: restingScale + 0.1,
-        scaleY: restingScale + 0.1,
-        y: pos.y - 4,
+        targets: candidate.container,
+        scaleX: candidate.restingScale + (active ? 0.1 : 0),
+        scaleY: candidate.restingScale + (active ? 0.1 : 0),
+        y: candidate.y - (active ? 4 : 0),
         duration: this.motionEnabled ? 130 : 0,
-        ease: 'Back.Out'
+        ease: active ? 'Back.Out' : 'Sine.Out'
       });
-      this.tooltip.show(pos.x + 42, pos.y - 82, `${MapSystem.getNodeLabel(node.type)}\n${NODE_TIPS[node.type]}`);
-    });
-    hit.on('pointerout', () => {
-      this.tooltip.hide();
-      this.tweens.killTweensOf(container);
-      this.tweens.add({
-        targets: container,
-        scaleX: restingScale,
-        scaleY: restingScale,
-        y: pos.y,
-        duration: this.motionEnabled ? 150 : 0,
-        ease: 'Sine.Out'
-      });
-    });
-    hit.on('pointerup', () => this.selectNode(node));
-    this.nodeViews.push({ id: node.id, type: node.type, x: pos.x, y: pos.y, depth: container.depth, selectable, completed });
+    }
+    if (focused) {
+      this.accessibility?.announce?.(`已选择${MapSystem.getNodeLabel(view.type)}。${NODE_TIPS[view.type]}`);
+    }
   }
 
   drawControls() {
@@ -439,11 +489,13 @@ export default class MapScene extends Phaser.Scene {
   }
 
   selectNode(node) {
-    if (this.uiPaused) return;
+    if (this.uiPaused || this.transitionLocked) return false;
     if (!MapSystem.canSelect(this.run, node.id)) {
       addToast(this, '只能选择当前路线连接的发光节点。', 'error');
-      return;
+      return false;
     }
+    this.transitionLocked = true;
+    this.mapInput?.lock();
     this.audio?.play('uiClick');
     MapSystem.startNode(this.run, node.id);
     this.run.pendingScene = node.type === 'boss' ? 'boss-intro' : node.type;
@@ -451,11 +503,11 @@ export default class MapScene extends Phaser.Scene {
     saveActiveRun(this, this.run);
     if (node.type === 'boss') {
       this.scene.start(SCENES.BossIntro);
-      return;
+      return true;
     }
     if (node.type === 'battle' || node.type === 'elite') {
       this.scene.start(SCENES.Battle, { battleType: node.type === 'elite' ? 'elite' : 'battle' });
-      return;
+      return true;
     }
     const sceneMap = {
       event: SCENES.Event,
@@ -464,5 +516,6 @@ export default class MapScene extends Phaser.Scene {
       chest: SCENES.Chest
     };
     this.scene.start(sceneMap[node.type] ?? SCENES.Map);
+    return true;
   }
 }

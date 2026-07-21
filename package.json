@@ -27,6 +27,7 @@
     "qa:simulation": "node scripts/qa-run-simulation.mjs",
     "qa:map-migration": "node scripts/qa-map-migration.mjs",
     "qa:progression": "node scripts/qa-progression-regression.mjs",
+    "qa:accessibility-responsive": "node scripts/qa-accessibility-responsive.mjs",
     "qa:chapter-transition": "node scripts/qa-chapter-transition.mjs",
     "qa:actor-roster": "node scripts/qa-actor-roster.mjs",
     "qa:resource-budget": "node scripts/qa-resource-budget.mjs --local",

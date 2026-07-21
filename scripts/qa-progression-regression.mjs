@@ -12,6 +12,13 @@ const url = process.env.QA_URL
   ?? process.argv.find((arg) => arg.startsWith('--url='))?.slice(6)
   ?? 'http://127.0.0.1:4173/';
 const report = { url, states: [], errors: [] };
+const NODE_HIT_PROBES = [
+  { name: 'center', x: 0, y: 0 },
+  { name: 'top', x: 0, y: -22 },
+  { name: 'bottom', x: 0, y: 22 },
+  { name: 'left', x: -22, y: 0 },
+  { name: 'right', x: 22, y: 0 }
+];
 
 function assert(value, message) {
   if (!value) throw new Error(message);
@@ -28,6 +35,60 @@ async function clickGame(page, x, y, delay = 500) {
   });
   await page.mouse.click(rect.x + (x / 1536) * rect.width, rect.y + (y / 864) * rect.height);
   await page.waitForTimeout(delay);
+}
+
+async function prepareN2Probe(page) {
+  await page.evaluate(() => localStorage.removeItem('ashen-pilgrimage-save-v1'));
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await waitScene(page, 'MainMenuScene');
+  await page.evaluate(() => {
+    const qa = window.__ASHEN_QA__;
+    // Each probe reloads the page, so startRun owns exactly one fresh MapScene
+    // generation. Do not start Map a second time in the same tick.
+    qa.startRun('ashblood-alchemist', { seed: 20260710, skipVow: true });
+    const run = window.__ASHEN_GAME__.registry.get('run');
+    const opening = run.map.nodes.find((node) => node.id === 'n0');
+    run.map.completed = ['n0'];
+    run.map.available = [...opening.links];
+    run.map.activeNode = null;
+    run.map.path = ['n0'];
+    run.floor = 1;
+    run.checkpoint = null;
+    delete run.pendingScene;
+    delete run.pendingBattleType;
+    delete run.pendingReward;
+    qa.saveRun(run);
+  });
+  await waitScene(page, 'MapScene');
+  return page.evaluate(() => {
+    const scene = window.__ASHEN_GAME__.scene.keys.MapScene;
+    const target = scene.nodeViews.find((view) => view.id === 'n2');
+    window.__N2_PROBE_EVENTS__ = [];
+    target?.hit?.on('pointerover', () => window.__N2_PROBE_EVENTS__.push('over'));
+    target?.hit?.on('pointerdown', () => window.__N2_PROBE_EVENTS__.push('down'));
+    target?.hit?.on('pointerup', () => window.__N2_PROBE_EVENTS__.push('up'));
+    return {
+      id: target?.id ?? null,
+      x: target?.x ?? null,
+      y: target?.y ?? null,
+      selectable: Boolean(target?.selectable),
+      hasHit: Boolean(target?.hit),
+      hitDebug: target?.hit ? {
+        originX: target.hit.originX,
+        originY: target.hit.originY,
+        displayOriginX: target.hit.displayOriginX,
+        displayOriginY: target.hit.displayOriginY,
+        hitArea: {
+          x: target.hit.input?.hitArea?.x,
+          y: target.hit.input?.hitArea?.y,
+          width: target.hit.input?.hitArea?.width,
+          height: target.hit.input?.hitArea?.height
+        }
+      } : null,
+      invalidHitIds: scene.nodeViews.filter((view) => !view.selectable && view.hit).map((view) => view.id),
+      selectableWithoutHit: scene.nodeViews.filter((view) => view.selectable && !view.hit).map((view) => view.id)
+    };
+  });
 }
 
 async function snapshot(page, phase) {
@@ -86,6 +147,51 @@ page.on('console', (message) => {
 
 try {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await waitScene(page, 'MainMenuScene');
+
+  for (const probe of NODE_HIT_PROBES) {
+    const target = await prepareN2Probe(page);
+    assert(target.id === 'n2' && target.selectable && target.hasHit, `${probe.name}: n2 was not an interactive selectable node`);
+    assert(target.invalidHitIds.length === 0, `${probe.name}: locked/completed nodes exposed pointer zones: ${target.invalidHitIds.join(', ')}`);
+    assert(target.selectableWithoutHit.length === 0, `${probe.name}: selectable nodes missing pointer zones: ${target.selectableWithoutHit.join(', ')}`);
+    await clickGame(page, target.x + probe.x, target.y + probe.y, 250);
+    const probeResult = await page.evaluate(() => {
+      const game = window.__ASHEN_GAME__;
+      const run = game?.registry?.get('run');
+      const scene = game.scene.keys.MapScene;
+      const pointer = scene.input.activePointer;
+      return {
+        activeNode: run?.map?.activeNode ?? null,
+        mapActive: scene.scene.isActive(),
+        transitionLocked: scene.transitionLocked,
+        pointer: { x: pointer.x, y: pointer.y, worldX: pointer.worldX, worldY: pointer.worldY, isDown: pointer.isDown },
+        probeEvents: [...(window.__N2_PROBE_EVENTS__ ?? [])],
+        interactive: (scene.input?._list ?? []).map((object) => ({
+          type: object.type,
+          x: object.x,
+          y: object.y,
+          width: object.width,
+          height: object.height,
+          depth: object.depth,
+          enabled: object.input?.enabled
+        }))
+      };
+    });
+    assert(
+      probeResult.activeNode === 'n2' && !probeResult.mapActive,
+      `${probe.name}: n2 click did not transition: ${JSON.stringify({ target, ...probeResult })}`
+    );
+    report.states.push({ phase: `n2-${probe.name}`, activeNode: 'n2', point: probe });
+  }
+
+  await page.evaluate(() => {
+    localStorage.removeItem('ashen-pilgrimage-save-v1');
+    localStorage.setItem(
+      'ashen-pilgrimage-settings-v1',
+      JSON.stringify({ sound: false, music: false, muted: true, animation: true, fastMode: false, tutorialEnabled: false, tutorialSeen: true, storySeen: true })
+    );
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await waitScene(page, 'MainMenuScene');
   await clickGame(page, 1190, 386, 500);
   await waitScene(page, 'CharacterSelectScene');

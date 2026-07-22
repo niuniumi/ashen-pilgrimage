@@ -243,7 +243,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       markAlpha: selected ? 1 : 0
     };
     const apply = () => {
-      container.setY(target.y).setScale(1);
+      container.setY(target.y).setAlpha(1).setScale(1);
       art.setAlpha(target.artAlpha);
       selectionGlow.setAlpha(target.glowAlpha);
       selectionMark.setAlpha(target.markAlpha);
@@ -260,6 +260,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.tweens.add({
       targets: container,
       y: target.y,
+      alpha: 1,
       duration: 150,
       ease: 'Cubic.Out'
     });

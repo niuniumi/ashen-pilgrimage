@@ -132,4 +132,6 @@ test('character select scene installs the controller and routes pointer and keyb
   assert.match(source, /!this\.characterInput\.locked && !this\.characterInput\.lock\(\)/);
   assert.match(source, /this\.runStarting = false/);
   assert.match(source, /this\.characterInput = null/);
+  assert.match(source, /container\.setY\(target\.y\)\.setAlpha\(1\)\.setScale\(1\)/);
+  assert.match(source, /targets: container,[\s\S]*?y: target\.y,[\s\S]*?alpha: 1,/);
 });

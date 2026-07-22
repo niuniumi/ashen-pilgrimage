@@ -26,6 +26,57 @@ async function startCharacterSelect(page) {
   });
 }
 
+async function captureImmediateSelection() {
+  const viewport = { width: 1536, height: 864 };
+  const name = 'character-select-immediate-third';
+  const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
+  await context.addInitScript(() => window.localStorage.clear());
+  const page = await context.newPage();
+  page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+  });
+
+  await page.goto(url, { waitUntil: 'networkidle' });
+  await page.waitForSelector('canvas');
+  await page.evaluate(() => window.__ASHEN_QA__.startScene('CharacterSelectScene'));
+  await page.waitForFunction(() => {
+    const scene = window.__ASHEN_GAME__.scene.keys.CharacterSelectScene;
+    return scene?.scene?.isActive() && scene.cards?.length === 3 && Boolean(scene.characterInput);
+  });
+  const immediate = await page.evaluate(() => {
+    const scene = window.__ASHEN_GAME__.scene.keys.CharacterSelectScene;
+    scene.characterInput.handleKey('Digit3');
+    return {
+      selected: scene.selected,
+      alphasAtSelection: scene.cards.map((card) => card.container.alpha)
+    };
+  });
+  await page.waitForTimeout(600);
+  const settled = await page.evaluate(() => {
+    const scene = window.__ASHEN_GAME__.scene.keys.CharacterSelectScene;
+    return {
+      selected: scene.selected,
+      cards: scene.cards.map((card) => ({
+        id: card.character.id,
+        alpha: card.container.alpha,
+        visible: card.container.visible,
+        x: card.container.x,
+        y: card.container.y
+      }))
+    };
+  });
+  const screenshot = path.join(outputDir, `${name}.png`);
+  await page.screenshot({ path: screenshot });
+  assert.equal(settled.selected, 'ashblood-alchemist', `${name}: immediate input did not select the third character`);
+  assert.ok(
+    settled.cards.every((card) => card.visible && card.alpha >= 0.99),
+    `${name}: immediate selection left a character card invisible: ${JSON.stringify({ immediate, settled })}`
+  );
+  await context.close();
+  return { name, viewport, immediate, settled, screenshot: path.relative(process.cwd(), screenshot).replaceAll('\\', '/') };
+}
+
 async function capture(viewport, name, keyboardSteps = 0) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
   await context.addInitScript(() => window.localStorage.clear());
@@ -100,6 +151,7 @@ async function capture(viewport, name, keyboardSteps = 0) {
 let captures;
 try {
   captures = [
+    await captureImmediateSelection(),
     await capture({ width: 1280, height: 720 }, 'character-select-1280'),
     await capture({ width: 1366, height: 768 }, 'character-select-1366'),
     await capture({ width: 1536, height: 864 }, 'character-select-1536'),
